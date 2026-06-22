@@ -893,10 +893,22 @@ body {
   border: 1px solid var(--line);
 }
 
+.attention-self-hint-bar {
+  margin: 0 0 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--line);
+  font-size: var(--text-viz-label);
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 .attention-flow-svg {
   width: 100%;
   max-width: 760px;
   height: auto;
+  min-height: 380px;
   display: block;
   margin: 0 auto;
 }
@@ -945,10 +957,19 @@ body {
   font-weight: 700;
 }
 
-.attention-self-hint {
-  fill: var(--muted);
-  font-size: var(--text-viz-label);
-  font-family: var(--font-sans);
+.attention-stage.is-active rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.attention-stage:not(.is-active) rect {
+  fill: #f8fafc;
+}
+
+.attention-output rect {
+  fill: #fff;
+  stroke: #cbd5e1;
 }
 
 .attention-flow-svg .attention-link {

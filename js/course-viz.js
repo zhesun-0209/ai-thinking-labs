@@ -162,15 +162,23 @@ function renderAttentionFlow(container, step) {
   const focus = step.focusIndex ?? weights.reduce((best, v, i, arr) => (v > arr[best] ? i : best), 0);
   const queryIndex = Math.max(0, sourceTokens.indexOf(queryToken));
   const W = 780;
-  const H = mode === "self" ? 420 : 388;
+  const showWeights = phase !== "score";
+  const showContext = phase === "context";
   const n = sourceTokens.length;
+
+  const encY = mode === "self" ? 188 : 168;
+  const arcBandY = 108;
+  const contextBarBase = mode === "self" ? 292 : 284;
+  const contextLabelY = contextBarBase - 22;
+  const outputY = 342;
+  const stageY = 432;
+  const H = 472;
+
   const normalizedScore = (v) => {
     const min = Math.min(...scores);
     const max = Math.max(...scores);
     return max === min ? 0.5 : (v - min) / (max - min);
   };
-  const showWeights = phase !== "score";
-  const showContext = phase === "context";
   const title =
     mode === "self"
       ? `Self-Attention：Q(${queryToken}) 查询同一句所有 K`
@@ -181,10 +189,9 @@ function renderAttentionFlow(container, step) {
 
   const encGap = n > 1 ? Math.min(118, (mode === "cross" ? 400 : W - 120) / (n - 1)) : 0;
   const encStart = mode === "cross" ? 72 : (W - encGap * (n - 1)) / 2;
-  const encY = mode === "self" ? 162 : 136;
   const queryPos =
     mode === "cross"
-      ? { x: W - 108, y: 236 }
+      ? { x: W - 108, y: 248 }
       : { x: encStart + queryIndex * encGap, y: encY };
 
   const lineMetric = showWeights ? weights : scores.map(normalizedScore);
@@ -202,8 +209,8 @@ function renderAttentionFlow(container, step) {
       const ty = y;
       const midY =
         mode === "self"
-          ? Math.min(qy, ty) - 64 - Math.abs(i - queryIndex) * 7
-          : (qy + ty) / 2 - 20;
+          ? arcBandY + Math.abs(i - queryIndex) * 5
+          : (qy + ty) / 2 - 24;
       const path =
         mode === "self"
           ? `M ${qx} ${qy - 26} Q ${(qx + tx) / 2} ${midY} ${tx} ${ty - 26}`
@@ -233,20 +240,18 @@ function renderAttentionFlow(container, step) {
     })
     .join("");
 
-  const contextY = mode === "self" ? 292 : 286;
   const contextBars = sourceTokens
     .map((tok, i) => {
-      const x = 100 + i * Math.min(76, (W - 200) / Math.max(n - 1, 1));
-      const h = Math.max(8, weights[i] * 44);
+      const x = 88 + i * Math.min(76, (W - 220) / Math.max(n - 1, 1));
+      const h = Math.max(8, weights[i] * 40);
       const cls = i === focus ? "is-focus" : "";
       return `<g class="attention-contrib ${cls}" transform="translate(${x},0)">
-        <rect x="-16" y="${contextY - h}" width="32" height="${h}" rx="6"></rect>
-        <text x="0" y="${contextY + 16}" text-anchor="middle">${tok}</text>
+        <rect x="-16" y="${contextBarBase - h}" width="32" height="${h}" rx="6"></rect>
+        <text x="0" y="${contextBarBase + 16}" text-anchor="middle">${tok}</text>
       </g>`;
     })
     .join("");
 
-  const stageY = mode === "self" ? 362 : 338;
   const stage = (x, label, active) => `<g class="attention-stage ${active ? "is-active" : ""}" transform="translate(${x},${stageY})">
     <rect x="-58" y="-14" width="116" height="24" rx="12"></rect>
     <text y="2" text-anchor="middle">${label}</text>
@@ -261,26 +266,32 @@ function renderAttentionFlow(container, step) {
           <text class="attention-query-hint" y="38" text-anchor="middle">${querySub}</text>
         </g>
         <text class="attention-section-label" x="${queryPos.x}" y="${queryPos.y - 44}" text-anchor="middle">Decoder</text>`
-      : `<text class="attention-self-hint" x="36" y="98">高亮 token 同时充当 Q，向全句 K 发查询</text>`;
+      : "";
+
+  const selfHintHtml =
+    mode === "self"
+      ? `<p class="attention-self-hint-bar">高亮 token 同时充当 Q，向全句 K 发查询</p>`
+      : "";
 
   container.innerHTML = `
     <div class="attention-flow-wrap">
+      ${selfHintHtml}
       <svg class="attention-flow-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${mode === "self" ? "Self-Attention 步进图" : "Encoder-Decoder Attention 步进图"}">
         <rect class="attention-bg" x="10" y="10" width="760" height="${H - 20}" rx="16"></rect>
         <text class="attention-title" x="28" y="34">${title}</text>
         <text class="attention-caption" x="28" y="54">${phase === "score" ? "第 1 步：用 Q 与每个 K 做点积，得到相似度分数。" : phase === "softmax" ? "第 2 步：Softmax 把分数变成权重，权重和为 1。" : "第 3 步：按权重加权 V，得到当前步需要的上下文信息。"}</text>
-        <text class="attention-section-label" x="36" y="78">${memorySub}</text>
+        <text class="attention-section-label" x="36" y="76">${memorySub}</text>
         ${mode === "cross" ? `<text class="attention-section-label" x="36" y="${encY - 44}">Encoder</text>` : ""}
         ${lineMarkup}
         ${sourceMarkup}
         ${crossQueryMarkup}
         ${showContext ? `<g class="attention-context">
-          <text class="attention-section-label" x="36" y="${contextY - 62}">context = Σ αᵢVᵢ</text>
+          <text class="attention-section-label" x="390" y="${contextLabelY}" text-anchor="middle">context = Σ αᵢVᵢ</text>
           ${contextBars}
-          <g class="attention-output" transform="translate(318, ${contextY + 34})">
-            <rect width="144" height="48" rx="10"></rect>
-            <text x="72" y="20" text-anchor="middle">上下文向量 c</text>
-            <text x="72" y="38" text-anchor="middle">${resultLabel}</text>
+          <g class="attention-output" transform="translate(36, ${outputY})">
+            <rect width="168" height="46" rx="10"></rect>
+            <text x="84" y="19" text-anchor="middle">上下文向量 c</text>
+            <text x="84" y="37" text-anchor="middle">${resultLabel}</text>
           </g>
         </g>` : ""}
         ${stage(168, "Q·Kᵀ 打分", phase === "score")}
