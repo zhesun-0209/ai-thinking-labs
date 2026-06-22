@@ -94,7 +94,7 @@ const ch7Config = {
     tree: {
       key: "tree",
       mentorKey: "ch7-tree",
-      title: "决策树 + 信息增益",
+      title: "学习算法 · 错题诊断与模型训练",
       subtitle: "50 道错题 · 熵 → 增益 → 分裂",
       cells: [
         {
@@ -383,7 +383,7 @@ window.courseShared.bootstrapChapter(
     chapterNum: 7,
     pageTitle: "学习算法 · 案例分步理解",
     eyebrow: "《AI思维》第7章 · 学习智能",
-    title: "五种学习方法，错题案例讲清楚",
+    title: "学习算法 · 错题诊断与模型训练",
     readingMeta: "约 28 分钟 · 5 种算法",
     sections: [
       { id: "hero", label: "开篇" },

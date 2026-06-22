@@ -39,7 +39,7 @@ const ch12Config = {
     repr: {
       key: "repr",
       mentorKey: "ch12-repr",
-      title: "表征搜索 + 模拟退火", subtitle: "AlphaProof 思路",
+      title: "创造智能 · 搜索、生成与结构设计", subtitle: "AlphaProof 思路",
       cells: [
         {
           prompt: "证明搜索可先**换几何表征**再优化；模拟退火允许暂时接受差解跳出局部最优。换表征 = 换优化问题的「地形」。",
@@ -222,6 +222,6 @@ const ch12Config = {
 courseShared.bootstrapChapter(
   {
     chapterNum: 12,
-    pageTitle: "创造算法 · 分步理解", eyebrow: "《AI思维》第12章 · 创造智能", title: "四类创造范式，五个演示讲清楚", readingMeta: "约 32 分钟 · 4 类方法 + AlphaFold案例", sections: [{ id: "hero", label: "开篇" }, { id: "m0", label: "概览" }, { id: "m1", label: "搜索" }, { id: "m2", label: "MCTS" }, { id: "m3", label: "生成" }, { id: "m4", label: "对比" }, { id: "lab", label: "实验室" }] },
+    pageTitle: "创造算法 · 分步理解", eyebrow: "《AI思维》第12章 · 创造智能", title: "创造智能 · 搜索、生成与结构设计", readingMeta: "约 32 分钟 · 4 类方法 + AlphaFold案例", sections: [{ id: "hero", label: "开篇" }, { id: "m0", label: "概览" }, { id: "m1", label: "搜索" }, { id: "m2", label: "MCTS" }, { id: "m3", label: "生成" }, { id: "m4", label: "对比" }, { id: "lab", label: "实验室" }] },
   ch12Config,
 );

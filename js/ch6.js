@@ -47,7 +47,7 @@ const CH6_KG_MOYAN = {
 
 const forwardTrace = [
   {
-    title: "初始化",
+    title: "推理算法 · 文学知识图谱推演",
     summary: "把已知事实放入工作记忆。",
     reason: "前向链从事实出发：先把「苏格拉底是人」放进待推理集合。",
     facts: [{ text: "人(苏格拉底)", new: true }],
@@ -227,7 +227,7 @@ const pathRankTrace = [
 const ch6Config = {
   pageTitle: "推理算法 · 图谱分步理解",
   eyebrow: "《AI思维》第6章 · 推理智能",
-  title: "四种推理策略，一张文学图谱讲清楚",
+  title: "推理算法 · 文学知识图谱推演",
   readingMeta: "约 18 分钟 · 4 种策略 + 图谱实验",
   sections: [
     { id: "hero", label: "开篇" },

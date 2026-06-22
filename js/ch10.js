@@ -29,7 +29,7 @@ const ch10Config = {
     cnn: {
       key: "cnn",
       mentorKey: "ch10-cnn",
-      title: "卷积 + 池化", subtitle: "局部特征提取",
+      title: "视觉模型 · 卷积到 Transformer", subtitle: "局部特征提取",
       cells: [
         {
           prompt: "CNN 的 inductive bias：**局部连接 + 权值共享**。同一 kernel 扫全图，提取可复用的局部模式。",
@@ -176,7 +176,7 @@ const ch10Config = {
 courseShared.bootstrapChapter(
   {
     chapterNum: 10,
-    pageTitle: "视觉模型 · 分步理解", eyebrow: "《AI思维》第10章 · 感知智能", title: "CNN 到 ViT，小图分步讲清楚", readingMeta: "约 30 分钟 · 4 种架构", sections: [{ id: "hero", label: "开篇" }, { id: "m0", label: "概览" }, { id: "m1", label: "CNN" }, { id: "m2", label: "ViT" }, { id: "m3", label: "自监督" }, { id: "m4", label: "对比" }, { id: "lab", label: "实验室" }],
+    pageTitle: "视觉模型 · 分步理解", eyebrow: "《AI思维》第10章 · 感知智能", title: "视觉模型 · 卷积到 Transformer", readingMeta: "约 30 分钟 · 4 种架构", sections: [{ id: "hero", label: "开篇" }, { id: "m0", label: "概览" }, { id: "m1", label: "CNN" }, { id: "m2", label: "ViT" }, { id: "m3", label: "自监督" }, { id: "m4", label: "对比" }, { id: "lab", label: "实验室" }],
   },
   ch10Config,
 );

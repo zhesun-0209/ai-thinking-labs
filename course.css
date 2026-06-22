@@ -230,12 +230,19 @@
 }
 
 .lab-section .lab-panel {
-  margin: 0 32px 24px;
+  margin: 0 clamp(16px, 3vw, 32px) 24px;
+  overflow: visible;
 }
 
 .lab-section .tabs {
-  margin: 0 32px;
+  margin: 0 clamp(16px, 3vw, 32px);
   padding-top: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.lab-section .tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .chart-canvas-wrap {
@@ -253,7 +260,11 @@
 }
 
 .site-main {
-  overflow-x: clip;
+  overflow-x: visible;
+}
+
+body {
+  overflow-x: hidden;
 }
 
 /* SVG chart demos */
@@ -624,7 +635,7 @@
 }
 
 .lab-algo-desc {
-  margin: 0 32px 12px;
+  margin: 0 clamp(16px, 3vw, 32px) 12px;
   padding: 12px 16px;
   border-radius: var(--radius-md);
   background: #fff;
@@ -1294,13 +1305,32 @@
   background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
+  overflow: visible;
 }
 
 .arch-svg {
   width: 100%;
   height: auto;
+  max-height: none;
   display: block;
-  min-height: 100px;
+  min-height: 0;
+}
+
+.td-viz,
+.bellman-explainer {
+  display: grid;
+  gap: 12px;
+}
+
+.td-formula-slot,
+.bellman-math-slot {
+  margin-top: 2px;
+}
+
+.bellman-explainer .bellman-diagram-svg {
+  width: 100%;
+  height: auto;
+  max-height: none;
 }
 
 .arch-caption {

@@ -40,7 +40,7 @@ const ch9Config = {
     bpe: {
       key: "bpe",
       mentorKey: "ch9-bpe",
-      title: "BPE 分词", subtitle: "字节对合并",
+      title: "语言模型 · 分词到序列生成", subtitle: "字节对合并",
       cells: [
         {
           prompt: "BPE 从字符开始，反复合并**最高频相邻对**，在字与词之间找粒度。合并顺序取决于语料统计，不是人工规则。",
@@ -240,7 +240,7 @@ courseShared.bootstrapChapter(
     chapterNum: 9,
     pageTitle: "语言模型 · 分步理解",
     eyebrow: "《AI思维》第9章 · 语言智能",
-    title: "从分词到生成，一条短句讲清楚",
+    title: "语言模型 · 分词到序列生成",
     readingMeta: "约 30 分钟 · 5 种算法", sections: [{ id: "hero", label: "开篇" }, { id: "m0", label: "概览" }, { id: "m1", label: "分词向量" }, { id: "m2", label: "注意力" }, { id: "m3", label: "生成" }, { id: "m4", label: "对比" }, { id: "lab", label: "实验室" }],
   },
   ch9Config,

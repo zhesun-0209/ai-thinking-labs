@@ -2,6 +2,8 @@
 
 (function () {
 
+let vizMarkerSeq = 0;
+
 function entropy(counts) {
   const total = counts.reduce((a, b) => a + b, 0);
   if (total <= 0) return 0;
@@ -1414,22 +1416,33 @@ function renderTDUpdate(container, step) {
   const r = step.r ?? 1;
   const vNext = step.vNext ?? 4.0;
   const target = step.target ?? 4.6;
-  const alpha = step.alpha ?? 0.2;
   const delta = target - vOld;
+  const uid = `td-${++vizMarkerSeq}`;
+  const arr = `${uid}-arr`;
   container.innerHTML = `
     <div class="td-viz">
-      <svg viewBox="0 0 520 200" class="td-svg" role="img" aria-label="TD 更新示意">
-        <rect width="520" height="200" fill="#f8fafc"/>
-        <g transform="translate(72,88)"><circle r="32" fill="#0d6b62"/><text text-anchor="middle" dy="5" fill="#fff" font-size="14">s</text><text y="52" text-anchor="middle" font-size="12" fill="#334155">待搜索</text><text y="68" text-anchor="middle" font-size="11" fill="#c2410c">V=${fmt(vOld)}</text></g>
-        <text x="148" y="92" fill="#64748b" font-size="12">动作 a</text>
-        <path d="M 168 88 L 208 88" stroke="#64748b" marker-end="url(#td-arr)"/>
-        <text x="178" y="78" fill="#0d6b62" font-size="11">r=${r}</text>
-        <g transform="translate(248,88)"><circle r="32" fill="#64748b"/><text text-anchor="middle" dy="5" fill="#fff" font-size="14">s′</text><text y="52" text-anchor="middle" font-size="12" fill="#334155">已比价</text><text y="68" text-anchor="middle" font-size="11" fill="#334155">V=${fmt(vNext)}</text></g>
-        <rect x="320" y="24" width="180" height="72" rx="8" fill="#fff" stroke="#e2e8f0"/>
-        <text x="332" y="44" font-size="11" fill="#64748b">Bellman 目标（一步）</text>
-        <text x="332" y="64" font-size="13" fill="#0f172a">r + γV(s′) = ${r} + 0.9×${fmt(vNext)} = ${fmt(target)}</text>
-        <text x="332" y="84" font-size="12" fill="#c2410c">δ = ${fmt(delta)} → V 新 ${fmt(vNew)}</text>
-        <defs><marker id="td-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#64748b"/></marker></defs>
+      <svg viewBox="0 0 520 228" class="td-svg" role="img" aria-label="TD 更新示意">
+        <rect width="520" height="228" fill="#f8fafc" rx="8"/>
+        <g transform="translate(64,72)">
+          <circle r="30" fill="#0d6b62"/>
+          <text text-anchor="middle" dy="5" fill="#fff" font-size="14">s</text>
+        </g>
+        <text x="64" y="128" text-anchor="middle" font-size="12" fill="#334155">待搜索</text>
+        <text x="64" y="146" text-anchor="middle" font-size="11" fill="#c2410c">V=${fmt(vOld)}</text>
+        <text x="152" y="78" fill="#64748b" font-size="12">动作 a</text>
+        <path d="M 124 72 L 176 72" stroke="#64748b" marker-end="url(#${arr})"/>
+        <text x="150" y="62" fill="#0d6b62" font-size="11">r=${r}</text>
+        <g transform="translate(232,72)">
+          <circle r="30" fill="#64748b"/>
+          <text text-anchor="middle" dy="5" fill="#fff" font-size="14">s′</text>
+        </g>
+        <text x="232" y="128" text-anchor="middle" font-size="12" fill="#334155">已比价</text>
+        <text x="232" y="146" text-anchor="middle" font-size="11" fill="#334155">V=${fmt(vNext)}</text>
+        <rect x="312" y="36" width="188" height="88" rx="8" fill="#fff" stroke="#e2e8f0"/>
+        <text x="326" y="58" font-size="11" fill="#64748b">Bellman 目标（一步）</text>
+        <text x="326" y="80" font-size="13" fill="#0f172a">r + γV(s′) = ${r} + 0.9×${fmt(vNext)} = ${fmt(target)}</text>
+        <text x="326" y="102" font-size="12" fill="#c2410c">δ = ${fmt(delta)} → V 新 ${fmt(vNew)}</text>
+        <defs><marker id="${arr}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#64748b"/></marker></defs>
       </svg>
       <div data-math="td_update" class="td-formula-slot"></div>
     </div>`;
@@ -1441,7 +1454,7 @@ function renderTDUpdate(container, step) {
 let clipArchSeq = 0;
 
 function clipArchSvg(clipPhase) {
-  const uid = `clip-${++clipArchSeq}`;
+  const uid = `clip-${++vizMarkerSeq}`;
   const arr = `${uid}-arr`;
   const arrG = `${uid}-arr-g`;
   const arrR = `${uid}-arr-r`;
@@ -2391,18 +2404,18 @@ function renderMDPBooking(container, step) {
 }
 
 function bellmanDiagram(part) {
-  const mk = (body, h = 130) => `<svg class="bellman-diagram-svg" viewBox="0 0 520 ${h}" role="img">${body}</svg>`;
+  const mk = (body, h = 148) => `<svg class="bellman-diagram-svg" viewBox="0 0 520 ${h}" role="img" preserveAspectRatio="xMidYMid meet">${body}</svg>`;
   if (part === "define") {
     return mk(`
-      <rect width="520" height="130" fill="#f8fafc" rx="8"/>
-      <text x="16" y="20" font-size="11" fill="#64748b">折扣回报 G = r₀ + γr₁ + γ²r₂ + …</text>
-      <g transform="translate(24,30)"><rect width="72" height="40" rx="6" fill="#ecfdf5" stroke="#0d6b62"/><text x="36" y="25" text-anchor="middle" font-size="11">s₀ 待搜索</text></g>
-      <text x="108" y="52" font-size="10" fill="#64748b">→ r=0 →</text>
-      <g transform="translate(148,30)"><rect width="72" height="40" rx="6" fill="#fff" stroke="#cbd5e1"/><text x="36" y="25" text-anchor="middle" font-size="11">s₁ 已比价</text></g>
-      <text x="232" y="52" font-size="10" fill="#64748b">→ r=1 →</text>
-      <g transform="translate(272,30)"><rect width="72" height="40" rx="6" fill="#fff" stroke="#cbd5e1"/><text x="36" y="25" text-anchor="middle" font-size="11">s₂ …</text></g>
-      <text x="360" y="52" font-size="10" fill="#0d6b62">γ=0.9 折扣未来奖励</text>
-      <text x="16" y="118" font-size="11" fill="#334155">V(s) = 从 s 出发、按策略 π 行动的期望回报</text>`);
+      <rect width="520" height="148" fill="#f8fafc" rx="8"/>
+      <text x="16" y="22" font-size="11" fill="#64748b">折扣回报 G = r₀ + γr₁ + γ²r₂ + …</text>
+      <g transform="translate(24,38)"><rect width="72" height="40" rx="6" fill="#ecfdf5" stroke="#0d6b62"/><text x="36" y="25" text-anchor="middle" font-size="11">s₀ 待搜索</text></g>
+      <text x="108" y="60" font-size="10" fill="#64748b">→ r=0 →</text>
+      <g transform="translate(148,38)"><rect width="72" height="40" rx="6" fill="#fff" stroke="#cbd5e1"/><text x="36" y="25" text-anchor="middle" font-size="11">s₁ 已比价</text></g>
+      <text x="232" y="60" font-size="10" fill="#64748b">→ r=1 →</text>
+      <g transform="translate(272,38)"><rect width="72" height="40" rx="6" fill="#fff" stroke="#cbd5e1"/><text x="36" y="25" text-anchor="middle" font-size="11">s₂ …</text></g>
+      <text x="360" y="60" font-size="10" fill="#0d6b62">γ=0.9 折扣未来奖励</text>
+      <text x="16" y="132" font-size="11" fill="#334155">V(s) = 从 s 出发、按策略 π 行动的期望回报</text>`, 148);
   }
   if (part === "expect") {
     return mk(`

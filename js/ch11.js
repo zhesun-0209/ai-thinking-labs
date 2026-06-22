@@ -50,7 +50,7 @@ const ch11Config = {
     mdp: {
       key: "mdp",
       mentorKey: "ch11-mdp",
-      title: "MDP 智能体环", subtitle: "观测 → 动作 → 奖励",
+      title: "强化学习 · 序贯决策与价值迭代", subtitle: "观测 → 动作 → 奖励",
       cells: [
         {
           prompt: "订机票：待搜索 → 已比价(+1) → 已下单(+2) → 已确认(+10)。**Agent–Env 环**：每步 s → a → (r, s′)。",
@@ -219,7 +219,7 @@ const ch11Config = {
 courseShared.bootstrapChapter(
   {
     chapterNum: 11,
-    pageTitle: "强化学习 · 分步理解", eyebrow: "《AI思维》第11章 · 行动智能", title: "智能体如何行动，订票案例讲清楚", readingMeta: "约 35 分钟 · Bellman + 4 种方法", sections: [{ id: "hero", label: "开篇" }, { id: "m0", label: "概览" }, { id: "m0b", label: "Bellman" }, { id: "m1", label: "MDP" }, { id: "m2", label: "学习" }, { id: "m3", label: "探索" }, { id: "m4", label: "对比" }, { id: "lab", label: "实验室" }],
+    pageTitle: "强化学习 · 分步理解", eyebrow: "《AI思维》第11章 · 行动智能", title: "强化学习 · 序贯决策与价值迭代", readingMeta: "约 35 分钟 · Bellman + 4 种方法", sections: [{ id: "hero", label: "开篇" }, { id: "m0", label: "概览" }, { id: "m0b", label: "Bellman" }, { id: "m1", label: "MDP" }, { id: "m2", label: "学习" }, { id: "m3", label: "探索" }, { id: "m4", label: "对比" }, { id: "lab", label: "实验室" }],
   },
   ch11Config,
 );

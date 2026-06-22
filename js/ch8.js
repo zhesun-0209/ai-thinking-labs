@@ -36,7 +36,7 @@ const ch8Config = {
     forward: {
       key: "forward",
       mentorKey: "ch8-forward",
-      title: "前向传播",
+      title: "连接网络 · 前向传播与表示学习",
       subtitle: "流水线从左到右 — 先会「算」，再学「改」",
       cells: [
         {
@@ -308,7 +308,7 @@ courseShared.bootstrapChapter(
     chapterNum: 8,
     pageTitle: "连接网络 · 分步理解",
     eyebrow: "《AI思维》第8章 · 连接智能",
-    title: "前向反向与嵌入，小例子讲清楚",
+    title: "连接网络 · 前向传播与表示学习",
     readingMeta: "约 30 分钟 · 5 种演示",
     sections: [{ id: "hero", label: "开篇" }, { id: "m0", label: "概览" }, { id: "m1", label: "MLP" }, { id: "m2", label: "嵌入" }, { id: "m3", label: "注意力" }, { id: "m4", label: "对比" }, { id: "lab", label: "实验室" }],
   },

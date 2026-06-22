@@ -274,7 +274,7 @@ function renderActorCriticArch(container, step = {}) {
     ${box(130, 160, 110, 70, "Critic", "V(s), A", hi.has("critic") ? "is-active" : "")}
     ${arrow(400, 92, 440, 92)}
     ${box(440, 70, 90, 44, "环境", "r, s′", hi.has("env") ? "is-active" : "")}`;
-  mount(container, inner, "0 0 560 180", "Actor-Critic 双网络");
+  mount(container, inner, "0 0 560 240", "Actor-Critic 双网络");
 }
 
 function renderDecoderBlock(container, step = {}) {

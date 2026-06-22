@@ -617,7 +617,7 @@ strong {
 }
 
 .lab-section .section-header {
-  padding: 20px 32px 0;
+  padding: 20px clamp(16px, 3vw, 32px) 0;
   max-width: none;
 }
 
@@ -646,7 +646,7 @@ strong {
 }
 
 .lab-section .app-shell {
-  padding: 16px 32px 24px;
+  padding: 16px clamp(16px, 3vw, 32px) 24px;
 }
 
 .lab-section .visual-workspace,
@@ -2004,20 +2004,18 @@ a:focus-visible,
   }
 }
 
-/* Lab: immersive full-width on large screens */
+/* Lab: immersive width — stay within page, avoid 100vw clip */
 @media (min-width: 1100px) {
   .lab-section {
-    width: 100vw;
-    max-width: 100vw;
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
-    border-radius: 0;
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: var(--radius-xl);
   }
 
   .lab-section .app-shell {
     grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.55fr);
     gap: 22px;
-    max-width: 1360px;
+    max-width: calc(var(--content-max) + 72px);
     margin: 0 auto;
     padding-left: clamp(18px, 2.6vw, 34px);
     padding-right: clamp(18px, 2.6vw, 34px);
@@ -2188,35 +2186,14 @@ pre,
     font-size: 20px;
   }
 
-  .worked-player--lab .demo-visual--rich {
-    max-height: min(23vh, 180px);
-    padding: 8px;
-    overflow: auto;
-  }
-
   .worked-player--lab .demo-visual--rich.kg-canvas,
   .worked-player--lab .map-canvas--auto,
   .worked-player--lab .kg-canvas,
   .lab-section .worked-player .map-canvas,
   .lab-section .map-canvas--auto,
   .lab-section .kg-canvas {
-    max-height: min(23vh, 180px);
+    max-height: min(48vh, 380px);
     overflow: auto;
-  }
-
-  .worked-player--lab .kg-svg,
-  .worked-player--lab .map-canvas .kg-svg,
-  .worked-player--lab .demo-visual--rich .kg-svg,
-  .lab-section .worked-player .map-canvas .kg-svg,
-  .worked-player--lab .arch-svg,
-  .worked-player--lab .mcts-svg,
-  .worked-player--lab .repr-landscape-svg,
-  .worked-player--lab .diffusion-svg,
-  .worked-player--lab .gan-sample-svg,
-  .worked-player--lab .activation-svg,
-  .worked-player--lab .xor-svg {
-    height: min(20vh, 165px);
-    max-height: 165px;
   }
 
   .worked-player--lab .worked-controls-bar {
@@ -2301,9 +2278,9 @@ pre,
 
 .worked-player--lab .demo-visual--rich {
   min-height: 0;
-  max-height: min(39vh, 310px);
-  padding: 10px;
-  overflow: auto;
+  max-height: none;
+  padding: 12px 14px 16px;
+  overflow: visible;
 }
 
 .worked-player--lab .demo-visual--rich.kg-canvas,
@@ -2312,8 +2289,8 @@ pre,
 .lab-section .worked-player .map-canvas,
 .lab-section .map-canvas--auto,
 .lab-section .kg-canvas {
-  max-height: min(38vh, 300px);
-  overflow: hidden;
+  max-height: none;
+  overflow: visible;
 }
 
 .worked-player--lab .kg-wrap {
@@ -2321,25 +2298,39 @@ pre,
   gap: 8px;
 }
 
-.worked-player--lab .kg-svg,
+.worked-player--lab svg,
 .worked-player--lab .arch-svg,
+.worked-player--lab .td-svg,
+.worked-player--lab .bellman-diagram-svg,
+.worked-player--lab .mdp-booking-svg,
+.worked-player--lab .kg-svg,
 .worked-player--lab .mcts-svg,
 .worked-player--lab .repr-landscape-svg,
 .worked-player--lab .diffusion-svg,
 .worked-player--lab .gan-sample-svg,
 .worked-player--lab .activation-svg,
-.worked-player--lab .xor-svg {
+.worked-player--lab .xor-svg,
+.worked-player--lab .clip-arch-mini {
   width: 100%;
-  height: min(30vh, 210px);
+  height: auto;
   min-height: 0;
-  max-height: 210px;
+  max-height: none;
   display: block;
-  object-fit: contain;
 }
 
-.worked-player--lab .kg-svg {
-  height: min(34vh, 240px);
-  max-height: 240px;
+/* Large graphs: scroll inside visual pane only */
+.worked-player--lab .demo-visual--rich.kg-canvas,
+.lab-section .worked-player .map-canvas.kg-canvas,
+.lab-section .map-canvas--auto,
+.lab-section .kg-canvas {
+  max-height: min(58vh, 520px);
+  overflow: auto;
+}
+
+.worked-player--lab .kg-canvas .kg-svg,
+.lab-section .kg-canvas .kg-svg {
+  max-height: none;
+  height: auto;
 }
 
 .worked-player--lab .arch-figure,
@@ -2452,14 +2443,14 @@ pre,
 
 .lab-section .minimax-tree-host {
   margin: 10px 0;
-  max-height: min(34vh, 240px);
-  overflow: hidden;
+  max-height: min(58vh, 520px);
+  overflow: auto;
   padding: 8px;
 }
 
 .lab-section .game-tree-svg {
-  height: min(31vh, 220px);
-  max-height: 220px;
+  height: auto;
+  max-height: none;
 }
 
 .lab-section .minimax-lab-controls {
@@ -2539,39 +2530,15 @@ pre,
 }
 
 @media (max-height: 760px) and (min-width: 900px) {
-  .worked-player--lab .demo-visual--rich,
   .worked-player--lab .demo-visual--rich.kg-canvas,
-  .worked-player--lab .map-canvas--auto,
-  .worked-player--lab .kg-canvas,
   .lab-section .worked-player .map-canvas,
   .lab-section .map-canvas--auto,
   .lab-section .kg-canvas {
-    max-height: min(34vh, 245px);
-  }
-
-  .worked-player--lab .kg-svg {
-    height: min(30vh, 215px);
-    max-height: 215px;
-  }
-
-  .worked-player--lab .arch-svg,
-  .worked-player--lab .mcts-svg,
-  .worked-player--lab .repr-landscape-svg,
-  .worked-player--lab .diffusion-svg,
-  .worked-player--lab .gan-sample-svg,
-  .worked-player--lab .activation-svg,
-  .worked-player--lab .xor-svg {
-    height: min(26vh, 185px);
-    max-height: 185px;
+    max-height: min(50vh, 440px);
   }
 
   .lab-section .minimax-tree-host {
-    max-height: min(30vh, 215px);
-  }
-
-  .lab-section .game-tree-svg {
-    height: min(28vh, 200px);
-    max-height: 200px;
+    max-height: min(50vh, 440px);
   }
 }
 
@@ -2579,19 +2546,17 @@ pre,
 .worked-player--lab .demo-visual--rich .kg-svg,
 .lab-section .worked-player .map-canvas .kg-svg {
   width: 100%;
-  height: min(34vh, 240px);
+  height: auto;
   min-height: 0;
-  max-height: 240px;
+  max-height: none;
   display: block;
-  object-fit: contain;
 }
 
 @media (max-height: 760px) and (min-width: 900px) {
   .worked-player--lab .map-canvas .kg-svg,
   .worked-player--lab .demo-visual--rich .kg-svg,
   .lab-section .worked-player .map-canvas .kg-svg {
-    height: min(30vh, 215px);
-    max-height: 215px;
+    max-height: none;
   }
 }
 
@@ -2616,24 +2581,10 @@ pre,
     font-size: 22px;
   }
 
-  .worked-player--lab .demo-visual--rich,
   .worked-player--lab .demo-visual--rich.kg-canvas,
   .worked-player--lab .map-canvas--auto,
   .worked-player--lab .kg-canvas {
-    max-height: min(32vh, 260px);
-  }
-
-  .worked-player--lab .kg-svg,
-  .worked-player--lab .arch-svg,
-  .worked-player--lab .mcts-svg,
-  .worked-player--lab .repr-landscape-svg,
-  .worked-player--lab .diffusion-svg,
-  .worked-player--lab .gan-sample-svg,
-  .worked-player--lab .activation-svg,
-  .worked-player--lab .xor-svg,
-  .lab-section .game-tree-svg {
-    height: min(24vh, 190px);
-    max-height: 190px;
+    max-height: min(52vh, 420px);
   }
 }
 
