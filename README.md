@@ -4,8 +4,8 @@
 
 ## 分享链接
 
-- **目录（推荐入口）**：https://zhesun-0209.github.io/ai-thinking-labs/hub.html
-- 第 5 章搜索：https://zhesun-0209.github.io/ai-thinking-labs/index.html
+- **站点首页（目录）**：https://zhesun-0209.github.io/ai-thinking-labs/
+- 第 5 章搜索：https://zhesun-0209.github.io/ai-thinking-labs/ch5.html
 - 第 6–12 章：`ch6.html` … `ch12.html`
 
 ## 本地预览

@@ -275,7 +275,7 @@ const ch6Config = {
         },
         {
           prompt: "第 6 章图谱推理与第 5 章搜索的关系：都是在图上找路，但推理还有关系类型约束与证据排序。",
-          html: `<p class="output-caption">→ 回顾 <a href="index.html#hero">第5章 搜索智能</a> 中的 BFS / A* 步进演示。</p>`,
+          html: `<p class="output-caption">→ 回顾 <a href="ch5.html#hero">第5章 搜索智能</a> 中的 BFS / A* 步进演示。</p>`,
           copyPrompt: C.compareSearch,
         },
       ],

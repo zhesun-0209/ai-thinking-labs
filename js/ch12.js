@@ -9,7 +9,7 @@ const ch12Config = {
     intro: {
       key: "intro",
       cells: [{
-        prompt: "创造智能在巨大搜索空间找新解。第5章已有 <a href=\"index.html#hero\">MiniMax</a>；本章重点：**扩散模型架构**、GAN 对抗、MCTS 树搜索。\n\n请先认准下方 **扩散模型流水线图**（x₀→加噪→U-Net 去噪→x̂₀）。",
+        prompt: "创造智能在巨大搜索空间找新解。第5章已有 <a href=\"ch5.html#hero\">MiniMax</a>；本章重点：**扩散模型架构**、GAN 对抗、MCTS 树搜索。\n\n请先认准下方 **扩散模型流水线图**（x₀→加噪→U-Net 去噪→x̂₀）。",
         architectureKey: "diffusion",
         vibeTip: "扩散 = 学一个「去噪器」U-Net，而不是直接学生成器 G(z)。",
         copyPrompt: C.intro,
