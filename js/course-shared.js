@@ -154,9 +154,22 @@ function initCoursePage(config) {
   scrollToHashAfterRender();
 }
 
+function ensureSectionNavWrap(nav) {
+  if (!nav || nav.parentElement?.classList.contains("section-nav-wrap")) return;
+  const wrap = document.createElement("div");
+  wrap.className = "section-nav-wrap";
+  const hint = document.createElement("span");
+  hint.className = "section-nav-scroll-hint";
+  hint.setAttribute("aria-hidden", "true");
+  hint.textContent = "滑动";
+  nav.parentNode.insertBefore(wrap, nav);
+  wrap.append(hint, nav);
+}
+
 function renderSectionNav(sections) {
   const nav = document.getElementById("sectionNav");
   if (!nav) return;
+  ensureSectionNavWrap(nav);
   nav.innerHTML = sections
     .map((s) => `<a class="section-link" href="#${s.id}" data-section="${s.id}">${escapeHtml(s.label)}</a>`)
     .join("");
@@ -430,6 +443,7 @@ function mountStepDemo(container, demo) {
 
   const trace = demo.trace;
   const render = demo.render || defaultStepRender;
+  const rangeName = demo.rangeLabel || demo.title || id;
 
   const wrap = document.createElement("div");
   wrap.className = container.closest(".lab-panel") ? "worked-player worked-player--lab" : "worked-player";
@@ -440,7 +454,7 @@ function mountStepDemo(container, demo) {
         <button type="button" class="step-btn demo-prev">‹ 上一步</button>
         <button type="button" class="step-btn demo-play">▶ 播放</button>
         <label class="worked-range"><span class="worked-range-label demo-range-label">步骤</span>
-          <input type="range" class="demo-range" min="0" max="${trace.length - 1}" value="0" /></label>
+          <input type="range" class="demo-range" min="0" max="${trace.length - 1}" value="0" aria-label="${escapeAttr(`步骤进度：${rangeName}`)}" aria-valuemin="0" aria-valuemax="${trace.length - 1}" aria-valuenow="0" /></label>
         <button type="button" class="step-btn demo-next">下一步 ›</button>
       </div>
       <div class="demo-detail" data-detail="${id}"></div>
@@ -462,6 +476,8 @@ function mountStepDemo(container, demo) {
     syncArchitectureForStep(container, step, demo);
     detail.innerHTML = renderStepDetailPanel(step, st.index, trace.length, demo);
     range.value = String(st.index);
+    range.setAttribute("aria-valuenow", String(st.index));
+    range.setAttribute("aria-valuetext", `第 ${st.index + 1} / ${trace.length} 步`);
     rangeLabel.textContent = `第 ${st.index + 1} / ${trace.length} 步`;
     prev.disabled = st.index <= 0;
     next.disabled = st.index >= trace.length - 1;

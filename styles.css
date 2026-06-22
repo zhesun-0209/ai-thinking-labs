@@ -1132,8 +1132,65 @@ input {
 
 .onboarding-actions {
   display: flex;
+  gap: 12px;
   justify-content: flex-end;
-  gap: 10px;
+}
+
+.onboarding-mobile-tip {
+  display: none;
+}
+
+@media (max-width: 680px) {
+  .onboarding:not([hidden]) {
+    display: block;
+    padding: 0;
+    place-items: unset;
+  }
+
+  .onboarding-backdrop {
+    display: none;
+  }
+
+  .onboarding-card {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 14px 16px;
+    border-radius: 0;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+  }
+
+  .onboarding-card .eyebrow {
+    margin-bottom: 4px;
+  }
+
+  .onboarding-card h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+  }
+
+  .onboarding-steps {
+    display: none;
+  }
+
+  .onboarding-mobile-tip {
+    display: block;
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  .onboarding-actions {
+    justify-content: stretch;
+    gap: 8px;
+  }
+
+  .onboarding-actions .primary-button,
+  .onboarding-actions .ghost-button {
+    flex: 1;
+    min-height: 40px;
+  }
 }
 
 .table-wrap {

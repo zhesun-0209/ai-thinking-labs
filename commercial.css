@@ -1,10 +1,10 @@
 /* ========== Commercial / EdTech polish layer ========== */
 
 :root {
-  --font-sans: "Noto Sans SC", "DM Sans", ui-sans-serif, system-ui, -apple-system,
-    "PingFang SC", "Microsoft YaHei", sans-serif;
-  --font-serif: "Noto Serif SC", "Source Serif 4", "Songti SC", Georgia, serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei",
+    "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+  --font-serif: ui-serif, "Songti SC", "Noto Serif SC", Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, "JetBrains Mono", monospace;
 
   /* Type scale (rem, base 16px) */
   --text-2xs: 0.6875rem; /* 11px — meta labels */
@@ -1074,6 +1074,27 @@ a:focus-visible,
 
 .vibe-notebook-host + .vibe-notebook-host {
   margin-top: 40px;
+}
+
+.vibe-notebook,
+.vibe-module-host .vibe-notebook,
+.vibe-notebook-body,
+.vibe-cell-pair,
+.vibe-cell,
+.vibe-prompt,
+.vibe-output,
+.algo-notebook {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.vibe-notebook-body,
+.vibe-cell .cell-body,
+.vibe-cell pre,
+.vibe-output .cell-body {
+  overflow-x: auto;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .vibe-notebook,
@@ -2676,6 +2697,24 @@ pre,
 }
 
 /* Section nav: wrap on desktop, scroll hint on mobile */
+.section-nav-wrap {
+  position: relative;
+  max-width: calc(var(--content-max) + 72px);
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 36px);
+}
+
+.section-nav-wrap .section-nav-sticky {
+  max-width: none;
+  margin: 0;
+  padding-left: 0;
+  padding-right: 36px;
+}
+
+.section-nav-scroll-hint {
+  display: none;
+}
+
 .section-nav-sticky {
   overflow-x: auto;
   scrollbar-width: none;
@@ -2687,9 +2726,33 @@ pre,
 }
 
 @media (max-width: 899px) {
+  .section-nav-wrap {
+    position: relative;
+  }
+
+  .section-nav-scroll-hint {
+    display: block;
+    position: absolute;
+    right: clamp(20px, 3vw, 40px);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    pointer-events: none;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--line);
+    font-size: var(--text-2xs);
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
   .section-nav-sticky {
     flex-wrap: nowrap;
-    box-shadow: inset -28px 0 22px -22px rgba(15, 23, 42, 0.42), 0 1px 0 rgba(15, 23, 42, 0.08);
+    box-shadow:
+      inset 24px 0 18px -18px rgba(15, 23, 42, 0.12),
+      inset -28px 0 22px -22px rgba(15, 23, 42, 0.42),
+      0 1px 0 rgba(15, 23, 42, 0.08);
   }
 
   .map-canvas:not(.map-canvas--auto) {

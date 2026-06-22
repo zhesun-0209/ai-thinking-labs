@@ -1438,7 +1438,13 @@ function renderTDUpdate(container, step) {
   }
 }
 
+let clipArchSeq = 0;
+
 function clipArchSvg(clipPhase) {
+  const uid = `clip-${++clipArchSeq}`;
+  const arr = `${uid}-arr`;
+  const arrG = `${uid}-arr-g`;
+  const arrR = `${uid}-arr-r`;
   const cx = 280;
   const cy = 92;
   const viX = clipPhase === 1 ? cx - 6 : clipPhase === 2 ? cx - 28 : cx - 12;
@@ -1461,20 +1467,20 @@ function clipArchSvg(clipPhase) {
       <text x="280" y="18" text-anchor="middle" font-size="11" fill="#64748b">${phaseLabel}</text>
       <rect x="12" y="36" width="56" height="36" rx="6" fill="#e0f2fe" stroke="#0d6b62" stroke-width="1.5"/>
       <text x="40" y="58" text-anchor="middle" font-size="9" fill="#0f172a">Image</text>
-      <path d="M 68 54 L 88 54" stroke="#64748b" marker-end="url(#clip-arr)"/>
+      <path d="M 68 54 L 88 54" stroke="#64748b" marker-end="url(#${arr})"/>
       <rect x="88" y="28" width="84" height="52" rx="6" fill="#fff" stroke="#0d6b62" stroke-width="1.5"/>
       <text x="130" y="48" text-anchor="middle" font-size="9" fill="#0d6b62" font-weight="600">Image Enc</text>
       <text x="130" y="62" text-anchor="middle" font-size="8" fill="#64748b">ViT / ResNet</text>
-      <path d="M 172 54 L 198 54" stroke="${linkOn ? "#0d6b62" : "#94a3b8"}" stroke-width="2" marker-end="url(#clip-arr-g)"/>
+      <path d="M 172 54 L 198 54" stroke="${linkOn ? "#0d6b62" : "#94a3b8"}" stroke-width="2" marker-end="url(#${arrG})"/>
       <text x="185" y="48" font-size="8" fill="#64748b">W_I</text>
       <path d="M 198 54 L ${cx - 78} ${cy - 6}" stroke="${linkOn ? "#0d6b62" : "#94a3b8"}" stroke-width="2" fill="none"/>
       <rect x="12" y="118" width="56" height="36" rx="6" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
       <text x="40" y="140" text-anchor="middle" font-size="9" fill="#0f172a">Text</text>
-      <path d="M 68 136 L 88 136" stroke="#64748b" marker-end="url(#clip-arr)"/>
+      <path d="M 68 136 L 88 136" stroke="#64748b" marker-end="url(#${arr})"/>
       <rect x="88" y="110" width="84" height="52" rx="6" fill="#fff" stroke="#c2410c" stroke-width="1.5"/>
       <text x="130" y="130" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="600">Text Enc</text>
       <text x="130" y="144" text-anchor="middle" font-size="8" fill="#64748b">Transformer</text>
-      <path d="M 172 136 L 198 136" stroke="${linkOn ? "#c2410c" : "#94a3b8"}" stroke-width="2" marker-end="url(#clip-arr-r)"/>
+      <path d="M 172 136 L 198 136" stroke="${linkOn ? "#c2410c" : "#94a3b8"}" stroke-width="2" marker-end="url(#${arrR})"/>
       <text x="185" y="130" font-size="8" fill="#64748b">W_T</text>
       <path d="M 198 136 L ${cx - 78} ${cy + 6}" stroke="${linkOn ? "#c2410c" : "#94a3b8"}" stroke-width="2" fill="none"/>
       <ellipse cx="${cx}" cy="${cy}" rx="78" ry="48" fill="#fff" stroke="#0d6b62" stroke-width="2" opacity="${linkOn ? 1 : 0.55}"/>
@@ -1483,11 +1489,11 @@ function clipArchSvg(clipPhase) {
       ${linkOn ? `<circle cx="${viX}" cy="${viY}" r="10" fill="#ecfdf5" stroke="#0d6b62" stroke-width="2"/><text x="${viX}" y="${viY + 3}" text-anchor="middle" font-size="8" fill="#0d6b62">v_I</text>` : ""}
       ${linkOn ? `<circle cx="${vtX}" cy="${vtY}" r="10" fill="#fff7ed" stroke="#c2410c" stroke-width="2"/><text x="${vtX}" y="${vtY + 3}" text-anchor="middle" font-size="8" fill="#c2410c">v_T</text>` : ""}
       ${linkOn ? `<line x1="${viX}" y1="${viY + 10}" x2="${vtX}" y2="${vtY - 10}" stroke="${linkColor}" stroke-width="2" stroke-dasharray="${clipPhase === 2 ? "4 3" : "0"}"/>` : ""}
-      ${clipPhase >= 1 ? `<path d="M ${cx + 78} ${cy} L 408 ${cy}" stroke="#64748b" stroke-width="1.5" marker-end="url(#clip-arr)"/><rect x="408" y="${cy - 28}" width="72" height="56" rx="6" fill="#fff" stroke="#cbd5e1"/><text x="444" y="${cy - 10}" text-anchor="middle" font-size="8" fill="#64748b">batch</text><text x="444" y="${cy + 6}" text-anchor="middle" font-size="9" fill="#0d6b62">N×N cos</text>` : ""}
+      ${clipPhase >= 1 ? `<path d="M ${cx + 78} ${cy} L 408 ${cy}" stroke="#64748b" stroke-width="1.5" marker-end="url(#${arr})"/><rect x="408" y="${cy - 28}" width="72" height="56" rx="6" fill="#fff" stroke="#cbd5e1"/><text x="444" y="${cy - 10}" text-anchor="middle" font-size="8" fill="#64748b">batch</text><text x="444" y="${cy + 6}" text-anchor="middle" font-size="9" fill="#0d6b62">N×N cos</text>` : ""}
       <defs>
-        <marker id="clip-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#64748b"/></marker>
-        <marker id="clip-arr-g" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#0d6b62"/></marker>
-        <marker id="clip-arr-r" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#c2410c"/></marker>
+        <marker id="${arr}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#64748b"/></marker>
+        <marker id="${arrG}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#0d6b62"/></marker>
+        <marker id="${arrR}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#c2410c"/></marker>
       </defs>
     </svg>`;
 }

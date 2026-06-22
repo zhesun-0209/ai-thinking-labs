@@ -1318,8 +1318,21 @@ function metricModeForAlgorithm(key) {
   return null;
 }
 
+function ensureSectionNavWrap(nav) {
+  if (!nav || nav.parentElement?.classList.contains("section-nav-wrap")) return;
+  const wrap = document.createElement("div");
+  wrap.className = "section-nav-wrap";
+  const hint = document.createElement("span");
+  hint.className = "section-nav-scroll-hint";
+  hint.setAttribute("aria-hidden", "true");
+  hint.textContent = "滑动";
+  nav.parentNode.insertBefore(wrap, nav);
+  wrap.append(hint, nav);
+}
+
 function renderSectionNav() {
   if (!dom.sectionNav) return;
+  ensureSectionNavWrap(dom.sectionNav);
   const sections = [
     { id: "hero", label: "开篇" },
     { id: "m0", label: "搜索图" },
@@ -1900,6 +1913,11 @@ function initOnboarding() {
     return;
   }
 
+  const isMobile = window.matchMedia("(max-width: 680px)").matches;
+  if (isMobile) {
+    el.classList.add("onboarding--compact");
+  }
+
   el.hidden = false;
   document.getElementById("onboardingStart")?.addEventListener("click", () => dismiss(true));
   document.getElementById("onboardingSkip")?.addEventListener("click", () => dismiss(false));
@@ -1959,7 +1977,7 @@ function renderWorkedRun(container, key, instanceKey) {
         <button type="button" class="step-btn" data-worked-action="prev" ${index === 0 ? "disabled" : ""} aria-label="上一步">‹ 上一步</button>
         <label class="range-label worked-range" for="${rangeId}">
           <span class="worked-range-label">步骤 ${index} / ${trace.length - 1}</span>
-          <input id="${rangeId}" type="range" min="0" max="${trace.length - 1}" value="${index}" />
+          <input id="${rangeId}" type="range" min="0" max="${trace.length - 1}" value="${index}" aria-label="${escapeAttr(`步骤进度：${meta.structureName || key}`)}" aria-valuemin="0" aria-valuemax="${trace.length - 1}" aria-valuenow="${index}" aria-valuetext="步骤 ${index} / ${trace.length - 1}" />
         </label>
         <button type="button" class="step-btn" data-worked-action="next" ${index === trace.length - 1 ? "disabled" : ""} aria-label="下一步">下一步 ›</button>
       </div>
@@ -1978,7 +1996,7 @@ function renderWorkedRun(container, key, instanceKey) {
         <button type="button" class="ghost-button" data-worked-action="play">${workedPlayState[instanceKey] ? "⏸ 暂停" : "▶ 播放"}</button>
         <label class="range-label worked-range" for="${rangeId}">
           <span class="worked-range-label">步骤 ${index} / ${trace.length - 1}</span>
-          <input id="${rangeId}" type="range" min="0" max="${trace.length - 1}" value="${index}" />
+          <input id="${rangeId}" type="range" min="0" max="${trace.length - 1}" value="${index}" aria-label="${escapeAttr(`步骤进度：${meta.structureName || key}`)}" aria-valuemin="0" aria-valuemax="${trace.length - 1}" aria-valuenow="${index}" aria-valuetext="步骤 ${index} / ${trace.length - 1}" />
         </label>
         <button type="button" class="step-btn" data-worked-action="next" ${index === trace.length - 1 ? "disabled" : ""} aria-label="下一步">下一步 ›</button>
       </div>
@@ -2138,6 +2156,9 @@ function renderMinimaxStep(index) {
   if (dom.minimaxLabRange) {
     dom.minimaxLabRange.max = String(MINIMAX_STEPS.length - 1);
     dom.minimaxLabRange.value = String(index);
+    dom.minimaxLabRange.setAttribute("aria-valuemax", String(MINIMAX_STEPS.length - 1));
+    dom.minimaxLabRange.setAttribute("aria-valuenow", String(index));
+    dom.minimaxLabRange.setAttribute("aria-valuetext", `步骤 ${index} / ${MINIMAX_STEPS.length - 1}`);
   }
   const labTree = document.getElementById("minimaxTreeLab");
   if (labTree) labTree.innerHTML = buildGameTreeSvg(step);
@@ -2314,6 +2335,9 @@ function render() {
   if (dom.stepRange) {
     dom.stepRange.max = String(steps.length - 1);
     dom.stepRange.value = String(state.stepIndex);
+    dom.stepRange.setAttribute("aria-valuemax", String(steps.length - 1));
+    dom.stepRange.setAttribute("aria-valuenow", String(state.stepIndex));
+    dom.stepRange.setAttribute("aria-valuetext", `步骤 ${state.stepIndex} / ${steps.length - 1}`);
   }
   updateLabStepButtons(state.stepIndex, steps.length - 1);
   if (dom.stepTitle) dom.stepTitle.textContent = step.title;
