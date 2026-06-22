@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="第12章创造智能：表征搜索、MCTS、GAN、扩散模型与 AlphaFold 案例。" />
+    <meta name="theme-color" content="#0d6b62" />
+    <title>创造算法 · 分步理解</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=p69" />
+    <link rel="stylesheet" href="commercial.css?v=p69" />
+    <link rel="stylesheet" href="course.css?v=p69" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+    <header class="site-header">
+      <div class="site-header-bar">
+        <div class="site-brand">
+          <span class="site-brand-mark" aria-hidden="true">12</span>
+          <div>
+            <p class="eyebrow">《AI思维》第12章 · 创造智能</p>
+            <h1 class="site-title">四类创造范式，五个演示讲清楚</h1>
+          </div>
+        </div>
+        <div class="site-header-meta">
+          <a class="ghost-button hub-link" href="hub.html">全部章节</a>
+          <span id="learningProgressText" class="progress-label">0%</span>
+          <span class="meta-divider">·</span>
+          <span class="meta-reading">约 32 分钟 · 4 类方法 + AlphaFold案例</span>
+        </div>
+      </div>
+      <div class="learning-progress" role="progressbar" aria-label="阅读进度" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div id="learningProgressBar" class="learning-progress-fill"></div></div>
+    </header>
+    <nav id="sectionNav" class="section-nav section-nav-sticky" aria-label="章节导航"></nav>
+    <main id="main" class="site-main">
+      <section id="hero" class="hero-section reveal-section">
+        <div class="hero-copy">
+          <h2>在搜索空间里发明新解</h2>
+          <p>换表征再优化、MCTS 树搜索、GAN 对抗、扩散逐步去噪 — 四种创造范式。可与<a href="index.html#hero">第5章 MiniMax</a>对照理解搜索与生成的差别。</p>
+          <p class="hero-formula">读要点 → 看演示 → 对比差异 → 进实验室练习</p>
+          <div data-chapter-goals></div>
+          <div class="hero-actions"><a class="primary-button hero-cta" href="#m0">从概览开始</a><a class="ghost-button hero-cta" href="#lab">直接进实验室</a></div>
+        </div>
+      </section>
+      <section id="m0" class="chapter-section reveal-section">
+        <div class="section-header"><p class="eyebrow">模块 0 · 概览</p><h2>创造概览</h2></div>
+        <div class="vibe-module-host" data-module="intro"></div>
+        <div class="vibe-module-host" data-module="alphafold"></div>
+      </section>
+      <section id="m1" class="chapter-section reveal-section">
+        <div class="section-header"><p class="eyebrow">模块 1 · 表征搜索</p><h2>模拟退火</h2></div>
+        <div class="vibe-notebook-host" data-notebook="repr"></div>
+      </section>
+      <section id="m2" class="chapter-section reveal-section">
+        <div class="section-header"><p class="eyebrow">模块 2 · MCTS</p><h2>四步搜索</h2></div>
+        <div class="vibe-notebook-host" data-notebook="mcts"></div>
+      </section>
+      <section id="m3" class="chapter-section reveal-section">
+        <div class="section-header"><p class="eyebrow">模块 3 · 生成</p><h2>GAN 与扩散</h2></div>
+        <div class="vibe-notebook-host" data-notebook="gan"></div>
+        <div class="vibe-notebook-host" data-notebook="diffusion"></div>
+      </section>
+      <section id="m4" class="chapter-section reveal-section">
+        <div class="section-header"><p class="eyebrow">模块 4 · 对比</p><h2>方法一张表</h2></div>
+        <div class="vibe-module-host" data-module="compare"></div>
+      </section>
+      <section id="lab" class="lab-section reveal-section">
+        <div class="section-header">
+          <p class="eyebrow">自由实验室</p>
+          <h2>互动实验室</h2>
+          <p class="lab-hint">在这里自由切换算法，逐步或自动播放全过程。快捷键：← → 步进，空格自动播放。</p>
+        </div>
+        <nav id="labTabs" class="tabs" aria-label="创造算法"></nav>
+        <div id="labPanel" class="lab-panel"></div>
+      </section>
+    </main>
+    <footer class="site-footer"><div class="site-footer-inner"><p class="footer-brand">第12章 · 创造智能</p><p class="footer-copy"><a href="ch11.html">← 上一章</a> · <a href="hub.html">目录</a> · <a href="hub.html">全书回顾 →</a></p></div></footer>
+    <script src="js/course-prompts.js?v=p69"></script>
+    <script src="js/course-copy-prompts.js?v=p69"></script>
+    <script src="js/course-pedagogy.js?v=p69"></script>
+    <script src="js/course-architectures.js?v=p69"></script>
+    <script src="js/course-math.js?v=p69"></script>
+    <script src="js/course-viz.js?v=p69"></script>
+    <script src="js/course-shared.js?v=p69"></script>
+    <script src="js/ch12.js?v=p69"></script>
+  </body>
+</html>

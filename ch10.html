@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="第10章感知智能：CNN、Patch词元化、MAE与CLIP对比学习。" />
+    <meta name="theme-color" content="#0d6b62" />
+    <title>视觉模型 · 分步理解</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=p69" />
+    <link rel="stylesheet" href="commercial.css?v=p69" />
+    <link rel="stylesheet" href="course.css?v=p69" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+    <header class="site-header">
+      <div class="site-header-bar">
+        <div class="site-brand">
+          <span class="site-brand-mark" aria-hidden="true">10</span>
+          <div>
+            <p class="eyebrow">《AI思维》第10章 · 感知智能</p>
+            <h1 class="site-title">CNN 到 ViT，小图分步讲清楚</h1>
+          </div>
+        </div>
+        <div class="site-header-meta">
+          <a class="ghost-button hub-link" href="hub.html">全部章节</a>
+          <span id="learningProgressText" class="progress-label">0%</span>
+          <span class="meta-divider">·</span>
+          <span class="meta-reading">约 30 分钟 · 4 种架构</span>
+        </div>
+      </div>
+      <div class="learning-progress" role="progressbar" aria-label="阅读进度" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div id="learningProgressBar" class="learning-progress-fill"></div></div>
+    </header>
+    <nav id="sectionNav" class="section-nav section-nav-sticky" aria-label="章节导航"></nav>
+    <main id="main" class="site-main">
+      <section id="hero" class="hero-section reveal-section">
+        <div class="hero-copy">
+          <h2>从像素到语义</h2>
+          <p>CNN 提取局部特征，ViT 用 Patch，MAE 自监督重构，CLIP 对齐图文。</p>
+          <p class="hero-formula">读要点 → 看演示 → 对比差异 → 进实验室练习</p>
+          <div data-chapter-goals></div>
+          <div class="hero-actions"><a class="primary-button hero-cta" href="#m0">从概览开始</a><a class="ghost-button hero-cta" href="#lab">直接进实验室</a></div>
+        </div>
+      </section>
+      <section id="m0" class="chapter-section reveal-section">
+        <div class="section-header"><p class="eyebrow">模块 0 · 概览</p><h2>感知概览</h2></div>
+        <div class="vibe-module-host" data-module="intro"></div>
+      </section>
+      <section id="m1" class="chapter-section reveal-section">
+        <div class="section-header"><p class="eyebrow">模块 1 · CNN</p><h2>卷积与池化</h2></div>
+        <div class="vibe-notebook-host" data-notebook="cnn"></div>
+      </section>
+      <section id="m2" class="chapter-section reveal-section">
+        <div class="section-header"><p class="eyebrow">模块 2 · ViT</p><h2>Patch 词元化</h2></div>
+        <div class="vibe-notebook-host" data-notebook="patch"></div>
+      </section>
+      <section id="m3" class="chapter-section reveal-section">
+        <div class="section-header"><p class="eyebrow">模块 3 · 自监督</p><h2>MAE 与 CLIP</h2></div>
+        <div class="vibe-notebook-host" data-notebook="mae"></div>
+        <div class="vibe-notebook-host" data-notebook="clip"></div>
+      </section>
+      <section id="m4" class="chapter-section reveal-section">
+        <div class="section-header"><p class="eyebrow">模块 4 · 对比</p><h2>架构一张表</h2></div>
+        <div class="vibe-module-host" data-module="compare"></div>
+      </section>
+      <section id="lab" class="lab-section reveal-section">
+        <div class="section-header">
+          <p class="eyebrow">自由实验室</p>
+          <h2>互动实验室</h2>
+          <p class="lab-hint">在这里自由切换算法，逐步或自动播放全过程。快捷键：← → 步进，空格自动播放。</p>
+        </div>
+        <nav id="labTabs" class="tabs" aria-label="视觉算法"></nav>
+        <div id="labPanel" class="lab-panel"></div>
+      </section>
+    </main>
+    <footer class="site-footer"><div class="site-footer-inner"><p class="footer-brand">第10章 · 感知智能</p><p class="footer-copy"><a href="ch9.html">← 上一章</a> · <a href="hub.html">目录</a> · <a href="ch11.html">下一章 →</a></p></div></footer>
+    <script src="js/course-prompts.js?v=p69"></script>
+    <script src="js/course-copy-prompts.js?v=p69"></script>
+    <script src="js/course-pedagogy.js?v=p69"></script>
+    <script src="js/course-architectures.js?v=p69"></script>
+    <script src="js/course-math.js?v=p69"></script>
+    <script src="js/course-viz.js?v=p69"></script>
+    <script src="js/course-shared.js?v=p69"></script>
+    <script src="js/ch10.js?v=p69"></script>
+  </body>
+</html>
