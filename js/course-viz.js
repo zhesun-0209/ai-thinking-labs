@@ -162,7 +162,7 @@ function renderAttentionFlow(container, step) {
   const focus = step.focusIndex ?? weights.reduce((best, v, i, arr) => (v > arr[best] ? i : best), 0);
   const queryIndex = Math.max(0, sourceTokens.indexOf(queryToken));
   const W = 780;
-  const H = 360;
+  const H = mode === "self" ? 420 : 388;
   const n = sourceTokens.length;
   const normalizedScore = (v) => {
     const min = Math.min(...scores);
@@ -181,10 +181,10 @@ function renderAttentionFlow(container, step) {
 
   const encGap = n > 1 ? Math.min(118, (mode === "cross" ? 400 : W - 120) / (n - 1)) : 0;
   const encStart = mode === "cross" ? 72 : (W - encGap * (n - 1)) / 2;
-  const encY = 132;
+  const encY = mode === "self" ? 162 : 136;
   const queryPos =
     mode === "cross"
-      ? { x: W - 108, y: 228 }
+      ? { x: W - 108, y: 236 }
       : { x: encStart + queryIndex * encGap, y: encY };
 
   const lineMetric = showWeights ? weights : scores.map(normalizedScore);
@@ -200,7 +200,10 @@ function renderAttentionFlow(container, step) {
       const qy = mode === "cross" ? queryPos.y - 28 : queryPos.y;
       const tx = x;
       const ty = y;
-      const midY = mode === "self" ? Math.min(encY, qy) - 36 - i * 4 : (qy + ty) / 2 - 20;
+      const midY =
+        mode === "self"
+          ? Math.min(qy, ty) - 64 - Math.abs(i - queryIndex) * 7
+          : (qy + ty) / 2 - 20;
       const path =
         mode === "self"
           ? `M ${qx} ${qy - 26} Q ${(qx + tx) / 2} ${midY} ${tx} ${ty - 26}`
@@ -230,7 +233,7 @@ function renderAttentionFlow(container, step) {
     })
     .join("");
 
-  const contextY = 286;
+  const contextY = mode === "self" ? 292 : 286;
   const contextBars = sourceTokens
     .map((tok, i) => {
       const x = 100 + i * Math.min(76, (W - 200) / Math.max(n - 1, 1));
@@ -243,7 +246,7 @@ function renderAttentionFlow(container, step) {
     })
     .join("");
 
-  const stageY = 332;
+  const stageY = mode === "self" ? 362 : 338;
   const stage = (x, label, active) => `<g class="attention-stage ${active ? "is-active" : ""}" transform="translate(${x},${stageY})">
     <rect x="-58" y="-14" width="116" height="24" rx="12"></rect>
     <text y="2" text-anchor="middle">${label}</text>
@@ -258,26 +261,26 @@ function renderAttentionFlow(container, step) {
           <text class="attention-query-hint" y="38" text-anchor="middle">${querySub}</text>
         </g>
         <text class="attention-section-label" x="${queryPos.x}" y="${queryPos.y - 44}" text-anchor="middle">Decoder</text>`
-      : `<text class="attention-section-label" x="${W / 2}" y="108" text-anchor="middle">高亮 token 同时充当 Q，向全句 K 发查询</text>`;
+      : `<text class="attention-self-hint" x="36" y="98">高亮 token 同时充当 Q，向全句 K 发查询</text>`;
 
   container.innerHTML = `
     <div class="attention-flow-wrap">
       <svg class="attention-flow-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${mode === "self" ? "Self-Attention 步进图" : "Encoder-Decoder Attention 步进图"}">
-        <rect class="attention-bg" x="10" y="10" width="760" height="340" rx="16"></rect>
+        <rect class="attention-bg" x="10" y="10" width="760" height="${H - 20}" rx="16"></rect>
         <text class="attention-title" x="28" y="34">${title}</text>
         <text class="attention-caption" x="28" y="54">${phase === "score" ? "第 1 步：用 Q 与每个 K 做点积，得到相似度分数。" : phase === "softmax" ? "第 2 步：Softmax 把分数变成权重，权重和为 1。" : "第 3 步：按权重加权 V，得到当前步需要的上下文信息。"}</text>
-        <text class="attention-section-label" x="36" y="88">${memorySub}</text>
+        <text class="attention-section-label" x="36" y="78">${memorySub}</text>
         ${mode === "cross" ? `<text class="attention-section-label" x="36" y="${encY - 44}">Encoder</text>` : ""}
         ${lineMarkup}
         ${sourceMarkup}
         ${crossQueryMarkup}
         ${showContext ? `<g class="attention-context">
-          <text class="attention-section-label" x="36" y="${contextY - 58}">context = Σ αᵢVᵢ</text>
+          <text class="attention-section-label" x="36" y="${contextY - 62}">context = Σ αᵢVᵢ</text>
           ${contextBars}
-          <g class="attention-output" transform="translate(${W - 150},${contextY - 8})">
-            <rect width="130" height="52" rx="10"></rect>
-            <text x="65" y="22" text-anchor="middle">上下文向量 c</text>
-            <text x="65" y="40" text-anchor="middle">${resultLabel}</text>
+          <g class="attention-output" transform="translate(318, ${contextY + 34})">
+            <rect width="144" height="48" rx="10"></rect>
+            <text x="72" y="20" text-anchor="middle">上下文向量 c</text>
+            <text x="72" y="38" text-anchor="middle">${resultLabel}</text>
           </g>
         </g>` : ""}
         ${stage(168, "Q·Kᵀ 打分", phase === "score")}

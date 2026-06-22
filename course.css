@@ -945,6 +945,20 @@ body {
   font-weight: 700;
 }
 
+.attention-self-hint {
+  fill: var(--muted);
+  font-size: var(--text-viz-label);
+  font-family: var(--font-sans);
+}
+
+.attention-flow-svg .attention-link {
+  pointer-events: none;
+}
+
+.attention-context .attention-output {
+  pointer-events: none;
+}
+
 .attention-link {
   stroke: #94a3b8;
   stroke-linecap: round;
