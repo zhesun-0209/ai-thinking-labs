@@ -5,19 +5,14 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.signal import correlate2d
 
 IMG = np.arange(16, dtype=float).reshape(4, 4)
 KERNEL = np.array([[1, 0, -1], [1, 0, -1], [1, 0, -1]], dtype=float)
 
 
 def conv2d_valid(x: np.ndarray, k: np.ndarray) -> np.ndarray:
-    h, w = x.shape
-    kh, kw = k.shape
-    out = np.zeros((h - kh + 1, w - kw + 1))
-    for i in range(out.shape[0]):
-        for j in range(out.shape[1]):
-            out[i, j] = (x[i : i + kh, j : j + kw] * k).sum()
-    return out
+    return correlate2d(x, k, mode="valid")
 
 
 def conv_demo() -> None:

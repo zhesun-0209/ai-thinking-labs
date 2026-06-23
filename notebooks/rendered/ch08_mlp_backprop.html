@@ -3,8 +3,8 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>第 8 章 · MLP 前向与反向 · AI思维 Notebook</title>
-<meta name="description" content="第 8 章 · MLP 前向与反向，AI思维配套 Jupyter 预渲染代码实验。"/>
+<title>第 8 章 · MLPClassifier · AI思维 Notebook</title>
+<meta name="description" content="第 8 章 · MLPClassifier，AI思维配套 Jupyter 预渲染代码实验。"/>
 <link rel="icon" href="../../favicon.svg" type="image/svg+xml"/><style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7294,11 +7294,13 @@ a.anchor-link {
 </style>
 <style id="ai-labs-render-style">
 :root {
-  --ai-labs-accent: #0d6b62;
-  --ai-labs-accent-dark: #09524b;
+  --ai-labs-accent: #2563eb;
+  --ai-labs-accent-dark: #1e3a8a;
   --ai-labs-blue: #2563eb;
-  --ai-labs-amber: #b45309;
-  --ai-labs-line: #dbe4ef;
+  --ai-labs-amber: #c2410c;
+  --ai-labs-line: #e2e8f0;
+  --ai-labs-surface: #ffffff;
+  --ai-labs-soft: #f8fafc;
   --ai-labs-gutter: clamp(18px, 6vw, 96px);
   --ai-labs-read-progress: 0%;
 }
@@ -7310,11 +7312,9 @@ html[lang="zh-CN"] {
 body.jp-Notebook {
   margin: 0;
   padding: 0 var(--ai-labs-gutter) 56px;
-  background:
-    linear-gradient(180deg, #f3faf8 0, #fff 260px),
-    #fff;
+  background: #fbfcfd;
   color: #111827;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 #ai-labs-chrome {
@@ -7329,10 +7329,11 @@ body.jp-Notebook {
   flex-wrap: wrap;
   gap: 10px 18px;
   align-items: center;
-  background: var(--ai-labs-accent);
-  color: #fff;
-  border-bottom: 1px solid var(--ai-labs-accent-dark);
-  font: 700 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: rgba(255, 255, 255, 0.96);
+  color: #0f172a;
+  border-bottom: 1px solid var(--ai-labs-line);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+  font: 700 13px/1.3 "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 #ai-labs-chrome::after {
@@ -7342,11 +7343,11 @@ body.jp-Notebook {
   right: 0;
   bottom: -1px;
   height: 3px;
-  background: linear-gradient(90deg, #f59e0b var(--ai-labs-read-progress), transparent 0);
+  background: linear-gradient(90deg, var(--ai-labs-accent) var(--ai-labs-read-progress), transparent 0);
 }
 
 #ai-labs-chrome a {
-  color: #fff;
+  color: #0f172a;
   min-height: 32px;
   padding: 0 2px;
   display: inline-flex;
@@ -7355,7 +7356,7 @@ body.jp-Notebook {
 }
 
 #ai-labs-chrome a:focus-visible {
-  outline: 3px solid rgba(255, 255, 255, 0.55);
+  outline: 3px solid rgba(37, 99, 235, 0.22);
   outline-offset: 2px;
 }
 
@@ -7376,7 +7377,7 @@ body.jp-Notebook {
   background: #fff;
   color: var(--ai-labs-accent-dark);
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
-  font: 800 16px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 800 16px/1 "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", sans-serif;
   cursor: pointer;
 }
 
@@ -7400,8 +7401,8 @@ body.jp-Notebook {
   border: 1px solid var(--ai-labs-line);
   border-left: 5px solid var(--ai-labs-accent);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+  background: #ffffff;
+  box-shadow: none;
 }
 
 .jp-RenderedHTMLCommon,
@@ -7435,7 +7436,7 @@ body.jp-Notebook {
 }
 
 .jp-RenderedHTMLCommon h3 {
-  color: var(--ai-labs-accent-dark);
+  color: #334155;
 }
 
 .jp-RenderedHTMLCommon a.anchor-link {
@@ -7455,12 +7456,12 @@ body.jp-Notebook {
 }
 
 .jp-RenderedHTMLCommon a.anchor-link:focus-visible {
-  outline: 2px solid rgba(13, 107, 98, 0.35);
+  outline: 2px solid rgba(37, 99, 235, 0.24);
   outline-offset: 2px;
 }
 
 .jp-RenderedHTMLCommon a {
-  color: #075985;
+  color: var(--ai-labs-accent-dark);
   font-weight: 700;
 }
 
@@ -7475,15 +7476,60 @@ body.jp-Notebook {
   max-width: 840px;
   margin: 12px 0;
   padding: 12px 14px;
-  border: 1px solid #d6e5ef;
+  border: 1px solid var(--ai-labs-line);
   border-radius: 8px;
-  background: #f8fbff;
+  background: #ffffff;
 }
 
 .jp-RenderedHTMLCommon summary {
   cursor: pointer;
   color: var(--ai-labs-accent-dark);
   font-weight: 800;
+}
+
+.jp-RenderedHTMLCommon table,
+.jp-RenderedHTMLCommon table.dataframe {
+  width: max-content;
+  min-width: min(100%, 720px);
+  max-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 10px 0 18px;
+  overflow: hidden;
+  border: 1px solid var(--ai-labs-line);
+  border-radius: 8px;
+  background: var(--ai-labs-surface);
+  box-shadow: none;
+}
+
+.jp-RenderedHTMLCommon thead th {
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 800;
+  border-bottom: 1px solid var(--ai-labs-line);
+}
+
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td {
+  padding: 9px 11px;
+  border-right: 1px solid #eef2f7;
+  border-bottom: 1px solid #eef2f7;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.jp-RenderedHTMLCommon tr:nth-child(even) td,
+.jp-RenderedHTMLCommon tr:nth-child(even) th {
+  background: #f8fafc;
+}
+
+.jp-RenderedHTMLCommon tr:last-child td,
+.jp-RenderedHTMLCommon tr:last-child th {
+  border-bottom: 0;
+}
+
+.jp-RenderedHTMLCommon tr > :last-child {
+  border-right: 0;
 }
 
 .jp-InputArea-editor,
@@ -7497,6 +7543,7 @@ body.jp-Notebook {
   border: 1px solid var(--ai-labs-line);
   border-radius: 8px;
   background: #f8fafc;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .jp-OutputArea-output {
@@ -7516,6 +7563,9 @@ body.jp-Notebook {
   max-width: 100%;
   height: auto;
   border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid var(--ai-labs-line);
+  box-shadow: none;
 }
 
 @media (max-width: 640px) {
@@ -7558,58 +7608,33 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../index.html">Notebook 索引</a><a href="../../ch8.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch08_mlp_backprop.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2c38d06f">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fead56fa">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E7%AC%AC-8-%E7%AB%A0-%C2%B7-MLP-%E5%89%8D%E5%90%91%E4%B8%8E%E5%8F%8D%E5%90%91">第 8 章 · MLP 前向与反向<a class="anchor-link" href="#%E7%AC%AC-8-%E7%AB%A0-%C2%B7-MLP-%E5%89%8D%E5%90%91%E4%B8%8E%E5%8F%8D%E5%90%91">¶</a></h1><p>血糖+运动→风险：逐层打印 z、h、ŷ 与 δ。</p>
-<p>配套交互演示：<a href="../../ch8.html">章节网页</a></p>
-<h2 id="%E6%9C%AC%E8%8A%82%E7%9B%AE%E6%A0%87">本节目标<a class="anchor-link" href="#%E6%9C%AC%E8%8A%82%E7%9B%AE%E6%A0%87">¶</a></h2><ul>
-<li>前向 trace 表</li>
-<li>反向 δ 链式法则</li>
-<li>ReLU 截断梯度</li>
+<h1 id="%E7%AC%AC-8-%E7%AB%A0-%C2%B7-MLPClassifier">第 8 章 · MLPClassifier<a class="anchor-link" href="#%E7%AC%AC-8-%E7%AB%A0-%C2%B7-MLPClassifier">¶</a></h1><p><a href="../../ch8.html">章节网页</a></p>
+<h2 id="%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">运行内容<a class="anchor-link" href="#%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">¶</a></h2><ul>
+<li>调用 sklearn MLPClassifier</li>
+<li>输出预测概率</li>
+<li>绘制网络结构</li>
 </ul>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d9dcda5b">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=367dc142">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-%E7%BD%91%E7%BB%9C%E7%BB%93%E6%9E%84">1. 网络结构<a class="anchor-link" href="#1.-%E7%BD%91%E7%BB%9C%E7%BB%93%E6%9E%84">¶</a></h2>
+<h2 id="0.-%E7%8E%AF%E5%A2%83%E4%B8%8E%E6%95%B0%E6%8D%AE">0. 环境与数据<a class="anchor-link" href="#0.-%E7%8E%AF%E5%A2%83%E4%B8%8E%E6%95%B0%E6%8D%AE">¶</a></h2>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=95bbf4f8">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>两层 MLP：输入 x → 隐藏 h=ReLU(W1x+b1) → 输出 ŷ=σ(W2h+b2)。</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=438e7adb">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>MLP</strong></p>
-<div class="highlight"><pre><span></span>z1=W1x+b1; h=ReLU(z1); y=sigmoid(W2h+b2)
-</pre></div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=06fba1d3">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d129a45c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7617,11 +7642,41 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 准备运行时：若下载单个 ipynb 后本地没有 labs/，会自动拉取所需脚本和数据。</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.request</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlretrieve</span>
+
+<span class="n">BASE_URL</span> <span class="o">=</span> <span class="s2">"https://raw.githubusercontent.com/zhesun-0209/ai-thinking-labs/main"</span>
+<span class="n">RUNTIME_FILES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'labs/ch08/neural.py'</span><span class="p">,</span> <span class="s1">'labs/common/campus_graph.json'</span><span class="p">,</span> <span class="s1">'labs/common/ch6_kg.json'</span><span class="p">,</span> <span class="s1">'labs/common/ch6_rules.json'</span><span class="p">,</span> <span class="s1">'labs/common/codelens.py'</span><span class="p">,</span> <span class="s1">'labs/common/luxun_bpe.json'</span><span class="p">,</span> <span class="s1">'labs/common/mpl_setup.py'</span><span class="p">,</span> <span class="s1">'labs/common/notebook_helpers.py'</span><span class="p">,</span> <span class="s1">'labs/common/viz_anim.py'</span><span class="p">]</span>
+
 <span class="n">ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
     <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+    <span class="n">ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"_ai_thinking_labs_runtime"</span>
+    <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">RUNTIME_FILES</span><span class="p">:</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">ROOT</span> <span class="o">/</span> <span class="n">rel</span>
+        <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">continue</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">urlretrieve</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">BASE_URL</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+
+<span class="n">missing</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">module</span><span class="p">,</span> <span class="n">package</span> <span class="ow">in</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">"numpy"</span><span class="p">,</span> <span class="s2">"numpy&gt;=1.24"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"pandas"</span><span class="p">,</span> <span class="s2">"pandas&gt;=2.0"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"matplotlib"</span><span class="p">,</span> <span class="s2">"matplotlib&gt;=3.7"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"scipy"</span><span class="p">,</span> <span class="s2">"scipy&gt;=1.10"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"sklearn"</span><span class="p">,</span> <span class="s2">"scikit-learn&gt;=1.3"</span><span class="p">),</span>
+<span class="p">]:</span>
+    <span class="k">if</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">([</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="o">*</span><span class="n">missing</span><span class="p">])</span>
+
 <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">))</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">))</span>
@@ -7630,13 +7685,27 @@ body.jp-Notebook {
 <span class="kn">from</span><span class="w"> </span><span class="nn">common.mpl_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">configure_matplotlib</span>
 <span class="n">configure_matplotlib</span><span class="p">()</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">Image</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"runtime ready:"</span><span class="p">,</span> <span class="n">ROOT</span><span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">neural</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f4db7331">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>runtime ready: /Users/zhesun/Desktop/Fudan/phd/vibe coding
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2774aeee">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7644,7 +7713,453 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">forward_trace</span><span class="p">())</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 用 sklearn Pipeline 标准化特征，并训练 MLPClassifier。</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_pipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">StandardScaler</span>
+<span class="n">X_mlp</span><span class="p">,</span> <span class="n">y_mlp</span> <span class="o">=</span> <span class="n">mlp_dataset</span><span class="p">()</span>
+<span class="n">mlp</span> <span class="o">=</span> <span class="n">make_pipeline</span><span class="p">(</span>
+    <span class="n">StandardScaler</span><span class="p">(),</span>
+    <span class="n">MLPClassifier</span><span class="p">(</span><span class="n">hidden_layer_sizes</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,),</span> <span class="n">activation</span><span class="o">=</span><span class="s1">'relu'</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s1">'lbfgs'</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">mlp</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_mlp</span><span class="p">,</span> <span class="n">y_mlp</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[2]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<style>#sk-container-id-1 {
+  /* Definition of color scheme common for light and dark mode */
+  --sklearn-color-text: black;
+  --sklearn-color-line: gray;
+  /* Definition of color scheme for unfitted estimators */
+  --sklearn-color-unfitted-level-0: #fff5e6;
+  --sklearn-color-unfitted-level-1: #f6e4d2;
+  --sklearn-color-unfitted-level-2: #ffe0b3;
+  --sklearn-color-unfitted-level-3: chocolate;
+  /* Definition of color scheme for fitted estimators */
+  --sklearn-color-fitted-level-0: #f0f8ff;
+  --sklearn-color-fitted-level-1: #d4ebff;
+  --sklearn-color-fitted-level-2: #b3dbfd;
+  --sklearn-color-fitted-level-3: cornflowerblue;
+
+  /* Specific color for light theme */
+  --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, white)));
+  --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-icon: #696969;
+
+  @media (prefers-color-scheme: dark) {
+    /* Redefinition of color scheme for dark theme */
+    --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, #111)));
+    --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-icon: #878787;
+  }
+}
+
+#sk-container-id-1 {
+  color: var(--sklearn-color-text);
+}
+
+#sk-container-id-1 pre {
+  padding: 0;
+}
+
+#sk-container-id-1 input.sk-hidden--visually {
+  border: 0;
+  clip: rect(1px 1px 1px 1px);
+  clip: rect(1px, 1px, 1px, 1px);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+#sk-container-id-1 div.sk-dashed-wrapped {
+  border: 1px dashed var(--sklearn-color-line);
+  margin: 0 0.4em 0.5em 0.4em;
+  box-sizing: border-box;
+  padding-bottom: 0.4em;
+  background-color: var(--sklearn-color-background);
+}
+
+#sk-container-id-1 div.sk-container {
+  /* jupyter's `normalize.less` sets `[hidden] { display: none; }`
+     but bootstrap.min.css set `[hidden] { display: none !important; }`
+     so we also need the `!important` here to be able to override the
+     default hidden behavior on the sphinx rendered scikit-learn.org.
+     See: https://github.com/scikit-learn/scikit-learn/issues/21755 */
+  display: inline-block !important;
+  position: relative;
+}
+
+#sk-container-id-1 div.sk-text-repr-fallback {
+  display: none;
+}
+
+div.sk-parallel-item,
+div.sk-serial,
+div.sk-item {
+  /* draw centered vertical line to link estimators */
+  background-image: linear-gradient(var(--sklearn-color-text-on-default-background), var(--sklearn-color-text-on-default-background));
+  background-size: 2px 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+/* Parallel-specific style estimator block */
+
+#sk-container-id-1 div.sk-parallel-item::after {
+  content: "";
+  width: 100%;
+  border-bottom: 2px solid var(--sklearn-color-text-on-default-background);
+  flex-grow: 1;
+}
+
+#sk-container-id-1 div.sk-parallel {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background-color: var(--sklearn-color-background);
+  position: relative;
+}
+
+#sk-container-id-1 div.sk-parallel-item {
+  display: flex;
+  flex-direction: column;
+}
+
+#sk-container-id-1 div.sk-parallel-item:first-child::after {
+  align-self: flex-end;
+  width: 50%;
+}
+
+#sk-container-id-1 div.sk-parallel-item:last-child::after {
+  align-self: flex-start;
+  width: 50%;
+}
+
+#sk-container-id-1 div.sk-parallel-item:only-child::after {
+  width: 0;
+}
+
+/* Serial-specific style estimator block */
+
+#sk-container-id-1 div.sk-serial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--sklearn-color-background);
+  padding-right: 1em;
+  padding-left: 1em;
+}
+
+
+/* Toggleable style: style used for estimator/Pipeline/ColumnTransformer box that is
+clickable and can be expanded/collapsed.
+- Pipeline and ColumnTransformer use this feature and define the default style
+- Estimators will overwrite some part of the style using the `sk-estimator` class
+*/
+
+/* Pipeline and ColumnTransformer style (default) */
+
+#sk-container-id-1 div.sk-toggleable {
+  /* Default theme specific background. It is overwritten whether we have a
+  specific estimator or a Pipeline/ColumnTransformer */
+  background-color: var(--sklearn-color-background);
+}
+
+/* Toggleable label */
+#sk-container-id-1 label.sk-toggleable__label {
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  margin-bottom: 0;
+  padding: 0.5em;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+#sk-container-id-1 label.sk-toggleable__label-arrow:before {
+  /* Arrow on the left of the label */
+  content: "▸";
+  float: left;
+  margin-right: 0.25em;
+  color: var(--sklearn-color-icon);
+}
+
+#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {
+  color: var(--sklearn-color-text);
+}
+
+/* Toggleable content - dropdown */
+
+#sk-container-id-1 div.sk-toggleable__content {
+  max-height: 0;
+  max-width: 0;
+  overflow: hidden;
+  text-align: left;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-1 div.sk-toggleable__content.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-1 div.sk-toggleable__content pre {
+  margin: 0.2em;
+  border-radius: 0.25em;
+  color: var(--sklearn-color-text);
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-1 div.sk-toggleable__content.fitted pre {
+  /* unfitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {
+  /* Expand drop-down */
+  max-height: 200px;
+  max-width: 100%;
+  overflow: auto;
+}
+
+#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {
+  content: "▾";
+}
+
+/* Pipeline/ColumnTransformer-specific style */
+
+#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-1 div.sk-label.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator-specific style */
+
+/* Colorize estimator box */
+#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-1 div.sk-estimator.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+#sk-container-id-1 div.sk-label label.sk-toggleable__label,
+#sk-container-id-1 div.sk-label label {
+  /* The background is the default theme color */
+  color: var(--sklearn-color-text-on-default-background);
+}
+
+/* On hover, darken the color of the background */
+#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+/* Label box, darken color on hover, fitted */
+#sk-container-id-1 div.sk-label.fitted:hover label.sk-toggleable__label.fitted {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator label */
+
+#sk-container-id-1 div.sk-label label {
+  font-family: monospace;
+  font-weight: bold;
+  display: inline-block;
+  line-height: 1.2em;
+}
+
+#sk-container-id-1 div.sk-label-container {
+  text-align: center;
+}
+
+/* Estimator-specific */
+#sk-container-id-1 div.sk-estimator {
+  font-family: monospace;
+  border: 1px dotted var(--sklearn-color-border-box);
+  border-radius: 0.25em;
+  box-sizing: border-box;
+  margin-bottom: 0.5em;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-1 div.sk-estimator.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+/* on hover */
+#sk-container-id-1 div.sk-estimator:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-1 div.sk-estimator.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Specification for estimator info (e.g. "i" and "?") */
+
+/* Common style for "i" and "?" */
+
+.sk-estimator-doc-link,
+a:link.sk-estimator-doc-link,
+a:visited.sk-estimator-doc-link {
+  float: right;
+  font-size: smaller;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1em;
+  height: 1em;
+  width: 1em;
+  text-decoration: none !important;
+  margin-left: 1ex;
+  /* unfitted */
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+  color: var(--sklearn-color-unfitted-level-1);
+}
+
+.sk-estimator-doc-link.fitted,
+a:link.sk-estimator-doc-link.fitted,
+a:visited.sk-estimator-doc-link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+div.sk-estimator:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover,
+div.sk-label-container:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+div.sk-estimator.fitted:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover,
+div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+/* Span, style for the box shown on hovering the info icon */
+.sk-estimator-doc-link span {
+  display: none;
+  z-index: 9999;
+  position: relative;
+  font-weight: normal;
+  right: .2ex;
+  padding: .5ex;
+  margin: .5ex;
+  width: min-content;
+  min-width: 20ex;
+  max-width: 50ex;
+  color: var(--sklearn-color-text);
+  box-shadow: 2pt 2pt 4pt #999;
+  /* unfitted */
+  background: var(--sklearn-color-unfitted-level-0);
+  border: .5pt solid var(--sklearn-color-unfitted-level-3);
+}
+
+.sk-estimator-doc-link.fitted span {
+  /* fitted */
+  background: var(--sklearn-color-fitted-level-0);
+  border: var(--sklearn-color-fitted-level-3);
+}
+
+.sk-estimator-doc-link:hover span {
+  display: block;
+}
+
+/* "?"-specific style due to the `<a>` HTML tag */
+
+#sk-container-id-1 a.estimator_doc_link {
+  float: right;
+  font-size: 1rem;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1rem;
+  height: 1rem;
+  width: 1rem;
+  text-decoration: none;
+  /* unfitted */
+  color: var(--sklearn-color-unfitted-level-1);
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+}
+
+#sk-container-id-1 a.estimator_doc_link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+#sk-container-id-1 a.estimator_doc_link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+#sk-container-id-1 a.estimator_doc_link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+}
+</style><div class="sk-top-container" id="sk-container-id-1"><div class="sk-text-repr-fallback"><pre>Pipeline(steps=[('standardscaler', StandardScaler()),
+                ('mlpclassifier',
+                 MLPClassifier(hidden_layer_sizes=(2,), max_iter=1000,
+                               random_state=0, solver='lbfgs'))])</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br/>On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden=""><div class="sk-item sk-dashed-wrapped"><div class="sk-label-container"><div class="sk-label fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-1" type="checkbox"/><label class="sk-toggleable__label fitted sk-toggleable__label-arrow fitted" for="sk-estimator-id-1">  Pipeline<a class="sk-estimator-doc-link fitted" href="https://scikit-learn.org/1.4/modules/generated/sklearn.pipeline.Pipeline.html" rel="noreferrer" target="_blank">?<span>Documentation for Pipeline</span></a><span class="sk-estimator-doc-link fitted">i<span>Fitted</span></span></label><div class="sk-toggleable__content fitted"><pre>Pipeline(steps=[('standardscaler', StandardScaler()),
+                ('mlpclassifier',
+                 MLPClassifier(hidden_layer_sizes=(2,), max_iter=1000,
+                               random_state=0, solver='lbfgs'))])</pre></div> </div></div><div class="sk-serial"><div class="sk-item"><div class="sk-estimator fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-2" type="checkbox"/><label class="sk-toggleable__label fitted sk-toggleable__label-arrow fitted" for="sk-estimator-id-2"> StandardScaler<a class="sk-estimator-doc-link fitted" href="https://scikit-learn.org/1.4/modules/generated/sklearn.preprocessing.StandardScaler.html" rel="noreferrer" target="_blank">?<span>Documentation for StandardScaler</span></a></label><div class="sk-toggleable__content fitted"><pre>StandardScaler()</pre></div> </div></div><div class="sk-item"><div class="sk-estimator fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-3" type="checkbox"/><label class="sk-toggleable__label fitted sk-toggleable__label-arrow fitted" for="sk-estimator-id-3"> MLPClassifier<a class="sk-estimator-doc-link fitted" href="https://scikit-learn.org/1.4/modules/generated/sklearn.neural_network.MLPClassifier.html" rel="noreferrer" target="_blank">?<span>Documentation for MLPClassifier</span></a></label><div class="sk-toggleable__content fitted"><pre>MLPClassifier(hidden_layer_sizes=(2,), max_iter=1000, random_state=0,
+              solver='lbfgs')</pre></div> </div></div></div></div></div></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d153307f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 查看 sklearn MLPClassifier 的预测概率。</span>
+<span class="n">display</span><span class="p">(</span><span class="n">mlp_result_table</span><span class="p">(</span><span class="n">mlp</span><span class="p">,</span> <span class="n">X_mlp</span><span class="p">,</span> <span class="n">y_mlp</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -7675,30 +8190,77 @@ body.jp-Notebook {
 <thead>
 <tr style="text-align: right;">
 <th></th>
-<th>阶段</th>
-<th>值</th>
+<th>血糖</th>
+<th>运动</th>
+<th>真实标签</th>
+<th>预测标签</th>
+<th>风险概率</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <th>0</th>
-<td>输入 x</td>
-<td>[6.2 0.8]</td>
+<td>5.8</td>
+<td>0.2</td>
+<td>1</td>
+<td>1</td>
+<td>1.0</td>
 </tr>
 <tr>
 <th>1</th>
-<td>z1=W1x+b1</td>
-<td>[2.02 0.94]</td>
+<td>6.1</td>
+<td>0.4</td>
+<td>1</td>
+<td>1</td>
+<td>1.0</td>
 </tr>
 <tr>
 <th>2</th>
-<td>h=ReLU(z1)</td>
-<td>[2.02 0.94]</td>
+<td>6.5</td>
+<td>0.7</td>
+<td>1</td>
+<td>1</td>
+<td>1.0</td>
 </tr>
 <tr>
 <th>3</th>
-<td>ŷ=σ(W2h+b2)</td>
-<td>0.78 (网页 0.82)</td>
+<td>7.0</td>
+<td>1.1</td>
+<td>1</td>
+<td>1</td>
+<td>1.0</td>
+</tr>
+<tr>
+<th>4</th>
+<td>4.8</td>
+<td>1.8</td>
+<td>0</td>
+<td>0</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>5</th>
+<td>5.1</td>
+<td>2.1</td>
+<td>0</td>
+<td>0</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>6</th>
+<td>5.6</td>
+<td>2.5</td>
+<td>0</td>
+<td>0</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>7</th>
+<td>6.0</td>
+<td>2.8</td>
+<td>0</td>
+<td>0</td>
+<td>0.0</td>
 </tr>
 </tbody>
 </table>
@@ -7707,38 +8269,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=87455754">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">forward_demo</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>         阶段              值
-       输入 x      [6.2 0.8]
-  z1=W1x+b1    [2.02 0.94]
- h=ReLU(z1)    [2.02 0.94]
-ŷ=σ(W2h+b2) 0.78 (网页 0.82)
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ce95408e">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f219861b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7746,7 +8277,8 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">plot_mlp_flow</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 绘制这个小 MLP 的输入-隐藏层-输出结构。</span>
+<span class="n">plot_mlp_flow</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -7761,145 +8293,6 @@ body.jp-Notebook {
 <div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
 <img alt="Notebook 输出图表，请结合前后文字说明阅读" class="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAxYAAAEiCAYAAABkykQ1AAAAOXRFWHRTb2Z0d2FyZQBNYXRwbG90bGliIHZlcnNpb24zLjkuNCwgaHR0cHM6Ly9tYXRwbG90bGliLm9yZy8ekN5oAAAACXBIWXMAAA9hAAAPYQGoP6dpAAAjyElEQVR4nO3deXRU5cHH8d9M9oQkIA2SECCIxARQFISCoiCbQBF5ZZUKsgoRpQoUBWqDSBVKpaJAFRSCCGLVupQKGJXFUhThBbSalCUBAmEXSNgSmHneP2jmZSAbeQIJ4fs5x3PIvc995pl4zk2+mbl3HMYYIwAAAACw4CzrBQAAAAC49hEWAAAAAKwRFgAAAACsERYAAAAArBEWAAAAAKwRFgAAAACsERYAAAAArBEWAAAAAKwRFgAAAACsERYAkI9nn31We/bsKXJcv379vL5OSkqSw+EocHzr1q3lcDjkcDjk4+OjsLAwNW7cWO+++26hj5OTk6P7779fQUFBio2NLd6TuEbFxMRo4sSJZb0MAMBl8i3rBQBAeZSamqrp06dr+vTpBY5ZtmyZPvnkk8ue+5e//KUeeeQRGWN04MABffzxx+rbt6+cTqd69+6d7zHJycn6/PPPNW7cOOXm5l72YwIAcKURFgCQj7S0NH355Zd67rnnVKVKlXzH/PGPf1R2drYOHTqkiIiIYs8dFxenJ554wvN1YmKimjVrphdffLHAsDhy5Igk6Q9/+EOhr4gAAFBWeCsUAOQjPT1dJ06c0KxZs/Ldv2HDBq1atUqStGPHDqvH8vPzU9u2bZWamprv/okTJ2rAgAGSJKfTqZiYGM8+Y4xef/11NWrUSIGBgYqMjNSwYcN04MABz5i8t2ctWLBAVapUUbt27dSvXz+1aNHiksd69913tXDhwku2d+zYUV27dvV8feLECY0bN0516tRRYGCg4uPjNXPmTG3atEkOh0M7d+7UqlWr5HA49MYbbygyMlINGjTwerVl3rx5aty4sYKCghQZGakRI0bo6NGjRX6/HA6HkpKS9PHHH6tp06YKCgpSVFSUEhISdPDgwUvGnz17VlOnTlVcXJwCAwNVp04dTZo0SQcPHpTD4fD8fzx8+LAeeughhYWFqWHDhlqxYoXX96Vu3boKDQ3VsGHDlJ2dXeQ6AeB6wysWAHCRgwcP6sSJE2rdurVeffVVjR49WkFBQV5jpk6dqsaNG2vLli1KS0tT8+bNrR4zJSWlwFc9OnfurB07duidd97Ra6+9prCwMM++QYMGKSkpSQ8++KD69++vPXv2aP78+Vq2bJnWrl2rmjVresYmJCToySefVPv27eV0OtW2bVtt27ZN9erV84x566235HK5vK4d2bt3r5KTk/XRRx9JkrKzs9WqVSulpqaqf//+io2N1datWzV27Fg1a9bskvU/+eSTGjp0qNq0aSN/f39J0vDhw/XGG2+oS5cu6tu3r44fP67Fixdr9erVOnnyZJHfr3nz5mndunXq3bu3Hn74YWVkZCgpKUnLli3TP//5T0VHR0uSzp07pwceeEBffPGF+vTpo8cee0x79uzRK6+8oq+++sprzjFjxui7777Ts88+q+TkZD388MNKS0vToUOH1L9/f/Xt21c33nij3njjDUVFRSkxMbHIdQLAdcUAALysW7fOSDIbN240QUFBZtasWV77t2/fbpxOp3n//fdN7dq1zaRJkzz75s+fbwo7tbZq1cr07NnTZGRkmN27d5vNmzebCRMmGElm7NixBR6X37wLFy40kszrr7/utT0tLc1Uq1bNtG/f3uvYMWPGeMa43W4TExNjfve733kd53A4jMPhMNu3b/dsnzJliqlevbo5e/asMcaYIUOGmODgYLN582avx/3+++9NSEiIkWTS09PNypUrjSTTo0cPr3GLFy/Od92nTp0yLVu2NJJMYmJigd8LScbhcJjly5d7bd+1a5epXr2653kbY8zkyZON0+k0K1as8BqbkZFhoqKijCSzcuVKY4wx8fHxZsaMGZ7vT9734L333jM33HCD59j09HTP9wIA8P8ICwC4yKJFi4y/v79xuVxmxIgR5qabbjLnzp3z7B8+fLi5+eabjcvlMq1atTIDBgzw7CtOWEjy+s/X19cMHTrU5OTkFHhcfvO2aNHC3HfffYWO37p1q+ffGzZs8BozceJEExMTY9xutzHGmOeee87cfPPNpn79+mbChAmecfHx8eaZZ54xxhiTnZ1t/P39zQsvvJDv47700kuXhMUHH3zgNeauu+4ybdq0yff4lJSUYoVF//79892XF1v/+c9/jDHGREVFmcGDB+c79t133/UKix49epgmTZqYffv2eY374YcfjMPhMHPmzClwTQAAY7jGAgAusmPHDtWqVUtOp1OjR4/W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AbwpFgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXCAgAAAIA1wgIAAACANcICAAAAgDXf4gwyxkiSsrKyruhiAAAAAJQfeb//5/VAYYoVFtnZ2ZKkmjVrWiwLAAAAwLUoOztb4eHhhY5xmGLkh9vtVmZmpkJDQ+VwOEptgSWRlZWlmjVrKiMjQ2FhYWW6FgC4HnDeBYCrqzydd40xys7OVlRUlJzOwq+iKNYrFk6nU9HR0aWyuNISFhZW5t9oALiecN4FgKurvJx3i3qlIg8XbwMAAACwRlgAAAAAsHbNhUVAQIASExMVEBBQ1ksBgOsC510AuLqu1fNusS7eBgAAAIDCXHOvWAAAAAAofwgLAAAAANYICwAAAADWCAsAAACgDE2cOFF9+vQplbn69OmjiRMnlspcl6tchsW2bdsUFBQkh8Oh5cuXl3iejIwMde3aVcHBwbrppps0depUud3uUlwpAJR/DodDqamphY5Zs2aNnE5nscbGxMQUeW7++uuvdeeddyo4OFi33367li5detnrBgBcW8plWNxwww3atGmToqKiSjyHy+VS165d5XA49MUXX2jKlCmaMWOGpk2bVoorBYCKITY2Vj/99FOpzLV792516tRJHTt21OrVq9WvXz/16NFD69atK5X5AQDlU7kMi6pVqyouLk5+fn4lnmP58uXat2+flixZorvuuku9evXSrFmzNHPmzFJcKQBUDNWrV1dcXFypzPXaa6+pbdu2mjx5spo2barRo0dr2LBhmj17dqnMDwDlVc+ePTVhwgSvbdnZ2QoLC9PGjRuLPP7tt99WvXr1FBISom7duunw4cNe++fNm6f4+HgFBASofv36WrRokXr06OF565PD4dB7772n559/Xg6Ho9SeV3GVSVjMnDlTUVFRysrKkiT99a9/VXh4uDIzMy9rns2bN8vf31/ffvutJGnnzp0KCQnR0qVLdfLkSQ0YMEBBQUGe8bGxsdq/f7/46A4A15sDBw6oV69eqlSpkmJiYrRw4UKr+bKzszVs2DBVrlxZ1atX15/+9CfPPl9fX/Xt29drfGxs7GWf4wHgWpOQkKA333xTubm5nm2LFy/WLbfcoiZNmhR67JdffqkXX3xRs2bN0meffaYDBw7oscce8+x/6aWX9PTTTyshIUFr167V+PHjNX78eK1atcozJiUlRZ07d9aIESOUkpJS6s+vSKYMuFwu07RpU/Ob3/zGZGdnmxo1apjXXnvtknG1a9c2y5YtK3SuUaNGmcaNGxuXy2W6du1qunfvXuDYKVOmmGbNmlmvHwCuJZJMtWrVzLPPPms2btxopk+fbvz8/MymTZvyHZuSklLofLVr1zYRERFm0KBBZsOGDWb+/PkmODjYfPLJJwUe07FjRzN27FjbpwIA5V5cXJxZtGiR5+s77rjDvPXWW4Uek5iYaAICAkxGRoZn28aNG42/v7/Jzc01+/btM/7+/iY5OdnruO3bt5vg4GCTmJjo2da7d2+vr68m36ufMpLT6dScOXPUvHlz7dy5U1FRUXr88cdLNNekSZNUv3599erVS6tWrSrwPcLff/+9Jk2apPfff99m6QBwTerRo4deeuklSVLjxo21cuVKffLJJ7r99ttLNF/Tpk311ltvSZKaNGmi//3f/9VHH32krl27XjJ27ty5+uabbzzjAaAiGz58uGbNmqW+fftq/fr1Sk9PL9Ydn+69915FR0d7vo6NjVVubq6OHDmitWvXKjIyUu3atfM6pm7durrnnntK/TmUVJldY3H77bdryJAh+uSTTzRz5kw5nSVbSkhIiF5++WV9+OGHmjBhgmrUqHHJmH379qlLly4aPHiwOnfubLt0ALjm/PrXv/b6OjY2Vvv27bvi861cuVJPPPGE3nzzTasbcgDAtWLAgAHavHmzNm/erNdff139+vVTcHBwkcdVrlzZ62tf3/N//z9z5kyhx5XFtRQFKbOwcLlcWrt2rXx9ffXll19azbV69Wr5+vrqq6++umTfyZMn1aVLF8XFxWn69OlWjwMA16r8fmAV9cPKdr6ffvpJDz30kCZMmKDu3buX+LEA4FoSHh6uvn376sUXX9R7772n4cOHF+u4wv7I3rJlS+3fv/+S35l37NihNWvWWK23NJVZWMyYMUNZWVn68MMP9cILLygtLa3Yx/7ud7/Trl27JEnfffed5s6dqxUrVmj9+vVavHixZ5zL5VLv3r119uxZffDBB57yA4DrTUlfFZbOn0tHjRqlI0eOFHu+/fv3q3PnznrwwQf1+9//vsSPDQDXooSEBL3//vu68847Vb9+fev5brzxRiUmJuqhhx7Sq6++qg0bNuidd95Ru3btFBoa6jXW6XRqz549ZXLDjDIJi4yMDCUmJuq1115T165d1a1bNyUkJBTr2H//+9+aPn26AgIC5HK5NGzYMI0cOVJt2rTRlClTNGrUKB09elSS9OSTT2rVqlV6+eWXlZmZqdTUVKWmpionJ+dKPj0AqFCWLVumJUuWKCQkpFjjT506pQceeEDBwcEaPXq059y7bdu2K7xSACgfGjdurIiIiGK/WlEc48aN08svv6zZs2fr7rvv1rRp0zRjxgy1bNnSa1z79u21aNEijRs3rtQeu7jK5E/4Tz75pNq3b++53uHPf/6z4uLitGjRokvet3uxuXPnKiEhQdWrV9crr7yiw4cPKzExUZI0dOhQJSUlaezYsYqNjdVf/vIXSVKHDh285ti0aVOJL1gEgOvN3LlzNW7cOAUGBhY51u126+GHH9aGDRskSbfddptnX3h4uI4dO3allgkA5cbKlSslqdhvA837HIoLBQYGXvIRCUOGDNGQIUO8tl1804yBAwdq4MCBl7Ha0uMwF6+4nJszZ466deumatWqlfVSAOC6MG3aNI0cOVIBAQFlvRQAuCb07t1bderU0ZQpUySdv4vppEmT8h07ffp0jRw58mou74q55sICAAAAKK8OHjyoWrVqKSUlRXXq1PFsO3jwYL7jIyMjVbVq1au5xCuGsAAAAABgrczuCgUAAACg4iAsAAAAAFgjLAAAAABYIywAAAAAWCMsAAAAAFgjLAAAAABYIywAAAAAWCMsAAAAAFgjLAAAAABY+z9grvr7RdZZrwAAAABJRU5ErkJggg=="/>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2b65d352">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>思考</strong> · 隐藏层维度？</p>
-<details><summary>查看答案</summary>
-</details>
-<p>2，对应 h1、h2。</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=00253208">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.-%E5%8F%8D%E5%90%91%E4%BC%A0%E6%92%AD">2. 反向传播<a class="anchor-link" href="#2.-%E5%8F%8D%E5%90%91%E4%BC%A0%E6%92%AD">¶</a></h2>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=acf50e37">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="2.1-%CE%B4-%E5%9B%9E%E4%BC%A0">2.1 δ 回传<a class="anchor-link" href="#2.1-%CE%B4-%E5%9B%9E%E4%BC%A0">¶</a></h3><p>δ_out 从输出层产生，链式法则乘回隐藏层；ReLU′=0 处梯度截断。</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3b211112">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Backprop</strong></p>
-<div class="highlight"><pre><span></span>delta_out = dL/dy * dy/dz
- delta_h = W2^T delta_out * ReLU'(z1)
-</pre></div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=548679c0">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">backward_demo</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>δ_out=-0.027 (网页 0.036)
-δ_h=[-0.013 -0.008] (网页 [0.018, 0.011])
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=febf463f">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>思考</strong> · ReLU 全 0 时 δ_h？</p>
-<details><summary>查看答案</summary>
-</details>
-<p>全 0，无梯度回传。</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2f3ceefb">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.-%E4%B8%8E%E7%BD%91%E9%A1%B5%E5%AF%B9%E7%85%A7">3. 与网页对照<a class="anchor-link" href="#3.-%E4%B8%8E%E7%BD%91%E9%A1%B5%E5%AF%B9%E7%85%A7">¶</a></h2>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3b87a594">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>ŷ≈0.82、δ_out≈0.036 与 ch8 网页一致。</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0bea8e7a">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="%E5%B0%8F%E7%BB%93">小结<a class="anchor-link" href="#%E5%B0%8F%E7%BB%93">¶</a></h2><p>前向存激活；反向分梯度。对照 <a href="../../ch8.html">ch8.html</a>。</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=55c7255d">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="%E7%BB%83%E4%B9%A0">练习<a class="anchor-link" href="#%E7%BB%83%E4%B9%A0">¶</a></h2><ol>
-<li>若输出层换 softmax，δ_out 形式？</li>
-<li>b1 梯度如何计算？</li>
-</ol>
 </div>
 </div>
 </div>

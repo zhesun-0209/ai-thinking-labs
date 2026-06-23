@@ -7294,11 +7294,13 @@ a.anchor-link {
 </style>
 <style id="ai-labs-render-style">
 :root {
-  --ai-labs-accent: #0d6b62;
-  --ai-labs-accent-dark: #09524b;
+  --ai-labs-accent: #2563eb;
+  --ai-labs-accent-dark: #1e3a8a;
   --ai-labs-blue: #2563eb;
-  --ai-labs-amber: #b45309;
-  --ai-labs-line: #dbe4ef;
+  --ai-labs-amber: #c2410c;
+  --ai-labs-line: #e2e8f0;
+  --ai-labs-surface: #ffffff;
+  --ai-labs-soft: #f8fafc;
   --ai-labs-gutter: clamp(18px, 6vw, 96px);
   --ai-labs-read-progress: 0%;
 }
@@ -7310,11 +7312,9 @@ html[lang="zh-CN"] {
 body.jp-Notebook {
   margin: 0;
   padding: 0 var(--ai-labs-gutter) 56px;
-  background:
-    linear-gradient(180deg, #f3faf8 0, #fff 260px),
-    #fff;
+  background: #fbfcfd;
   color: #111827;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 #ai-labs-chrome {
@@ -7329,10 +7329,11 @@ body.jp-Notebook {
   flex-wrap: wrap;
   gap: 10px 18px;
   align-items: center;
-  background: var(--ai-labs-accent);
-  color: #fff;
-  border-bottom: 1px solid var(--ai-labs-accent-dark);
-  font: 700 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: rgba(255, 255, 255, 0.96);
+  color: #0f172a;
+  border-bottom: 1px solid var(--ai-labs-line);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+  font: 700 13px/1.3 "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 #ai-labs-chrome::after {
@@ -7342,11 +7343,11 @@ body.jp-Notebook {
   right: 0;
   bottom: -1px;
   height: 3px;
-  background: linear-gradient(90deg, #f59e0b var(--ai-labs-read-progress), transparent 0);
+  background: linear-gradient(90deg, var(--ai-labs-accent) var(--ai-labs-read-progress), transparent 0);
 }
 
 #ai-labs-chrome a {
-  color: #fff;
+  color: #0f172a;
   min-height: 32px;
   padding: 0 2px;
   display: inline-flex;
@@ -7355,7 +7356,7 @@ body.jp-Notebook {
 }
 
 #ai-labs-chrome a:focus-visible {
-  outline: 3px solid rgba(255, 255, 255, 0.55);
+  outline: 3px solid rgba(37, 99, 235, 0.22);
   outline-offset: 2px;
 }
 
@@ -7376,7 +7377,7 @@ body.jp-Notebook {
   background: #fff;
   color: var(--ai-labs-accent-dark);
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
-  font: 800 16px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 800 16px/1 "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", sans-serif;
   cursor: pointer;
 }
 
@@ -7400,8 +7401,8 @@ body.jp-Notebook {
   border: 1px solid var(--ai-labs-line);
   border-left: 5px solid var(--ai-labs-accent);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+  background: #ffffff;
+  box-shadow: none;
 }
 
 .jp-RenderedHTMLCommon,
@@ -7435,7 +7436,7 @@ body.jp-Notebook {
 }
 
 .jp-RenderedHTMLCommon h3 {
-  color: var(--ai-labs-accent-dark);
+  color: #334155;
 }
 
 .jp-RenderedHTMLCommon a.anchor-link {
@@ -7455,12 +7456,12 @@ body.jp-Notebook {
 }
 
 .jp-RenderedHTMLCommon a.anchor-link:focus-visible {
-  outline: 2px solid rgba(13, 107, 98, 0.35);
+  outline: 2px solid rgba(37, 99, 235, 0.24);
   outline-offset: 2px;
 }
 
 .jp-RenderedHTMLCommon a {
-  color: #075985;
+  color: var(--ai-labs-accent-dark);
   font-weight: 700;
 }
 
@@ -7475,15 +7476,60 @@ body.jp-Notebook {
   max-width: 840px;
   margin: 12px 0;
   padding: 12px 14px;
-  border: 1px solid #d6e5ef;
+  border: 1px solid var(--ai-labs-line);
   border-radius: 8px;
-  background: #f8fbff;
+  background: #ffffff;
 }
 
 .jp-RenderedHTMLCommon summary {
   cursor: pointer;
   color: var(--ai-labs-accent-dark);
   font-weight: 800;
+}
+
+.jp-RenderedHTMLCommon table,
+.jp-RenderedHTMLCommon table.dataframe {
+  width: max-content;
+  min-width: min(100%, 720px);
+  max-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 10px 0 18px;
+  overflow: hidden;
+  border: 1px solid var(--ai-labs-line);
+  border-radius: 8px;
+  background: var(--ai-labs-surface);
+  box-shadow: none;
+}
+
+.jp-RenderedHTMLCommon thead th {
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 800;
+  border-bottom: 1px solid var(--ai-labs-line);
+}
+
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td {
+  padding: 9px 11px;
+  border-right: 1px solid #eef2f7;
+  border-bottom: 1px solid #eef2f7;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.jp-RenderedHTMLCommon tr:nth-child(even) td,
+.jp-RenderedHTMLCommon tr:nth-child(even) th {
+  background: #f8fafc;
+}
+
+.jp-RenderedHTMLCommon tr:last-child td,
+.jp-RenderedHTMLCommon tr:last-child th {
+  border-bottom: 0;
+}
+
+.jp-RenderedHTMLCommon tr > :last-child {
+  border-right: 0;
 }
 
 .jp-InputArea-editor,
@@ -7497,6 +7543,7 @@ body.jp-Notebook {
   border: 1px solid var(--ai-labs-line);
   border-radius: 8px;
   background: #f8fafc;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .jp-OutputArea-output {
@@ -7516,6 +7563,9 @@ body.jp-Notebook {
   max-width: 100%;
   height: auto;
   border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid var(--ai-labs-line);
+  box-shadow: none;
 }
 
 @media (max-width: 640px) {
@@ -7558,58 +7608,33 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../index.html">Notebook 索引</a><a href="../../ch7.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch07_perceptron_gd.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ee9e7779">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1d0c5f17">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E7%AC%AC-7-%E7%AB%A0-%C2%B7-%E6%84%9F%E7%9F%A5%E6%9C%BA%E4%B8%8E%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D">第 7 章 · 感知机与梯度下降<a class="anchor-link" href="#%E7%AC%AC-7-%E7%AB%A0-%C2%B7-%E6%84%9F%E7%9F%A5%E6%9C%BA%E4%B8%8E%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D">¶</a></h1><p>房价 MSE 逐轮下降、感知机边界 b 更新、分类阈值与 P/R。</p>
-<p>配套交互演示：<a href="../../ch7.html">章节网页</a></p>
-<h2 id="%E6%9C%AC%E8%8A%82%E7%9B%AE%E6%A0%87">本节目标<a class="anchor-link" href="#%E6%9C%AC%E8%8A%82%E7%9B%AE%E6%A0%87">¶</a></h2><ul>
-<li>梯度下降逐步 trace</li>
-<li>感知机决策边界</li>
-<li>阈值与 P/R 权衡</li>
+<h1 id="%E7%AC%AC-7-%E7%AB%A0-%C2%B7-%E6%84%9F%E7%9F%A5%E6%9C%BA%E4%B8%8E%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D">第 7 章 · 感知机与梯度下降<a class="anchor-link" href="#%E7%AC%AC-7-%E7%AB%A0-%C2%B7-%E6%84%9F%E7%9F%A5%E6%9C%BA%E4%B8%8E%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D">¶</a></h1><p><a href="../../ch7.html">章节网页</a></p>
+<h2 id="%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">运行内容<a class="anchor-link" href="#%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">¶</a></h2><ul>
+<li>运行梯度下降</li>
+<li>运行感知机</li>
+<li>输出阈值指标</li>
 </ul>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=953527e5">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d535d5be">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D">1. 梯度下降<a class="anchor-link" href="#1.-%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D">¶</a></h2>
+<h2 id="0.-%E7%8E%AF%E5%A2%83%E4%B8%8E%E6%95%B0%E6%8D%AE">0. 环境与数据<a class="anchor-link" href="#0.-%E7%8E%AF%E5%A2%83%E4%B8%8E%E6%95%B0%E6%8D%AE">¶</a></h2>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b1834a36">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>最小化 MSE：沿负梯度方向更新权重 w，学习率控制步长。</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b56b25b9">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>GD</strong></p>
-<div class="highlight"><pre><span></span>w &lt;- w - lr * d(MSE)/dw
-</pre></div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c6fd154e">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2f203c1f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7617,11 +7642,41 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 准备运行时：若下载单个 ipynb 后本地没有 labs/，会自动拉取所需脚本和数据。</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.request</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlretrieve</span>
+
+<span class="n">BASE_URL</span> <span class="o">=</span> <span class="s2">"https://raw.githubusercontent.com/zhesun-0209/ai-thinking-labs/main"</span>
+<span class="n">RUNTIME_FILES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'labs/ch07/learning.py'</span><span class="p">,</span> <span class="s1">'labs/common/campus_graph.json'</span><span class="p">,</span> <span class="s1">'labs/common/ch6_kg.json'</span><span class="p">,</span> <span class="s1">'labs/common/ch6_rules.json'</span><span class="p">,</span> <span class="s1">'labs/common/codelens.py'</span><span class="p">,</span> <span class="s1">'labs/common/luxun_bpe.json'</span><span class="p">,</span> <span class="s1">'labs/common/mpl_setup.py'</span><span class="p">,</span> <span class="s1">'labs/common/notebook_helpers.py'</span><span class="p">,</span> <span class="s1">'labs/common/viz_anim.py'</span><span class="p">]</span>
+
 <span class="n">ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
     <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+    <span class="n">ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"_ai_thinking_labs_runtime"</span>
+    <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">RUNTIME_FILES</span><span class="p">:</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">ROOT</span> <span class="o">/</span> <span class="n">rel</span>
+        <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">continue</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">urlretrieve</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">BASE_URL</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+
+<span class="n">missing</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">module</span><span class="p">,</span> <span class="n">package</span> <span class="ow">in</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">"numpy"</span><span class="p">,</span> <span class="s2">"numpy&gt;=1.24"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"pandas"</span><span class="p">,</span> <span class="s2">"pandas&gt;=2.0"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"matplotlib"</span><span class="p">,</span> <span class="s2">"matplotlib&gt;=3.7"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"scipy"</span><span class="p">,</span> <span class="s2">"scipy&gt;=1.10"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"sklearn"</span><span class="p">,</span> <span class="s2">"scikit-learn&gt;=1.3"</span><span class="p">),</span>
+<span class="p">]:</span>
+    <span class="k">if</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">([</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="o">*</span><span class="n">missing</span><span class="p">])</span>
+
 <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">))</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">))</span>
@@ -7630,13 +7685,27 @@ body.jp-Notebook {
 <span class="kn">from</span><span class="w"> </span><span class="nn">common.mpl_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">configure_matplotlib</span>
 <span class="n">configure_matplotlib</span><span class="p">()</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">Image</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"runtime ready:"</span><span class="p">,</span> <span class="n">ROOT</span><span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">learning</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=51fc99a2">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>runtime ready: /Users/zhesun/Desktop/Fudan/phd/vibe coding
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=650d9e77">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7644,21 +7713,8 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">gd_frames</span> <span class="o">=</span> <span class="n">codelens_gd</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=bb5742c8">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">gd_iteration_table</span><span class="p">())</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 输出预设的梯度下降迭代表，用于复现实验曲线。</span>
+<span class="n">display</span><span class="p">(</span><span class="n">gd_iteration_table</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -7738,15 +7794,16 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c49757c3">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b7c393c5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">plot_gd_mse</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 绘制 MSE 随迭代下降的曲线。</span>
+<span class="n">plot_gd_mse</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -7765,63 +7822,26 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7e603d50">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=13f75b67">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>思考</strong> · MSE 从 8420 降到多少？</p>
-<details><summary>查看答案</summary>
-</details>
-<p>约 920，单调下降。</p>
+<h2 id="1.-%E6%84%9F%E7%9F%A5%E6%9C%BA">1. 感知机<a class="anchor-link" href="#1.-%E6%84%9F%E7%9F%A5%E6%9C%BA">¶</a></h2>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=779a7b79">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.-%E6%84%9F%E7%9F%A5%E6%9C%BA%E8%BE%B9%E7%95%8C">2. 感知机边界<a class="anchor-link" href="#2.-%E6%84%9F%E7%9F%A5%E6%9C%BA%E8%BE%B9%E7%95%8C">¶</a></h2>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=315e7f80">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="2.1-%E6%9D%83%E9%87%8D%E6%9B%B4%E6%96%B0">2.1 权重更新<a class="anchor-link" href="#2.1-%E6%9D%83%E9%87%8D%E6%9B%B4%E6%96%B0">¶</a></h3><p>错分样本推动法向量旋转，边界逐步分开两类。</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=963451d2">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Perceptron</strong></p>
-<div class="highlight"><pre><span></span>if misclassified: w += lr * y * x
-</pre></div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2ea0fc8a">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7ea60566">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">perceptron_demo</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 调用实验函数输出感知机边界参数更新。</span>
+<span class="n">perceptron_demo</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -7840,15 +7860,16 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=bb69bf44">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=43c018a5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">plot_perceptron</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 绘制最终线性边界。</span>
+<span class="n">plot_perceptron</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -7867,50 +7888,26 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0b02bb74">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=880f1ba8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>思考</strong> · 边界 b 最终约多少？</p>
-<details><summary>查看答案</summary>
-</details>
-<p>-66，见 plot 图例。</p>
+<h2 id="2.-%E9%98%88%E5%80%BC%E6%8C%87%E6%A0%87">2. 阈值指标<a class="anchor-link" href="#2.-%E9%98%88%E5%80%BC%E6%8C%87%E6%A0%87">¶</a></h2>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a5085a55">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.-%E9%98%88%E5%80%BC%E4%B8%8E-P/R">3. 阈值与 P/R<a class="anchor-link" href="#3.-%E9%98%88%E5%80%BC%E4%B8%8E-P/R">¶</a></h2>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=350429b8">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>分类阈值 τ 影响 TP/FP/FN/TN；提高 τ 通常提高 P、降低 R。</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=da6a16dc">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0ba4c5f3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">metrics_table</span><span class="p">())</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 输出不同阈值下的 P/R 指标表。</span>
+<span class="n">display</span><span class="p">(</span><span class="n">metrics_table</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -7985,68 +7982,6 @@ body.jp-Notebook {
 </table>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f4226473">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>思考</strong> · τ=0.65 时 P 与 R 如何？</p>
-<details><summary>查看答案</summary>
-</details>
-<p>P 高 R 低，更保守。</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a6de69e0">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="4.-%E4%B8%A4%E5%B1%82%E4%BC%98%E5%8C%96">4. 两层优化<a class="anchor-link" href="#4.-%E4%B8%A4%E5%B1%82%E4%BC%98%E5%8C%96">¶</a></h2>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=78f01f96">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>内层 loss（MSE/hinge）驱动训练；外层 F1/P/R 评泛化，目标不一定同向。</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e6f4a41d">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="%E5%B0%8F%E7%BB%93">小结<a class="anchor-link" href="#%E5%B0%8F%E7%BB%93">¶</a></h2><p>GD 逐步降 loss；感知机找线性可分边界；阈值调 P/R。</p>
-<p>对照 <a href="../../ch7.html">ch7.html</a> 查看边界与 MSE 曲线。</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4999de5a">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="%E7%BB%83%E4%B9%A0">练习<a class="anchor-link" href="#%E7%BB%83%E4%B9%A0">¶</a></h2><ol>
-<li>学习率过大时 MSE 曲线会怎样？</li>
-<li>感知机对 XOR 数据能收敛吗？</li>
-</ol>
 </div>
 </div>
 </div>

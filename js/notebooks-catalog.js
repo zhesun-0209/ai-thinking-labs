@@ -34,10 +34,10 @@ const SCOPE_META = {
 };
 
 const LEARNING_PATH = [
-  { title: "看目标", text: "先读每章核心问题，建立算法要解决什么的直觉。" },
-  { title: "跑过程", text: "从最小代码块观察变量、队列、矩阵或回报如何变化。" },
-  { title: "对照网页", text: "回到章节交互页，把代码输出和动画/图表一一对应。" },
-  { title: "改参数", text: "下载 .ipynb 后替换输入、调参数，检查结论是否稳定。" },
+  { title: "打开", text: "进入预渲染页面，确认代码单元和输出。" },
+  { title: "下载", text: "下载 .ipynb 后直接运行首个环境单元。" },
+  { title: "改参数", text: "替换输入、调参数，观察输出变化。" },
+  { title: "复现", text: "用同一代码复现章节网页中的关键结果。" },
 ];
 
 /** @type {Record<number, { title: string; slug: string; web: string; question: string; items: Array<object> }>} */
@@ -50,10 +50,10 @@ const CHAPTER_NOTEBOOKS = {
     items: [
       {
         file: "ch05_campus_search.ipynb",
-        title: "校园图六种搜索",
+        title: "校园图五种搜索",
         blurb: "DFS / BFS / UCS / Greedy / A*，输出与 ch5 地图演示同路径。",
-        outcomes: ["比较 frontier 的推进顺序", "区分步数最少与代价最少"],
-        result: "路径表、逐步轨迹、搜索动画帧",
+        outcomes: ["运行五种搜索函数", "比较路径和总代价"],
+        result: "路径表、校园图、结果校验",
         tier: "A",
         minutes: 15,
         ready: true,
@@ -70,8 +70,8 @@ const CHAPTER_NOTEBOOKS = {
         file: "ch06_forward_backward_chain.ipynb",
         title: "前向链与后向链",
         blurb: "小规则库逐步推导。",
-        outcomes: ["追踪 known 集合变化", "比较从事实出发和从目标反推"],
-        result: "规则命中表、推导链、目标证明过程",
+        outcomes: ["运行规则表", "输出前向链和后向链结果"],
+        result: "事实表、规则表、推理结果表",
         tier: "A",
         minutes: 12,
         ready: true,
@@ -80,7 +80,7 @@ const CHAPTER_NOTEBOOKS = {
         file: "ch06_graph_reasoning.ipynb",
         title: "图谱多跳与路径排序",
         blurb: "固定 JSON 三元组上的推理实验。",
-        outcomes: ["枚举多跳候选路径", "按关系类型解释排序依据"],
+        outcomes: ["加载三元组 JSON", "运行多跳查询和路径排序"],
         result: "三元组加载、多跳路径、排序解释",
         tier: "A",
         minutes: 15,
@@ -97,9 +97,9 @@ const CHAPTER_NOTEBOOKS = {
       {
         file: "ch07_decision_tree_kmeans.ipynb",
         title: "决策树与 K-均值",
-        blurb: "错题诊断案例。",
-        outcomes: ["观察特征分裂如何减少混乱", "看聚类中心如何移动"],
-        result: "树分裂表、簇中心迭代、诊断图",
+        blurb: "sklearn DecisionTreeClassifier + KMeans。",
+        outcomes: ["调用 sklearn 决策树", "调用 sklearn KMeans"],
+        result: "特征重要度、树文本、聚类中心图",
         tier: "B",
         minutes: 20,
         scope: "extension",
@@ -109,7 +109,7 @@ const CHAPTER_NOTEBOOKS = {
         file: "ch07_perceptron_gd.ipynb",
         title: "感知机与梯度下降",
         blurb: "loss 曲线与网页对齐。",
-        outcomes: ["理解线性边界的更新方向", "用 loss 曲线检查学习是否有效"],
+        outcomes: ["运行实验函数", "输出 loss 曲线和线性边界"],
         result: "决策边界、参数更新、误差曲线",
         tier: "B",
         minutes: 18,
@@ -125,10 +125,10 @@ const CHAPTER_NOTEBOOKS = {
     items: [
       {
         file: "ch08_mlp_backprop.ipynb",
-        title: "小 MLP 前向与反向传播",
-        blurb: "numpy 复现网页同一组数。",
-        outcomes: ["拆开前向激活与反向梯度", "核对每层矩阵形状"],
-        result: "激活值、梯度表、loss 下降",
+        title: "MLPClassifier",
+        blurb: "sklearn Pipeline + MLPClassifier。",
+        outcomes: ["调用 sklearn MLPClassifier", "输出预测概率"],
+        result: "预测概率表、网络结构图",
         tier: "B",
         minutes: 25,
         ready: true,
@@ -336,7 +336,7 @@ const CHAPTER_NOTEBOOKS = {
         title: "扩散去噪概念（1D 扩展）",
         blurb: "用一维轨迹补充理解反向过程。",
         outcomes: ["连接前向噪声和反向去噪", "把图像案例抽象回公式"],
-        result: "前向/反向概念线、逐步 trace",
+        result: "前向/反向概念线",
         tier: "C",
         minutes: 12,
         scope: "extension",
@@ -466,7 +466,7 @@ function renderOverview(chapterFilter = null) {
     <div>
       <p class="nb-kicker">代码实验台</p>
       <h2 id="nbOverviewTitle">${chapterFilter ? `第 ${chapterFilter} 章学习包` : "从交互理解到可复现实验"}</h2>
-      <p>${chapterFilter ? CHAPTER_NOTEBOOKS[chapterFilter].question : "每个 Notebook 都围绕一个算法问题：先给出可观察变量，再用代码复现实验过程，最后回到章节网页对照动画和图表。"}</p>
+      <p>${chapterFilter ? CHAPTER_NOTEBOOKS[chapterFilter].question : "每个 Notebook 都是可下载运行的代码实验：首个单元准备依赖和数据，后续单元调用主流库或轻量 numpy 示例复现关键结果。"}</p>
     </div>
     <dl class="nb-stats">
       <div><dt>${stats.core}</dt><dd>核心实验</dd></div>

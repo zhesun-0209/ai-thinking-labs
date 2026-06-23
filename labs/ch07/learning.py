@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, export_text
 
 ERROR_COUNTS = [20, 18, 12]
 ERROR_LABELS = ["计算错误", "概念混淆", "粗心"]
@@ -42,6 +42,30 @@ def entropy(counts: list[int]) -> float:
 
 def error_distribution_df() -> pd.DataFrame:
     return pd.DataFrame({"类型": ERROR_LABELS, "题数": ERROR_COUNTS})
+
+
+def decision_tree_dataset() -> tuple[np.ndarray, np.ndarray, list[str], list[str]]:
+    """Small labeled dataset for sklearn DecisionTreeClassifier."""
+    x = np.array([[1, 0]] * 20 + [[0, 1]] * 18 + [[0, 0]] * 12, dtype=int)
+    y = np.array([0] * 20 + [1] * 18 + [2] * 12, dtype=int)
+    feature_names = ["含分数", "抽象概念"]
+    class_names = ERROR_LABELS
+    return x, y, feature_names, class_names
+
+
+def decision_tree_summary(model: DecisionTreeClassifier, feature_names: list[str], class_names: list[str]) -> pd.DataFrame:
+    """Summarize a fitted sklearn decision tree for notebook display."""
+    return pd.DataFrame(
+        {
+            "特征": feature_names,
+            "重要度": np.round(model.feature_importances_, 3),
+        }
+    ).assign(类别=", ".join(class_names))
+
+
+def print_decision_tree(model: DecisionTreeClassifier, feature_names: list[str]) -> None:
+    """Print sklearn's own tree text export."""
+    print(export_text(model, feature_names=feature_names))
 
 
 def decision_tree_demo() -> None:
@@ -80,20 +104,39 @@ def kmeans_demo() -> None:
     print(f"中心: {km.cluster_centers_.round(1).tolist()}")
 
 
-def plot_kmeans() -> None:
-    km = KMeans(n_clusters=2, init=KMEANS_INIT, n_init=1, max_iter=20)
-    labels = km.fit_predict(KMEANS_PTS)
+def kmeans_result_table(model: KMeans, labels: np.ndarray) -> pd.DataFrame:
+    """Summarize a fitted sklearn KMeans model."""
+    rows = []
+    for k, center in enumerate(model.cluster_centers_):
+        rows.append(
+            {
+                "簇": k,
+                "中心 x": round(float(center[0]), 2),
+                "中心 y": round(float(center[1]), 2),
+                "样本数": int((labels == k).sum()),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def plot_kmeans_model(model: KMeans, labels: np.ndarray) -> None:
     fig, ax = plt.subplots()
     for lab, color in [(0, "#0d6b62"), (1, "#e67e22")]:
         m = labels == lab
         ax.scatter(KMEANS_PTS[m, 0], KMEANS_PTS[m, 1], c=color, s=60, label=f"cluster {lab}")
     ax.scatter(KMEANS_INIT[:, 0], KMEANS_INIT[:, 1], c="red", marker="x", s=120, label="init centers")
-    ax.scatter(km.cluster_centers_[:, 0], km.cluster_centers_[:, 1], c="black", marker="*", s=150, label="final centers")
+    ax.scatter(model.cluster_centers_[:, 0], model.cluster_centers_[:, 1], c="black", marker="*", s=150, label="final centers")
     ax.set_title("K-means: 14 points, 2 clusters")
     ax.legend()
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.show()
+
+
+def plot_kmeans() -> None:
+    km = KMeans(n_clusters=2, init=KMEANS_INIT, n_init=1, max_iter=20)
+    labels = km.fit_predict(KMEANS_PTS)
+    plot_kmeans_model(km, labels)
 
 
 def perceptron_demo() -> None:

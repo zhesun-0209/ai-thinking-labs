@@ -5,6 +5,7 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.neural_network import MLPClassifier
 
 X = np.array([6.2, 0.8])
 H = np.array([0.71, 0.45])
@@ -13,6 +14,41 @@ W1 = np.array([[0.3, 0.2], [0.1, 0.4]])
 W2 = np.array([0.5, 0.3])
 B1 = np.array([0.0, 0.0])
 B2 = 0.0
+
+MLP_X = np.array(
+    [
+        [5.8, 0.2],
+        [6.1, 0.4],
+        [6.5, 0.7],
+        [7.0, 1.1],
+        [4.8, 1.8],
+        [5.1, 2.1],
+        [5.6, 2.5],
+        [6.0, 2.8],
+    ],
+    dtype=float,
+)
+MLP_Y = np.array([1, 1, 1, 1, 0, 0, 0, 0], dtype=int)
+
+
+def mlp_dataset() -> tuple[np.ndarray, np.ndarray]:
+    """Return a tiny binary dataset for sklearn MLPClassifier."""
+    return MLP_X.copy(), MLP_Y.copy()
+
+
+def mlp_result_table(model: MLPClassifier, x: np.ndarray, y: np.ndarray) -> pd.DataFrame:
+    """Show predictions from a fitted sklearn MLPClassifier or pipeline."""
+    prob = model.predict_proba(x)[:, 1]
+    pred = model.predict(x)
+    return pd.DataFrame(
+        {
+            "血糖": x[:, 0],
+            "运动": x[:, 1],
+            "真实标签": y,
+            "预测标签": pred,
+            "风险概率": np.round(prob, 3),
+        }
+    )
 
 
 def relu(z: np.ndarray) -> np.ndarray:

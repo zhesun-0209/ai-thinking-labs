@@ -1,4 +1,4 @@
-"""Matplotlib 字体：显式注册 CJK 字体，图表/GIF 内尽量 ASCII。"""
+"""Matplotlib font setup for notebook figures."""
 
 from __future__ import annotations
 
@@ -9,7 +9,9 @@ from pathlib import Path
 import matplotlib as mpl
 import matplotlib.font_manager as fm
 
-# 常见系统路径（CI: fonts-noto-cjk；macOS: PingFang）
+# Prefer one fixed CJK face in rendered site; keep local fallbacks for downloaded notebooks.
+CJK_FONT = "Noto Sans CJK SC"
+
 _FONT_PATHS = [
     "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
@@ -20,7 +22,7 @@ _FONT_PATHS = [
 ]
 
 _CJK_NAMES = [
-    "Noto Sans CJK SC",
+    CJK_FONT,
     "Noto Sans SC",
     "Source Han Sans SC",
     "PingFang SC",
@@ -52,9 +54,11 @@ def _register_font_files() -> str | None:
 
 def _find_cjk_font() -> str | None:
     from_file = _register_font_files()
+    available = {f.name for f in fm.fontManager.ttflist}
+    if CJK_FONT in available:
+        return CJK_FONT
     if from_file:
         return from_file
-    available = {f.name for f in fm.fontManager.ttflist}
     for name in _CJK_NAMES:
         if name in available:
             return name

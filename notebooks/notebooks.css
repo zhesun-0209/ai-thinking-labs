@@ -23,7 +23,7 @@
 
 .nb-page {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
   color: var(--nb-ink);
   background:
     linear-gradient(180deg, #eef7f5 0, rgba(246, 248, 251, 0) 260px),
@@ -253,7 +253,7 @@
   padding: 0 11px;
   background: transparent;
   color: #475569;
-  font: 700 13px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 700 13px/1 "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", sans-serif;
   cursor: pointer;
 }
 

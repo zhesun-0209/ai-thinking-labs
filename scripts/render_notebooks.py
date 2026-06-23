@@ -51,7 +51,7 @@ body.jp-Notebook {
   padding: 0 var(--ai-labs-gutter) 56px;
   background: #fbfcfd;
   color: #111827;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 #ai-labs-chrome {
@@ -70,7 +70,7 @@ body.jp-Notebook {
   color: #0f172a;
   border-bottom: 1px solid var(--ai-labs-line);
   box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
-  font: 700 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 700 13px/1.3 "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 #ai-labs-chrome::after {
@@ -114,7 +114,7 @@ body.jp-Notebook {
   background: #fff;
   color: var(--ai-labs-accent-dark);
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
-  font: 800 16px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 800 16px/1 "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", sans-serif;
   cursor: pointer;
 }
 
@@ -222,51 +222,6 @@ body.jp-Notebook {
   cursor: pointer;
   color: var(--ai-labs-accent-dark);
   font-weight: 800;
-}
-
-.jp-RenderedHTMLCommon details.ai-self-check {
-  padding: 0;
-  overflow: hidden;
-  border-color: #facc15;
-  background: #fefce8;
-}
-
-.jp-RenderedHTMLCommon details.ai-self-check summary {
-  min-height: 44px;
-  padding: 12px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  color: #713f12;
-  list-style: none;
-}
-
-.jp-RenderedHTMLCommon details.ai-self-check summary::-webkit-details-marker {
-  display: none;
-}
-
-.jp-RenderedHTMLCommon details.ai-self-check summary::after {
-  content: "展开";
-  flex: 0 0 auto;
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: #fef3c7;
-  color: #854d0e;
-  font-size: 12px;
-}
-
-.jp-RenderedHTMLCommon details.ai-self-check[open] summary::after {
-  content: "收起";
-}
-
-.jp-RenderedHTMLCommon details.ai-self-check p {
-  max-width: none;
-  margin: 0;
-  padding: 12px 14px 14px;
-  border-top: 1px solid #fde68a;
-  background: #fff;
-  color: #334155;
 }
 
 .jp-RenderedHTMLCommon table,

@@ -9,13 +9,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-# 中文字体：nbconvert 静态页优先使用系统 sans-serif
+# Keep helper plots aligned with the rendered notebook font.
 plt.rcParams.update(
     {
         "figure.figsize": (7.5, 4.2),
         "font.size": 11,
         "axes.unicode_minus": False,
-        "font.sans-serif": ["PingFang SC", "Heiti SC", "Arial Unicode MS", "DejaVu Sans"],
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Noto Sans CJK SC", "DejaVu Sans", "sans-serif"],
     }
 )
 

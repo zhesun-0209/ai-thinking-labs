@@ -19,15 +19,14 @@ def _cells() -> list:
     return [
         rs.chapter_link(
             "第 5 章 · 图搜索代码实验",
-            "完整讲解请看章节网页；这里只保留同一案例的可执行 Python 代码。",
             [
-                "加载校园图数据",
+                "准备校园图数据",
                 "运行 BFS、DFS、UCS、Greedy、A*",
-                "查看路径、代价并与章节网页结果校验",
+                "输出路径、代价和校验结果",
             ],
             "../ch5.html",
         ),
-        rs.section("1", "准备数据"),
+        rs.section("0", "环境与数据"),
         *rs.stepcode(
             B,
             "graph = load_graph()",
@@ -37,14 +36,13 @@ def _cells() -> list:
             "display(edges_table())",
             "plot_campus(title='Campus graph')",
         ),
-        rs.section("2", "运行所有算法"),
+        rs.section("1", "运行所有算法"),
         *rs.stepcode(
             "results = run_all(graph)",
             "display(comparison_table(graph))",
             "plot_all_paths(graph)",
         ),
-        rs.section("3", "单独运行一个算法"),
-        rs.reading("修改 `algo` 的值即可重跑其它算法：`bfs`、`dfs`、`ucs`、`greedy`、`astar`。"),
+        rs.section("2", "单独运行一个算法"),
         *rs.stepcode(
             "algo = 'astar'",
             "path = results[algo]['path']",
@@ -52,7 +50,7 @@ def _cells() -> list:
             "print(algo, 'path:', ' -> '.join(path), 'cost:', cost)",
             "plot_campus(path, title=f'{algo.upper()} path')",
         ),
-        rs.section("4", "校验"),
+        rs.section("3", "校验"),
         *rs.stepcode(
             "verify_against_web(graph)",
         ),

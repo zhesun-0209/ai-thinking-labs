@@ -6,7 +6,7 @@
 
 ```bash
 cd labs
-python3 ch05/search_algorithms.py   # 第 5 章：六种搜索对比表
+python3 ch05/search_algorithms.py   # 第 5 章：五种搜索对比表
 python3 ch09/bpe.py                 # 第 9 章：BPE 合并步骤
 ```
 
