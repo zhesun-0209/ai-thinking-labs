@@ -229,7 +229,7 @@ function renderChapterPage(chNum) {
   if (mainEl) {
     const cards = ch.items.map(renderNotebookCard).join("");
     mainEl.innerHTML = `
-      <p class="nb-lead">Notebook 由 Jupyter 真实执行后导出。含<strong>学习目标、分步讲解、图表与自测</strong>，与章节网页互补；国内可直接阅读。</p>
+      <p class="nb-lead">逐步演示各章算法流程：分步输出、队列/栈 GIF 动画、图表。全部真实执行后导出，国内可访问。</p>
       <div class="nb-chapter-head">
         <span class="nb-chapter-num">${chNum}</span>
         <div>
@@ -250,7 +250,7 @@ function renderIndexPage() {
     .map((n) => renderChapterSection(Number(n)))
     .join("");
   mainEl.innerHTML = `
-    <p class="nb-lead">Runestone 式交互教材结构：<strong>Reading → Listing → ActiveCode → CodeLens 分步状态 → Self-Check</strong>。全部 cell 真实执行后导出，国内可访问。</p>
+    <p class="nb-lead">逐步演示各章算法流程：分步输出、队列/栈 GIF 动画、图表。全部真实执行后导出，国内可访问。</p>
     <ul class="nb-toc">
       ${Object.keys(CHAPTER_NOTEBOOKS)
         .sort((a, b) => Number(a) - Number(b))

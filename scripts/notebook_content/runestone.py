@@ -1,12 +1,4 @@
-"""Runestone-style notebook building blocks (PythonDS 交互教材结构).
-
-映射关系（静态 Jupyter 预渲染）：
-- Reading      → 长文 Markdown 小节
-- Listing      → 伪代码 / 代码清单（Markdown）
-- ActiveCode   → 可运行、尽量短小的 code cell
-- CodeLens     → 分步 code cell + 每步打印全部变量状态
-- Self-Check   → 预测题 + <details> 隐藏答案
-"""
+"""Notebook cell building blocks — 只展示算法流程。"""
 
 from __future__ import annotations
 
@@ -21,23 +13,25 @@ def code(text: str) -> Cell:
     return ("code", text.strip())
 
 
-def chapter(title: str, subtitle: str, objectives: list[str]) -> list[Cell]:
+def chapter_link(title: str, intro: str, objectives: list[str], web_href: str) -> list[Cell]:
     objs = "\n".join(f"- {o}" for o in objectives)
     return [
         md(
             f"""# {title}
 
-{subtitle}
+{intro}
 
-> 本 notebook 采用 [Runestone Academy · PythonDS](https://runestone.academy/ns/books/published/pythonds/index.html) 式结构：
-> **Reading（阅读）→ Listing（清单/伪代码）→ ActiveCode（运行）→ CodeLens（分步状态）→ Self-Check（自测）**。
-> 配套交互网页见各章 `chN.html`。
+配套交互演示：[章节网页]({web_href})
 
-## 学习目标
+## 本节目标
 
 {objs}"""
         )
     ]
+
+
+def chapter(title: str, intro: str, objectives: list[str]) -> list[Cell]:
+    return chapter_link(title, intro, objectives, "../ch5.html")
 
 
 def section(num: str, title: str, body: str = "") -> list[Cell]:
@@ -59,34 +53,33 @@ def reading(*paragraphs: str) -> list[Cell]:
 
 
 def listing(caption: str, source: str, lang: str = "text") -> list[Cell]:
-    return [md(f"**Listing · {caption}**\n\n```{lang}\n{source.strip()}\n```")]
+    return [md(f"**{caption}**\n\n```{lang}\n{source.strip()}\n```")]
 
 
-def activecode(*lines: str, caption: str = "") -> list[Cell]:
-    cap = f"# ActiveCode · {caption}\n" if caption else ""
-    return [code(cap + "\n".join(lines))]
+def activecode(*lines: str) -> list[Cell]:
+    return [code("\n".join(lines))]
 
 
-def codelens(caption: str, *lines: str) -> list[Cell]:
-    cap = f"# CodeLens · {caption}\n" if caption else ""
-    return [code(cap + "\n".join(lines))]
+def stepcode(*lines: str) -> list[Cell]:
+    """每行独立 code cell，便于逐步执行与阅读。"""
+    return [code(line.strip()) for line in lines if line.strip()]
 
 
 def self_check(question: str, hint: str = "", answer: str = "") -> list[Cell]:
     hint_block = f"\n\n*{hint}*" if hint else ""
     ans_block = ""
     if answer:
-        ans_block = f"\n\n<details><summary>点击展开答案</summary>\n\n{answer}\n\n</details>"
-    return [md(f"**Self-Check** · {question}{hint_block}{ans_block}")]
+        ans_block = f"\n\n<details><summary>查看答案</summary>\n\n{answer}\n\n</details>"
+    return [md(f"**思考** · {question}{hint_block}{ans_block}")]
 
 
 def summary(*paragraphs: str) -> list[Cell]:
-    return [md("## 本章小结\n\n" + "\n\n".join(paragraphs))]
+    return [md("## 小结\n\n" + "\n\n".join(paragraphs))]
 
 
 def exercises(*items: str) -> list[Cell]:
     body = "\n".join(f"{i+1}. {t}" for i, t in enumerate(items))
-    return [md(f"## 练习题\n\n{body}")]
+    return [md(f"## 练习\n\n{body}")]
 
 
 def boot(ch: str, imports: str = "") -> str:
@@ -101,9 +94,9 @@ if str(ROOT) not in sys.path:
 sys.path.insert(0, str(ROOT / "labs"))
 sys.path.insert(0, str(ROOT / "labs" / "{ch}"))
 import matplotlib.pyplot as plt
-plt.rcParams["font.sans-serif"] = ["PingFang SC", "Heiti SC", "Arial Unicode MS", "DejaVu Sans"]
-plt.rcParams["axes.unicode_minus"] = False
-from IPython.display import display, Markdown
+from common.mpl_setup import configure_matplotlib
+configure_matplotlib()
+from IPython.display import display, Image
 """.strip()
     return base + ("\n" + imports.strip() if imports.strip() else "")
 

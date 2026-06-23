@@ -7796,66 +7796,61 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <div id="ai-labs-chrome" style="position:sticky;top:0;z-index:9999;background:#0d6b62;color:#fff;font:600 13px system-ui,sans-serif;padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #0a5a52"><a href="../index.html" style="color:#fff;text-decoration:none">Notebook 索引</a><a href="../../hub.html" style="color:#fff;text-decoration:none">章节目录</a><span style="opacity:.85;margin-left:auto">Jupyter 预渲染 · 国内可访问</span></div><body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3571dd59">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=501367b9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E5%89%8D%E5%90%91%E9%93%BE%E4%B8%8E%E5%90%8E%E5%90%91%E9%93%BE">第 6 章 · 前向链与后向链<a class="anchor-link" href="#%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E5%89%8D%E5%90%91%E9%93%BE%E4%B8%8E%E5%90%8E%E5%90%91%E9%93%BE">¶</a></h1><p>Runestone 式阅读 + CodeLens 展示规则库<strong>每一轮</strong>扫描与事实池变化。</p>
-<blockquote>
-<p>本 notebook 采用 <a href="https://runestone.academy/ns/books/published/pythonds/index.html">Runestone Academy · PythonDS</a> 式结构：
-<strong>Reading（阅读）→ Listing（清单/伪代码）→ ActiveCode（运行）→ CodeLens（分步状态）→ Self-Check（自测）</strong>。
-配套交互网页见各章 <code>chN.html</code>。</p>
-</blockquote>
-<h2 id="%E5%AD%A6%E4%B9%A0%E7%9B%AE%E6%A0%87">学习目标<a class="anchor-link" href="#%E5%AD%A6%E4%B9%A0%E7%9B%AE%E6%A0%87">¶</a></h2><ul>
-<li>能逐步模拟前向链</li>
-<li>能倒推后向链子目标</li>
-<li>能判断何时用前向/后向</li>
+<h1 id="%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E5%89%8D%E5%90%91%E9%93%BE%E4%B8%8E%E5%90%8E%E5%90%91%E9%93%BE">第 6 章 · 前向链与后向链<a class="anchor-link" href="#%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E5%89%8D%E5%90%91%E9%93%BE%E4%B8%8E%E5%90%8E%E5%90%91%E9%93%BE">¶</a></h1><p>苏格拉底三段论：逐步展示规则扫描、事实池增长与目标证明。</p>
+<p>配套交互演示：<a href="../ch6.html">章节网页</a></p>
+<h2 id="%E6%9C%AC%E8%8A%82%E7%9B%AE%E6%A0%87">本节目标<a class="anchor-link" href="#%E6%9C%AC%E8%8A%82%E7%9B%AE%E6%A0%87">¶</a></h2><ul>
+<li>逐步模拟前向链</li>
+<li>观察 known 事实池如何扩展</li>
+<li>倒推后向链</li>
+<li>对照 ch6 网页动画</li>
 </ul>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=be1b7397">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=db8afd97">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-Reading-%C2%B7-%E6%8E%A8%E7%90%86-=-%E6%98%BE%E5%BC%8F%E5%8C%96%E9%9A%90%E5%90%AB%E7%BB%93%E8%AE%BA">1. Reading · 推理 = 显式化隐含结论<a class="anchor-link" href="#1.-Reading-%C2%B7-%E6%8E%A8%E7%90%86-=-%E6%98%BE%E5%BC%8F%E5%8C%96%E9%9A%90%E5%90%AB%E7%BB%93%E8%AE%BA">¶</a></h2>
+<h2 id="1.-%E8%A7%84%E5%88%99%E5%BA%93%E4%B8%8E%E4%BA%8B%E5%AE%9E">1. 规则库与事实<a class="anchor-link" href="#1.-%E8%A7%84%E5%88%99%E5%BA%93%E4%B8%8E%E4%BA%8B%E5%AE%9E">¶</a></h2>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a6ad04a4">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=506f59cc">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>前向链（forward chaining）</strong> 从已知事实出发，反复扫描规则「若条件成立则结论入池」。</p>
-<p><strong>后向链（backward chaining）</strong> 从目标出发，分解子目标直到命中事实库。</p>
+<p>每条规则形如 <strong>IF 条件 THEN 结论</strong>。已知事实放在 <code>known</code> 集合；每轮扫描全部规则，触发则把结论加入 known。</p>
+<p>目标：证明「苏格拉底终有一死」。</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=79f268ab">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c505eb5a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Listing · 前向链核心循环</strong></p>
-<div class="highlight"><pre><span></span>while 有新事实:
-    for rule in rules:
-        if rule.if in known and rule.then not in known:
-            known.add(rule.then)
+<p><strong>规则形式</strong></p>
+<div class="highlight"><pre><span></span>IF 人(x) THEN 会死(x)
+IF 会死(x) THEN 终有一死(x)
 </pre></div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=10f9eb7a">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=035da26c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7863,8 +7858,7 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ActiveCode · 加载规则库</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="n">ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
@@ -7874,15 +7868,39 @@ a.anchor-link {
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">))</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span> <span class="o">/</span> <span class="s2">"ch06"</span><span class="p">))</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">"font.sans-serif"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"PingFang SC"</span><span class="p">,</span> <span class="s2">"Heiti SC"</span><span class="p">,</span> <span class="s2">"Arial Unicode MS"</span><span class="p">,</span> <span class="s2">"DejaVu Sans"</span><span class="p">]</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">"axes.unicode_minus"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">Markdown</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">common.mpl_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">configure_matplotlib</span>
+<span class="n">configure_matplotlib</span><span class="p">()</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">Image</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">reasoning</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">common.codelens</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_frames</span> <span class="k">as</span> <span class="n">print_codelens</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">load_rules</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">'事实库:'</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">'facts'</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">'规则:'</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">'rules'</span><span class="p">]:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">' '</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="s1">'id'</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s1">'if'</span><span class="p">],</span> <span class="s1">'⇒'</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="s1">'then'</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c8b66255">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">load_rules</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=34c245a2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">'facts:'</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">'facts'</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -7895,51 +7913,142 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>事实库: ['人(苏格拉底)']
-规则:
-  R1 ['人(X)'] ⇒ 会死(X)
-  R2 ['会死(X)'] ⇒ 终有一死(X)
+<pre>facts: ['人(苏格拉底)']
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e8e21927">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">'goal:'</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">'goal'</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>goal: 终有一死(苏格拉底)
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=756f6131">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">'rules'</span><span class="p">]:</span> <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s1">'id'</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s1">'if'</span><span class="p">],</span> <span class="s1">'=&gt;'</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="s1">'then'</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>R1 ['人(X)'] =&gt; 会死(X)
+R2 ['会死(X)'] =&gt; 终有一死(X)
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f381f148">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=57a263e1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Self-Check</strong> · 第一轮哪条规则会被触发？</p>
-<details><summary>点击展开答案</summary>
+<p><strong>思考</strong> · 初始 known 里有什么？</p>
+<details><summary>查看答案</summary>
 </details>
-<p>R1: 人(苏格拉底) ⇒ 会死(苏格拉底)</p>
+<p>人(苏格拉底)</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2b8ce123">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=05704d75">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.-CodeLens-%C2%B7-%E5%89%8D%E5%90%91%E9%93%BE%E9%80%90%E6%AD%A5">2. CodeLens · 前向链逐步<a class="anchor-link" href="#2.-CodeLens-%C2%B7-%E5%89%8D%E5%90%91%E9%93%BE%E9%80%90%E6%AD%A5">¶</a></h2>
+<h2 id="2.-%E5%89%8D%E5%90%91%E9%93%BE%EF%BC%9A%E9%80%90%E8%BD%AE%E6%89%AB%E6%8F%8F">2. 前向链：逐轮扫描<a class="anchor-link" href="#2.-%E5%89%8D%E5%90%91%E9%93%BE%EF%BC%9A%E9%80%90%E8%BD%AE%E6%89%AB%E6%8F%8F">¶</a></h2>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8c287bf2">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d733c68d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="2.1-%E6%89%AB%E6%8F%8F%E5%BE%AA%E7%8E%AF">2.1 扫描循环<a class="anchor-link" href="#2.1-%E6%89%AB%E6%8F%8F%E5%BE%AA%E7%8E%AF">¶</a></h3><p>每轮遍历规则列表；条件已在 known 中则结论入池，直到无新事实。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3781bb5e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>前向链</strong></p>
+<div class="highlight"><pre><span></span>while changed:
+  for rule in rules:
+    if all(cond in known for cond in rule.if):
+      known.add(rule.then)
+</pre></div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=9561278d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ActiveCode · 每一轮 known 集合变化</span>
-<span class="n">fc</span> <span class="o">=</span> <span class="n">codelens_forward_chain</span><span class="p">()</span>
-<span class="n">print_codelens</span><span class="p">(</span><span class="n">fc</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fc_frames</span> <span class="o">=</span> <span class="n">codelens_forward_chain</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a3740560">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">print_codelens</span><span class="p">(</span><span class="n">fc_frames</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7972,16 +8081,41 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4aa2b760">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=856cd43d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ActiveCode · 文本 log 对照</span>
-<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">forward_chain</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">animate_forward_chain</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="data:image/png;base64,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"/>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8e9f3403">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">forward_chain</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8003,39 +8137,79 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5164fae7">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=49d6b9c5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.-%E5%90%8E%E5%90%91%E9%93%BE-CodeLens%EF%BC%88%E7%9B%AE%E6%A0%87%E9%A9%B1%E5%8A%A8%EF%BC%89">3. 后向链 CodeLens（目标驱动）<a class="anchor-link" href="#3.-%E5%90%8E%E5%90%91%E9%93%BE-CodeLens%EF%BC%88%E7%9B%AE%E6%A0%87%E9%A9%B1%E5%8A%A8%EF%BC%89">¶</a></h2>
+<p><strong>思考</strong> · 第一轮新增哪条事实？</p>
+<details><summary>查看答案</summary>
+</details>
+<p>会死(苏格拉底)，由 R1 触发。</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7942e339">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=caf42ea8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Listing · 后向链</strong></p>
-<div class="highlight"><pre><span></span>goal → 匹配规则 → subgoals → 直到 fact
+<p><strong>思考</strong> · 几轮后目标成立？</p>
+<details><summary>查看答案</summary>
+</details>
+<p>第二轮 R2 推出终有一死(苏格拉底)。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5d03c5b9">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="3.-%E5%90%8E%E5%90%91%E9%93%BE%EF%BC%9A%E7%9B%AE%E6%A0%87%E5%88%86%E8%A7%A3">3. 后向链：目标分解<a class="anchor-link" href="#3.-%E5%90%8E%E5%90%91%E9%93%BE%EF%BC%9A%E7%9B%AE%E6%A0%87%E5%88%86%E8%A7%A3">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8fef4fc9">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>从目标出发，匹配规则结论，把前提变为子目标，直到子目标在 known 中。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=495aa494">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>后向</strong></p>
+<div class="highlight"><pre><span></span>prove(goal):
+  match rule where rule.then == goal
+  prove each subgoal in rule.if
 </pre></div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=90386468">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c663c2ad">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ActiveCode · 后向 trace</span>
-<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">backward_chain</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="s1">' '</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">backward_chain</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="s1">' '</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8058,13 +8232,65 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0fbce0d0">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=832ddfe9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="%E6%9C%AC%E7%AB%A0%E5%B0%8F%E7%BB%93">本章小结<a class="anchor-link" href="#%E6%9C%AC%E7%AB%A0%E5%B0%8F%E7%BB%93">¶</a></h2><p>前向撒网、后向聚焦；方向不同，都依赖规则完备性。</p>
+<h2 id="4.-%E5%89%8D%E5%90%91-vs-%E5%90%8E%E5%90%91">4. 前向 vs 后向<a class="anchor-link" href="#4.-%E5%89%8D%E5%90%91-vs-%E5%90%8E%E5%90%91">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=513dd7c2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>前向</strong>：数据驱动，适合已知事实多、目标未知的诊断。</p>
+<p><strong>后向</strong>：目标驱动，适合证明特定结论。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=171898c8">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>思考</strong> · 本例为何前向两轮就够？</p>
+<details><summary>查看答案</summary>
+</details>
+<p>规则链短，事实少，每轮都能触发新结论。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=90e12749">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="%E5%B0%8F%E7%BB%93">小结<a class="anchor-link" href="#%E5%B0%8F%E7%BB%93">¶</a></h2><p>前向链用 known 事实池驱动推理；后向链从 goal 倒推子目标。</p>
+<p>对照 <a href="../ch6.html">ch6.html</a> 步进动画验证每一轮 known 变化。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=48d37154">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="%E7%BB%83%E4%B9%A0">练习<a class="anchor-link" href="#%E7%BB%83%E4%B9%A0">¶</a></h2><ol>
+<li>若增加规则「哲学家(x)→人(x)」，需几轮才能证明目标？</li>
+<li>后向链若先匹配 R1 而非 R2，证明路径有何不同？</li>
+</ol>
 </div>
 </div>
 </div>

@@ -110,6 +110,28 @@ def codelens_bpe_merges() -> list:
     return frames
 
 
+def animate_bpe_merges() -> None:
+    from common.viz_anim import animate_items_row
+
+    frames = codelens_bpe_merges()
+    snaps = []
+    for f in frames:
+        tokens = f.state.get("合并后") or f.state.get("tokens") or []
+        pair = f.state.get("合并对")
+        merged = None
+        if pair and isinstance(pair, (list, tuple)) and len(pair) == 2:
+            merged = "".join(pair)
+        snaps.append(
+            {
+                "step": f.step,
+                "items": list(tokens) if isinstance(tokens, (list, tuple)) else [str(tokens)],
+                "highlight": merged,
+                "action": f.narrative,
+            }
+        )
+    animate_items_row(snaps, title="BPE token sequence", fps=0.7)
+
+
 def print_steps() -> None:
     spec = load_bpe_spec()
     history = run_from_spec()

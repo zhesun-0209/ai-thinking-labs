@@ -22,7 +22,7 @@ def conv2d_valid(x: np.ndarray, k: np.ndarray) -> np.ndarray:
 def conv_demo() -> None:
     feat = conv2d_valid(IMG, KERNEL)
     pooled = feat.max()
-    print("4×4 输入 → 2×2 卷积特征:")
+    print("4x4 input → 2x2 conv特征:")
     print(feat.astype(int))
     print(f"MaxPool → {pooled:.0f}")
 
@@ -31,16 +31,58 @@ def plot_conv() -> None:
     feat = conv2d_valid(IMG, KERNEL)
     fig, axes = plt.subplots(1, 3, figsize=(9, 3))
     axes[0].imshow(IMG, cmap="gray")
-    axes[0].set_title("4×4 输入")
+    axes[0].set_title("4x4 input")
     axes[1].imshow(feat, cmap="viridis")
-    axes[1].set_title("2×2 卷积")
+    axes[1].set_title("2x2 conv")
     axes[2].bar(["max"], [feat.max()], color="#0d6b62")
     axes[2].set_title(f"MaxPool={feat.max():.0f}")
     for ax in axes[:2]:
         ax.axis("off")
-    plt.suptitle("CNN 流水线（与 ch10 网页同数）")
+    plt.suptitle("CNN pipeline")
     plt.tight_layout()
     plt.show()
+
+
+def codelens_conv() -> list:
+    from common.codelens import Frame
+
+    kh, kw = KERNEL.shape
+    h, w = IMG.shape
+    frames: list = []
+    step = 0
+    for i in range(h - kh + 1):
+        for j in range(w - kw + 1):
+            patch = IMG[i : i + kh, j : j + kw]
+            val = float((patch * KERNEL).sum())
+            frames.append(
+                Frame(
+                    step,
+                    f"out[{i},{j}] = sum(patch*K)",
+                    f"窗口 ({i},{j}) 卷积",
+                    {"patch_pos": (i, j, kh, kw), "out_val": val, "grid": IMG.copy()},
+                )
+            )
+            step += 1
+    return frames
+
+
+def animate_conv_slide() -> None:
+    from common.viz_anim import animate_grid_highlight
+
+    frames = codelens_conv()
+    snaps = []
+    for f in frames:
+        i, j, kh, kw = f.state["patch_pos"]
+        snaps.append(
+            {
+                "step": f.step,
+                "grid": f.state["grid"],
+                "patch": (i, j, kh, kw),
+                "out_val": f.state["out_val"],
+                "action": f.narrative,
+            }
+        )
+    animate_grid_highlight(snaps, title="Conv2d sliding window", fps=1.5)
 
 
 def vit_patchify() -> None:
@@ -53,14 +95,14 @@ def vit_patchify() -> None:
 def plot_patches() -> None:
     fig, axes = plt.subplots(1, 5, figsize=(10, 2.5))
     axes[0].imshow(IMG, cmap="gray")
-    axes[0].set_title("原图")
+    axes[0].set_title("input")
     patches = IMG.reshape(2, 2, 2, 2).transpose(0, 2, 1, 3)
     for i in range(4):
         axes[i + 1].imshow(patches[i // 2, i % 2], cmap="gray")
         axes[i + 1].set_title(f"P{i+1}")
     for ax in axes:
         ax.axis("off")
-    plt.suptitle("ViT Patchify")
+    plt.suptitle("ViT patchify")
     plt.tight_layout()
     plt.show()
 
@@ -77,7 +119,7 @@ def plot_mae_mask() -> None:
     grid = np.arange(4).reshape(2, 2)
     show = np.where(mask.reshape(2, 2) == 0, grid, np.nan)
     ax.imshow(show, cmap="Greens")
-    ax.set_title("MAE：仅 P1 可见（75% 掩码）")
+    ax.set_title("MAE: 75% masked")
     ax.axis("off")
     plt.tight_layout()
     plt.show()
@@ -93,11 +135,11 @@ def clip_infonce() -> None:
 
 
 def plot_clip_cos() -> None:
-    labels = ["正例图文", "负例图文"]
+    labels = ["pos pair", "neg pair"]
     vals = [0.91, 0.08]
     fig, ax = plt.subplots()
     ax.bar(labels, vals, color=["#0d6b62", "#e74c3c"])
     ax.set_ylim(0, 1)
-    ax.set_title("CLIP：对比学习拉大正负 cos 差距")
+    ax.set_title("CLIP cosine similarity")
     plt.tight_layout()
     plt.show()

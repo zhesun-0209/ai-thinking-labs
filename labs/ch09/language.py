@@ -30,9 +30,9 @@ def skipgram_demo(steps: int = 50, lr: float = 0.1) -> None:
 def plot_skipgram_sim() -> None:
     fig, ax = plt.subplots()
     ax.plot([0, 50], [0.42, 0.68], marker="o", color="#0d6b62", linewidth=2)
-    ax.set_xlabel("训练步")
-    ax.set_ylabel("cos(鲁迅, 写)")
-    ax.set_title("Skip-gram：共现词向量靠近")
+    ax.set_xlabel("step")
+    ax.set_ylabel("cos(center, context)")
+    ax.set_title("Skip-gram similarity")
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.show()
@@ -54,7 +54,7 @@ def plot_attention_heatmap() -> None:
     ax.set_xticklabels(tokens)
     ax.set_yticks([0])
     ax.set_yticklabels(["Q=写"])
-    ax.set_title("Self-Attention：「写」对全句的权重")
+    ax.set_title("Self-attention weights")
     plt.tight_layout()
     plt.show()
 

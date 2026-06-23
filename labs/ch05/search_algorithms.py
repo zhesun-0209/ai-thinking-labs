@@ -291,12 +291,12 @@ def plot_campus(
         if path and nid in path:
             color = "#c0392b"
         ax.scatter(px, py, s=400, c=color, zorder=3, edgecolors="white", linewidths=1.5)
-        ax.text(px, py, f"{nid}\n{name}\nh={h}", ha="center", va="center", fontsize=8, color="white", zorder=4)
+        ax.text(px, py, f"{nid}\nh={h}", ha="center", va="center", fontsize=9, color="white", zorder=4, fontweight="bold")
 
     if path and len(path) > 1:
         xs = [LAYOUT[n][0] for n in path]
         ys = [LAYOUT[n][1] for n in path]
-        ax.plot(xs, ys, color="#c0392b", linewidth=3, marker="o", markersize=6, zorder=2, label="路径")
+        ax.plot(xs, ys, color="#c0392b", linewidth=3, marker="o", markersize=6, zorder=2, label="path")
         ax.legend(loc="upper left")
 
     ax.set_title(title)
@@ -332,10 +332,10 @@ def plot_all_paths(graph: dict | None = None) -> None:
             ys = [LAYOUT[n][1] for n in path]
             ax.plot(xs, ys, color="#c0392b", linewidth=2, zorder=3)
         cost = results[key]["cost"]
-        ax.set_title(f"{title}\n{'→'.join(path)} · 代价{cost}")
+        ax.set_title(f"{title}\n{'->'.join(path)} cost={cost}")
         ax.axis("off")
     axes.flat[-1].axis("off")
-    plt.suptitle("五种搜索路径对照（同一校园图）", y=1.02)
+    plt.suptitle("Five search paths (same campus graph)", y=1.02)
     plt.tight_layout()
     plt.show()
 
@@ -441,7 +441,7 @@ if __name__ == "__main__":
     print_comparison()
 
 
-# ── Runestone CodeLens：逐步展示全部变量 ─────────────────────────────
+# ── CodeLens：逐步展示全部变量 ─────────────────────────────
 
 
 def codelens_build_adjacency(graph: dict | None = None) -> list[Frame]:
@@ -597,3 +597,31 @@ def print_codelens(frames: list[Frame], limit: int | None = None) -> None:
     from common.codelens import print_frames
 
     print_frames(frames, stop=limit)
+
+
+def animate_bfs_queue() -> None:
+    from common.viz_anim import animate_container, snapshots_from_codelens
+
+    frames = codelens_bfs()
+    snaps = snapshots_from_codelens(frames, key="frontier", kind="queue")
+    animate_container(snaps, kind="queue", caption="BFS: queue state at each step (GIF)")
+
+
+def animate_dfs_stack() -> None:
+    from common.viz_anim import animate_container, snapshots_from_codelens
+
+    frames = codelens_dfs()
+    snaps = []
+    for f in frames:
+        raw = f.state.get("stack", [])
+        items = list(raw) if isinstance(raw, (list, tuple)) else str(raw).split("→")
+        snaps.append(
+            {
+                "step": f.step,
+                "items": items,
+                "pop": f.state.get("current"),
+                "action": f.narrative,
+                "extra": f"visited={f.state.get('visited', set())}",
+            }
+        )
+    animate_container(snaps, kind="stack", caption="DFS: stack state at each step (GIF)")

@@ -118,6 +118,33 @@ def codelens_forward_chain(max_steps: int = 10) -> list:
     return frames
 
 
+def animate_forward_chain() -> None:
+    from common.viz_anim import animate_items_row
+
+    frames = codelens_forward_chain()
+    snaps = []
+    for f in frames:
+        known = f.state.get("known", [])
+        if isinstance(known, (list, tuple)):
+            items = [str(x) for x in known]
+        else:
+            items = []
+        new_items = f.state.get("新增", [])
+        highlight = None
+        if new_items and isinstance(new_items, list) and new_items:
+            highlight = str(new_items[-1]).split(":")[-1].strip() if ":" in str(new_items[-1]) else None
+        snaps.append(
+            {
+                "step": f.step,
+                "items": items,
+                "highlight": highlight,
+                "action": f.narrative,
+                "extra": "; ".join(str(x) for x in new_items) if new_items else "",
+            }
+        )
+    animate_items_row(snaps, title="Known facts (forward chain)")
+
+
 def path_ranking() -> None:
     kg = load_kg()
     scores = kg["path_scores"]

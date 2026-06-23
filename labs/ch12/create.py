@@ -21,9 +21,9 @@ def plot_annealing() -> None:
     losses = [12.4, 8.1, 3.2, 2.3]
     fig, ax = plt.subplots()
     ax.plot(range(len(losses)), losses, marker="o", color="#0d6b62", linewidth=2)
-    ax.set_xlabel("搜索步骤")
+    ax.set_xlabel("search step")
     ax.set_ylabel("loss")
-    ax.set_title("表征搜索 + 模拟退火：换表征跳出局部最优")
+    ax.set_title("Annealing search")
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.show()
@@ -50,7 +50,7 @@ def plot_uct() -> None:
     scores = [mcts_uct(q, n, N) for q, n in stats.values()]
     fig, ax = plt.subplots()
     ax.bar(keys, scores, color="#0d6b62")
-    ax.set_title("MCTS：未访问节点 c 的 UCT=∞，优先探索")
+    ax.set_title("MCTS UCT scores")
     plt.tight_layout()
     plt.show()
 
@@ -67,6 +67,26 @@ def diffusion_1d() -> None:
     return xs
 
 
+def codelens_diffusion_1d(steps: int = 5) -> list:
+    from common.codelens import Frame
+
+    random.seed(0)
+    x = 1.0
+    frames = [Frame(0, "x = x0", "初始", {"x": round(x, 3)})]
+    for i in range(1, steps + 1):
+        x += random.gauss(0, 0.3)
+        frames.append(Frame(i, "x += noise", f"第 {i} 步加噪", {"x": round(x, 3)}))
+    return frames
+
+
+def animate_diffusion_1d() -> None:
+    from common.viz_anim import animate_bar_values
+
+    frames = codelens_diffusion_1d()
+    snaps = [{"step": f.step, "values": {"x": f.state["x"]}, "action": f.narrative} for f in frames]
+    animate_bar_values(snaps, title="1D diffusion x", ylabel="x", fps=0.8)
+
+
 def plot_diffusion_1d(xs: list[float] | None = None) -> None:
     if xs is None:
         random.seed(0)
@@ -76,9 +96,9 @@ def plot_diffusion_1d(xs: list[float] | None = None) -> None:
             x += random.gauss(0, 0.3)
             xs.append(x)
     fig, ax = plt.subplots()
-    ax.plot(range(len(xs)), xs, marker="o", color="#3498db", label="前向加噪")
-    ax.plot(range(len(xs)-1, -1, -1), xs[::-1], marker="x", color="#0d6b62", label="反向去噪(概念)")
-    ax.set_title("1D 玩具扩散")
+    ax.plot(range(len(xs)), xs, marker="o", color="#3498db", label="forward noise")
+    ax.plot(range(len(xs)-1, -1, -1), xs[::-1], marker="x", color="#0d6b62", label="reverse denoise")
+    ax.set_title("1D diffusion toy")
     ax.legend()
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
@@ -94,8 +114,8 @@ def plot_gan_d() -> None:
     d_fake = [0.18, 0.08, 0.74, 0.50]
     fig, ax = plt.subplots()
     ax.plot(range(len(d_fake)), d_fake, marker="o", color="#e74c3c", linewidth=2)
-    ax.axhline(0.5, color="gray", linestyle="--", label="理想 D=0.5")
-    ax.set_title("GAN：判别器对假样本的输出轨迹")
+    ax.axhline(0.5, color="gray", linestyle="--", label="ideal D=0.5")
+    ax.set_title("GAN discriminator D(x)")
     ax.legend()
     ax.grid(True, alpha=0.3)
     plt.tight_layout()

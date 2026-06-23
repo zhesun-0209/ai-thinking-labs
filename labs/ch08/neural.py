@@ -59,7 +59,7 @@ def plot_mlp_flow() -> None:
     ax.set_xticks(xs)
     ax.set_xticklabels(layers)
     ax.set_yticks([])
-    ax.set_title("MLP 前向：血糖+运动 → 风险概率")
+    ax.set_title("MLP forward pass")
     plt.tight_layout()
     plt.show()
 
@@ -77,11 +77,11 @@ def plot_transe() -> None:
     r = np.array([1.0, 0.5])
     t_pos = h + r
     t_neg = np.array([2.5, 1.8])
-    ax.scatter(*h, s=120, label="鲁迅 h")
-    ax.scatter(*t_pos, s=120, label="呐喊 t+")
-    ax.scatter(*t_neg, s=120, label="红楼梦 t-")
+    ax.scatter(*h, s=120, label="h (鲁迅)")
+    ax.scatter(*t_pos, s=120, label="t+ (呐喊)")
+    ax.scatter(*t_neg, s=120, label="t- (红楼梦)")
     ax.arrow(h[0], h[1], r[0], r[1], head_width=0.08, color="#0d6b62", length_includes_head=True)
-    ax.set_title("TransE：h + r ≈ t（向量平移）")
+    ax.set_title("TransE: h + r ~ t")
     ax.legend()
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
@@ -104,12 +104,12 @@ def attention_demo() -> None:
 
 
 def plot_attention() -> None:
-    tokens = ["鲁迅", "写", "日记"]
+    tokens = ["t0", "t1", "t2"]
     weights = np.array([0.05, 0.80, 0.15])
     fig, ax = plt.subplots()
     ax.bar(tokens, weights, color="#0d6b62")
     ax.set_ylim(0, 1)
-    ax.set_title("Cross-Attention：解码「日记」时对 Encoder 的权重")
+    ax.set_title("Cross-attention weights")
     ax.set_ylabel("α (softmax)")
     plt.tight_layout()
     plt.show()
