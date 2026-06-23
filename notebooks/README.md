@@ -1,26 +1,35 @@
 # Jupyter Notebook 索引
 
-配套网页的可执行 Python 实验。**在章节页点击「Python 代码实验 ↗」会在新标签页打开**，不拉长章节正文。
+配套网页的 Python 实验，**预渲染为静态 HTML**，国内用户无需 Colab 即可阅读完整过程与输出。
 
-## 当前可用（P0）
+## 阅读方式（推荐）
 
-| Notebook | 章节 | 说明 |
-|----------|------|------|
-| [ch05_campus_search.ipynb](./ch05_campus_search.ipynb) | 第 5 章 | 校园图六种搜索，输出与网页一致 |
-| [ch09_bpe.ipynb](./ch09_bpe.ipynb) | 第 9 章 | BPE 合并步骤与 ch9 演示对齐 |
+1. **在线阅读** — 索引页点「在线阅读 ↗」，打开 `rendered/*.html` 教程页  
+   - 左侧目录、Markdown 讲解、代码单元与运行结果  
+   - 顶栏「隐藏代码 / 显示代码」切换（类似 many 中文 ML 教程）
 
-## 打开方式
+2. **下载 .ipynb** — 本地 Jupyter / VS Code 可修改重跑
 
-1. **下载 .ipynb** — 本地 Jupyter / VS Code
-2. **在 Colab 打开** — Notebook 索引页上的按钮（需 Google 账号）
-3. **直接跑脚本** — 见 [../labs/README.md](../labs/README.md)
+3. **直接跑脚本** — [../labs/README.md](../labs/README.md)
 
-## 依赖
+## 当前可阅读
 
-- P0：Python 3.10+，仅标准库
-- 后续 B 层：`pip install -r ../labs/requirements-min.txt`
-- C 层（Colab）：notebook 内 `%pip install torch` 等
+| 预渲染页 | 章节 |
+|----------|------|
+| [rendered/ch05_campus_search.html](./rendered/ch05_campus_search.html) | 第 5 章 搜索 |
+| [rendered/ch09_bpe.html](./rendered/ch09_bpe.html) | 第 9 章 BPE |
 
-## 模板结构
+## 维护者：重新生成 HTML
 
-每个 notebook 包含：与网页对照表 → 加载 `labs/common` 数据 → 分步代码 → 结果汇总 → 练习。
+```bash
+pip install -r ../scripts/requirements-render.txt
+python ../scripts/render_notebooks.py
+```
+
+GitHub Actions 在每次 push 到 `main` 时会自动执行上述命令后再部署 Pages。
+
+## 设计说明
+
+- 参考常见教程站（D2L / 课程 lab）：叙事 Markdown + 可折叠代码 + 执行输出  
+- 不使用 nbviewer / Colab，避免国内访问问题  
+- 单页约 5–8 KB（不含外链），适合 GitHub Pages

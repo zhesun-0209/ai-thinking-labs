@@ -6,13 +6,13 @@ const NOTEBOOKS_BRANCH = "main";
 const NOTEBOOKS_BASE = `https://github.com/${NOTEBOOKS_REPO}/blob/${NOTEBOOKS_BRANCH}/notebooks`;
 
 const TIER_LABELS = {
-  A: "浏览器 / 纯 Python",
-  B: "本地 numpy · sklearn",
-  C: "Colab · torch",
+  A: "纯 Python · 已预渲染",
+  B: "numpy / sklearn · 已预渲染",
+  C: "本地 torch · 发布后预渲染",
   D: "概念 · 只读",
 };
 
-/** @type {Record<number, { title: string, slug: string, web: string, items: Array<object> }>} */
+/** @type {Record<number, { title: string; slug: string; web: string; items: Array<object> }>} */
 const CHAPTER_NOTEBOOKS = {
   5: {
     title: "搜索智能",
@@ -134,35 +134,10 @@ const CHAPTER_NOTEBOOKS = {
     slug: "ch10",
     web: "../ch10.html",
     items: [
-      {
-        file: "ch10_conv2d_numpy.ipynb",
-        title: "4×4 卷积与 MaxPool",
-        tier: "B",
-        minutes: 18,
-        ready: false,
-      },
-      {
-        file: "ch10_vit_patchify.ipynb",
-        title: "ViT Patch 词元化",
-        tier: "B",
-        minutes: 15,
-        ready: false,
-      },
-      {
-        file: "ch10_mae_masking.ipynb",
-        title: "MAE 掩码与 MSE",
-        tier: "B",
-        minutes: 15,
-        ready: false,
-      },
-      {
-        file: "ch10_clip_infonce_colab.ipynb",
-        title: "CLIP InfoNCE",
-        tier: "C",
-        minutes: 20,
-        ready: false,
-        colab: true,
-      },
+      { file: "ch10_conv2d_numpy.ipynb", title: "4×4 卷积与 MaxPool", tier: "B", minutes: 18, ready: false },
+      { file: "ch10_vit_patchify.ipynb", title: "ViT Patch 词元化", tier: "B", minutes: 15, ready: false },
+      { file: "ch10_mae_masking.ipynb", title: "MAE 掩码与 MSE", tier: "B", minutes: 15, ready: false },
+      { file: "ch10_clip_infonce.ipynb", title: "CLIP InfoNCE", tier: "C", minutes: 20, ready: false },
     ],
   },
   11: {
@@ -170,27 +145,9 @@ const CHAPTER_NOTEBOOKS = {
     slug: "ch11",
     web: "../ch11.html",
     items: [
-      {
-        file: "ch11_mdp_value_iteration.ipynb",
-        title: "MDP 与价值迭代",
-        tier: "A",
-        minutes: 18,
-        ready: false,
-      },
-      {
-        file: "ch11_td_learning.ipynb",
-        title: "TD(0) 学习",
-        tier: "A",
-        minutes: 12,
-        ready: false,
-      },
-      {
-        file: "ch11_epsilon_greedy.ipynb",
-        title: "ε-贪心多臂老虎机",
-        tier: "A",
-        minutes: 10,
-        ready: false,
-      },
+      { file: "ch11_mdp_value_iteration.ipynb", title: "MDP 与价值迭代", tier: "A", minutes: 18, ready: false },
+      { file: "ch11_td_learning.ipynb", title: "TD(0) 学习", tier: "A", minutes: 12, ready: false },
+      { file: "ch11_epsilon_greedy.ipynb", title: "ε-贪心多臂老虎机", tier: "A", minutes: 10, ready: false },
     ],
   },
   12: {
@@ -198,64 +155,26 @@ const CHAPTER_NOTEBOOKS = {
     slug: "ch12",
     web: "../ch12.html",
     items: [
-      {
-        file: "ch12_repr_search_annealing.ipynb",
-        title: "表征搜索与模拟退火",
-        tier: "A",
-        minutes: 12,
-        ready: false,
-      },
-      {
-        file: "ch12_mcts.ipynb",
-        title: "MCTS 与 UCT",
-        tier: "A",
-        minutes: 20,
-        ready: false,
-      },
-      {
-        file: "ch12_diffusion_1d.ipynb",
-        title: "1D 玩具扩散（numpy）",
-        tier: "B",
-        minutes: 15,
-        ready: false,
-      },
-      {
-        file: "ch12_gan_colab.ipynb",
-        title: "2D GAN（Colab）",
-        tier: "C",
-        minutes: 25,
-        ready: false,
-        colab: true,
-      },
-      {
-        file: "ch12_diffusion_colab.ipynb",
-        title: "小图 DDPM（Colab）",
-        tier: "C",
-        minutes: 30,
-        ready: false,
-        colab: true,
-      },
-      {
-        file: "ch12_alphafold_concepts.ipynb",
-        title: "AlphaFold 流程（概念）",
-        tier: "D",
-        minutes: 10,
-        ready: false,
-      },
+      { file: "ch12_repr_search_annealing.ipynb", title: "表征搜索与模拟退火", tier: "A", minutes: 12, ready: false },
+      { file: "ch12_mcts.ipynb", title: "MCTS 与 UCT", tier: "A", minutes: 20, ready: false },
+      { file: "ch12_diffusion_1d.ipynb", title: "1D 玩具扩散（numpy）", tier: "B", minutes: 15, ready: false },
+      { file: "ch12_gan_toy.ipynb", title: "2D GAN 玩具", tier: "C", minutes: 25, ready: false },
+      { file: "ch12_diffusion_toy.ipynb", title: "小图扩散（本地）", tier: "C", minutes: 30, ready: false },
+      { file: "ch12_alphafold_concepts.ipynb", title: "AlphaFold 流程（概念）", tier: "D", minutes: 10, ready: false },
     ],
   },
 };
 
-function colabUrl(filename) {
-  return `https://colab.research.google.com/github/${NOTEBOOKS_REPO}/blob/${NOTEBOOKS_BRANCH}/notebooks/${filename}`;
+function stem(filename) {
+  return filename.replace(/\.ipynb$/i, "");
+}
+
+function readerUrl(filename) {
+  return `rendered/${stem(filename)}.html`;
 }
 
 function githubUrl(filename) {
   return `${NOTEBOOKS_BASE}/${filename}`;
-}
-
-function downloadUrl(filename) {
-  return filename;
 }
 
 function renderNotebookCard(item) {
@@ -266,20 +185,17 @@ function renderNotebookCard(item) {
       <h3>${item.title}</h3>
       ${item.blurb ? `<p>${item.blurb}</p>` : ""}
       <p class="nb-meta">${meta}</p>
-      <p class="nb-soon">即将推出</p>
+      <p class="nb-soon">即将推出（发布后提供预渲染 HTML）</p>
     </article>`;
   }
-  const colab = item.colab !== false
-    ? `<a class="nb-btn nb-btn--colab" href="${colabUrl(item.file)}" target="_blank" rel="noopener noreferrer">在 Colab 打开 ↗</a>`
-    : "";
   return `<article class="nb-card">
     <h3>${item.title}</h3>
     ${item.blurb ? `<p>${item.blurb}</p>` : ""}
     <p class="nb-meta">${meta}</p>
     <div class="nb-actions">
-      <a class="nb-btn nb-btn--primary" href="${downloadUrl(item.file)}" download>下载 .ipynb</a>
-      ${colab}
-      <a class="nb-btn" href="${githubUrl(item.file)}" target="_blank" rel="noopener noreferrer">GitHub 查看 ↗</a>
+      <a class="nb-btn nb-btn--primary" href="${readerUrl(item.file)}" target="_blank" rel="noopener noreferrer">在线阅读 ↗</a>
+      <a class="nb-btn" href="${item.file}" download>下载 .ipynb</a>
+      <a class="nb-btn" href="${githubUrl(item.file)}" target="_blank" rel="noopener noreferrer">GitHub 源码 ↗</a>
     </div>
   </article>`;
 }
@@ -287,15 +203,16 @@ function renderNotebookCard(item) {
 function renderChapterSection(chNum, opts = {}) {
   const ch = CHAPTER_NOTEBOOKS[chNum];
   if (!ch) return "";
-  const heading = opts.heading !== false
-    ? `<div class="nb-chapter-head">
+  const heading =
+    opts.heading !== false
+      ? `<div class="nb-chapter-head">
         <span class="nb-chapter-num">${chNum}</span>
         <div>
           <h2>${ch.title}</h2>
           <a class="nb-back-ch" href="${ch.web}">返回第 ${chNum} 章网页 ↗</a>
         </div>
       </div>`
-    : "";
+      : "";
   const cards = ch.items.map(renderNotebookCard).join("");
   return `<section class="nb-chapter" id="ch${chNum}">${heading}<div class="nb-grid">${cards}</div></section>`;
 }
@@ -312,7 +229,7 @@ function renderChapterPage(chNum) {
   if (mainEl) {
     const cards = ch.items.map(renderNotebookCard).join("");
     mainEl.innerHTML = `
-      <p class="nb-lead">在<strong>新标签页</strong>打开，不增加章节页长度。每个 Notebook 与网页演示使用<strong>同一案例</strong>。</p>
+      <p class="nb-lead">Notebook 已<strong>预渲染为静态 HTML</strong>，国内可直接阅读，无需 Colab。支持目录跳转与「隐藏/显示代码」。</p>
       <div class="nb-chapter-head">
         <span class="nb-chapter-num">${chNum}</span>
         <div>
@@ -333,13 +250,13 @@ function renderIndexPage() {
     .map((n) => renderChapterSection(Number(n)))
     .join("");
   mainEl.innerHTML = `
-    <p class="nb-lead">配套《AI思维》第 5–12 章的可执行 Python 实验。点击章节页的「Python 代码实验 ↗」会在<strong>新标签页</strong>打开本索引。</p>
+    <p class="nb-lead">配套《AI思维》第 5–12 章。点击<strong>在线阅读</strong>打开预渲染 Jupyter 教程页（含代码、输出与目录），不依赖 Google Colab。</p>
     <ul class="nb-toc">
       ${Object.keys(CHAPTER_NOTEBOOKS)
         .sort((a, b) => Number(a) - Number(b))
         .map(
           (n) =>
-            `<li><a href="chapter.html?ch=${n}">第 ${n} 章 ${CHAPTER_NOTEBOOKS[n].title}</a> · ${CHAPTER_NOTEBOOKS[n].items.filter((i) => i.ready).length}/${CHAPTER_NOTEBOOKS[n].items.length} 可用</li>`,
+            `<li><a href="chapter.html?ch=${n}">第 ${n} 章 ${CHAPTER_NOTEBOOKS[n].title}</a> · ${CHAPTER_NOTEBOOKS[n].items.filter((i) => i.ready).length}/${CHAPTER_NOTEBOOKS[n].items.length} 可阅读</li>`,
         )
         .join("")}
     </ul>
@@ -349,7 +266,7 @@ function renderIndexPage() {
 if (typeof window !== "undefined") {
   window.NOTEBOOKS_CATALOG = {
     CHAPTER_NOTEBOOKS,
-    colabUrl,
+    readerUrl,
     githubUrl,
     renderChapterPage,
     renderIndexPage,

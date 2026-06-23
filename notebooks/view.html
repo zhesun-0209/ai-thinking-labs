@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="refresh" content="0; url=rendered/"/>
+  <script>
+    const q = new URLSearchParams(location.search).get("nb") || "";
+    const stem = q.replace(/\.ipynb$/i, "");
+    location.replace(stem ? `rendered/${stem}.html` : "index.html");
+  </script>
+  <title>跳转中…</title>
+</head>
+<body><p><a href="index.html">Notebook 索引</a></p></body>
+</html>

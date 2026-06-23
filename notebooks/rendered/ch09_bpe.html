@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="第 9 章 · BPE 字节对合并 — 《AI思维》配套 Python 实验（预渲染）"/>
+  <title>第 9 章 · BPE 字节对合并</title>
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml"/>
+  <link rel="stylesheet" href="../notebook-reader.css?v=1"/>
+</head>
+<body class="nb-reader" data-chapter="9">
+  <header class="nb-reader-header">
+    <div class="nb-reader-header-inner">
+      <a class="nb-reader-back" href="../../ch9.html">← 第 9 章网页</a>
+      <a class="nb-reader-index" href="../index.html">Notebook 索引</a>
+      <span class="nb-reader-meta">约 10 分钟 · 预渲染 · 无需 Colab</span>
+    </div>
+    <div class="nb-reader-toolbar">
+      <h1>第 9 章 · BPE 字节对合并</h1>
+      <div class="nb-reader-actions">
+        <button type="button" class="nb-toggle-code" id="toggleCode" aria-pressed="false">隐藏代码</button>
+        <a class="nb-dl" id="downloadLink" href="../ch09_bpe.ipynb" download>下载 .ipynb</a>
+      </div>
+    </div>
+  </header>
+  <div class="nb-reader-layout">
+    <nav class="nb-toc" aria-label="本页目录"><p class="nb-toc-title">目录</p><ul><li class=""><a href="#ai思维-第-9-章-bpe-字节对合并">《AI思维》第 9 章 · BPE 字节对合并</a></li><li class="nb-toc-l2"><a href="#0-与网页演示对照">0. 与网页演示对照</a></li><li class="nb-toc-l2"><a href="#3-练习">3. 练习</a></li></ul></nav>
+    <article class="nb-reader-body" id="nbContent">
+      <div class="nb-markdown"><h1 id="ai思维-第-9-章-bpe-字节对合并">《AI思维》第 9 章 · BPE 字节对合并</h1>
+<blockquote>
+<p>配套网页：<a href="../../ch9.html">ch9.html</a> · BPE 模块<br />
+依赖：Python 3.10+ 标准库<br />
+预计：约 10 分钟</p>
+</blockquote>
+<h2 id="0-与网页演示对照">0. 与网页演示对照</h2>
+<table>
+<thead>
+<tr>
+<th>网页步骤</th>
+<th>合并对</th>
+<th>合并后序列</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 字符级</td>
+<td>—</td>
+<td>鲁/迅/写/了/狂/人/日/记</td>
+</tr>
+<tr>
+<td>2 合并日记</td>
+<td>日+记</td>
+<td>…/日记</td>
+</tr>
+<tr>
+<td>3 合并狂人</td>
+<td>狂+人</td>
+<td>…/狂人/日记</td>
+</tr>
+<tr>
+<td>4 合并鲁迅</td>
+<td>鲁+迅</td>
+<td>鲁迅/写/了/狂人/日记</td>
+</tr>
+</tbody>
+</table></div>
+<section class="nb-cell nb-code" data-cell="0">
+  <div class="nb-code-header">
+    <span class="nb-code-label">In [1]</span>
+  </div>
+  <div class="nb-code-input"><pre><code class="language-python">import sys
+from pathlib import Path
+
+ROOT = Path.cwd()
+if (ROOT / &quot;labs&quot; / &quot;ch09&quot;).exists():
+    LAB = ROOT / &quot;labs&quot; / &quot;ch09&quot;
+elif (ROOT.parent / &quot;labs&quot; / &quot;ch09&quot;).exists():
+    LAB = ROOT.parent / &quot;labs&quot; / &quot;ch09&quot;
+else:
+    LAB = Path(&quot;../labs/ch09&quot;).resolve()
+
+sys.path.insert(0, str(LAB))
+from bpe import load_bpe_spec, run_from_spec, count_pairs, print_steps
+
+spec = load_bpe_spec()
+print(&quot;语料:&quot;, spec[&quot;corpus_hint&quot;])
+print(&quot;初始 tokens:&quot;, spec[&quot;initial_tokens&quot;])</code></pre></div>
+  <div class="nb-code-output"><pre class="nb-stdout">语料: 鲁迅 写 了 狂人 日记
+初始 tokens: [&#x27;鲁&#x27;, &#x27;迅&#x27;, &#x27;写&#x27;, &#x27;了&#x27;, &#x27;狂&#x27;, &#x27;人&#x27;, &#x27;日&#x27;, &#x27;记&#x27;]</pre></div>
+</section>
+<section class="nb-cell nb-code" data-cell="1">
+  <div class="nb-code-header">
+    <span class="nb-code-label">In [2]</span>
+  </div>
+  <div class="nb-code-input"><pre><code class="language-python">history = run_from_spec()
+for i, tokens in enumerate(history):
+    print(i, &quot;→&quot;, &quot; / &quot;.join(tokens))</code></pre></div>
+  <div class="nb-code-output"><pre class="nb-stdout">0 → 鲁 / 迅 / 写 / 了 / 狂 / 人 / 日 / 记
+1 → 鲁 / 迅 / 写 / 了 / 狂 / 人 / 日记
+2 → 鲁 / 迅 / 写 / 了 / 狂人 / 日记
+3 → 鲁迅 / 写 / 了 / 狂人 / 日记</pre></div>
+</section>
+<section class="nb-cell nb-code" data-cell="2">
+  <div class="nb-code-header">
+    <span class="nb-code-label">In [3]</span>
+  </div>
+  <div class="nb-code-input"><pre><code class="language-python">pairs = count_pairs(spec[&quot;initial_tokens&quot;])
+print(&quot;初始最高频对:&quot;, pairs.most_common(3))
+print()
+print_steps()</code></pre></div>
+  <div class="nb-code-output"><pre class="nb-stdout">初始最高频对: [((&#x27;鲁&#x27;, &#x27;迅&#x27;), 1), ((&#x27;迅&#x27;, &#x27;写&#x27;), 1), ((&#x27;写&#x27;, &#x27;了&#x27;), 1)]
+
+语料提示：鲁迅 写 了 狂人 日记
+
+| 步骤 | 合并对 | 合并后 token 序列 | 与网页一致 |
+|------|--------|-------------------|------------|
+| 0 字符级 | — | 鲁 / 迅 / 写 / 了 / 狂 / 人 / 日 / 记 | ✓ |
+| 1 | 日+记（12 次） | 鲁 / 迅 / 写 / 了 / 狂 / 人 / 日记 | ✓ |
+| 2 | 狂+人（8 次） | 鲁 / 迅 / 写 / 了 / 狂人 / 日记 | ✓ |
+| 3 | 鲁+迅（6 次） | 鲁迅 / 写 / 了 / 狂人 / 日记 | ✓ |
+
+最终子词表：鲁迅 / 写 / 了 / 狂人 / 日记  (✓ 与网页一致)</pre></div>
+</section>
+<div class="nb-markdown"><h2 id="3-练习">3. 练习</h2>
+<ol>
+<li>把 <code>luxun_bpe.json</code> 里「狂+人」的次数改低，观察合并顺序如何变化。</li>
+<li>思考：BPE 词表变大时，序列变短，对语言模型下一步预测意味着什么？</li>
+</ol></div>
+    </article>
+  </div>
+  <footer class="nb-reader-footer">
+    <p>输出在发布时已执行保存；修改案例数据请下载 Notebook 在本地运行。</p>
+  </footer>
+  <script src="../reader.js?v=1"></script>
+</body>
+</html>

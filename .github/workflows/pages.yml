@@ -24,6 +24,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Render notebook HTML
+        run: |
+          pip install -r scripts/requirements-render.txt
+          python scripts/render_notebooks.py
+
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:

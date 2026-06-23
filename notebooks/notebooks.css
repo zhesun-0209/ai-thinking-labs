@@ -217,6 +217,10 @@
   color: #b45309;
 }
 
+.nb-lead strong {
+  color: var(--nb-ink);
+}
+
 .nb-foot {
   margin-top: 32px;
   font-size: 14px;
