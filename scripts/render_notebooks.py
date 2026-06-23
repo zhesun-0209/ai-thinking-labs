@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import html
+import json
 import re
 import subprocess
 import sys
@@ -12,7 +14,299 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOKS_DIR = ROOT / "notebooks"
 RENDERED_DIR = NOTEBOOKS_DIR / "rendered"
-CHROME = """<div id="ai-labs-chrome" style="position:sticky;top:0;z-index:9999;background:#0d6b62;color:#fff;font:600 13px system-ui,sans-serif;padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #0a5a52"><a href="../index.html" style="color:#fff;text-decoration:none">Notebook 索引</a><a href="../../hub.html" style="color:#fff;text-decoration:none">章节目录</a><span style="opacity:.85;margin-left:auto">Jupyter 预渲染 · 国内可访问</span></div>"""
+READER_SCRIPT = """<script id="ai-labs-reader-script">
+(() => {
+  const root = document.documentElement;
+  const topButton = document.getElementById("ai-labs-top");
+  const updateProgress = () => {
+    const scrollable = Math.max(1, root.scrollHeight - root.clientHeight);
+    const progress = Math.min(1, Math.max(0, root.scrollTop / scrollable));
+    root.style.setProperty("--ai-labs-read-progress", `${Math.round(progress * 100)}%`);
+    if (topButton) topButton.hidden = root.scrollTop < 520;
+  };
+  document.addEventListener("scroll", updateProgress, { passive: true });
+  topButton?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  updateProgress();
+})();
+</script>"""
+RENDER_STYLE = """<style id="ai-labs-render-style">
+:root {
+  --ai-labs-accent: #0d6b62;
+  --ai-labs-accent-dark: #09524b;
+  --ai-labs-blue: #2563eb;
+  --ai-labs-amber: #b45309;
+  --ai-labs-line: #dbe4ef;
+  --ai-labs-gutter: clamp(18px, 6vw, 96px);
+  --ai-labs-read-progress: 0%;
+}
+
+html[lang="zh-CN"] {
+  scroll-padding-top: 72px;
+}
+
+body.jp-Notebook {
+  margin: 0;
+  padding: 0 var(--ai-labs-gutter) 56px;
+  background:
+    linear-gradient(180deg, #f3faf8 0, #fff 260px),
+    #fff;
+  color: #111827;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+#ai-labs-chrome {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  margin: 0 calc(-1 * var(--ai-labs-gutter)) 22px;
+  padding: 10px var(--ai-labs-gutter);
+  min-height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+  background: var(--ai-labs-accent);
+  color: #fff;
+  border-bottom: 1px solid var(--ai-labs-accent-dark);
+  font: 700 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+#ai-labs-chrome::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b var(--ai-labs-read-progress), transparent 0);
+}
+
+#ai-labs-chrome a {
+  color: #fff;
+  min-height: 32px;
+  padding: 0 2px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+#ai-labs-chrome a:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
+}
+
+#ai-labs-chrome span {
+  margin-left: auto;
+  opacity: 0.9;
+}
+
+#ai-labs-top {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9998;
+  min-width: 42px;
+  min-height: 42px;
+  border: 1px solid var(--ai-labs-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ai-labs-accent-dark);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+  font: 800 16px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  cursor: pointer;
+}
+
+#ai-labs-top[hidden] {
+  display: none;
+}
+
+.jp-Notebook .jp-Cell {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 10px;
+}
+
+.jp-Notebook .jp-CodeCell {
+  max-width: min(1120px, 100%);
+}
+
+.jp-Notebook .jp-MarkdownCell:first-of-type {
+  padding: 18px 20px;
+  border: 1px solid var(--ai-labs-line);
+  border-left: 5px solid var(--ai-labs-accent);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.jp-RenderedHTMLCommon,
+.jp-RenderedHTMLCommon p,
+.jp-RenderedHTMLCommon li {
+  line-height: 1.72;
+}
+
+.jp-RenderedHTMLCommon p,
+.jp-RenderedHTMLCommon ul,
+.jp-RenderedHTMLCommon ol {
+  max-width: 840px;
+}
+
+.jp-RenderedHTMLCommon h1,
+.jp-RenderedHTMLCommon h2,
+.jp-RenderedHTMLCommon h3 {
+  letter-spacing: 0;
+  color: #1f2937;
+}
+
+.jp-RenderedHTMLCommon h1 {
+  font-size: clamp(1.85rem, 5vw, 2.45rem);
+  line-height: 1.16;
+}
+
+.jp-RenderedHTMLCommon h2 {
+  margin-top: 1.35em;
+  padding-top: 0.2em;
+  font-size: clamp(1.35rem, 3.6vw, 1.78rem);
+}
+
+.jp-RenderedHTMLCommon h3 {
+  color: var(--ai-labs-accent-dark);
+}
+
+.jp-RenderedHTMLCommon a.anchor-link {
+  margin-left: 0.35em;
+  color: var(--ai-labs-accent);
+  font-size: 0.72em;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.jp-RenderedHTMLCommon h1:hover a.anchor-link,
+.jp-RenderedHTMLCommon h2:hover a.anchor-link,
+.jp-RenderedHTMLCommon h3:hover a.anchor-link,
+.jp-RenderedHTMLCommon a.anchor-link:focus-visible {
+  opacity: 0.75;
+}
+
+.jp-RenderedHTMLCommon a.anchor-link:focus-visible {
+  outline: 2px solid rgba(13, 107, 98, 0.35);
+  outline-offset: 2px;
+}
+
+.jp-RenderedHTMLCommon a {
+  color: #075985;
+  font-weight: 700;
+}
+
+.jp-RenderedHTMLCommon code {
+  border-radius: 5px;
+  padding: 0.1em 0.35em;
+  background: #eef2f7;
+  color: #334155;
+}
+
+.jp-RenderedHTMLCommon details {
+  max-width: 840px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid #d6e5ef;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.jp-RenderedHTMLCommon summary {
+  cursor: pointer;
+  color: var(--ai-labs-accent-dark);
+  font-weight: 800;
+}
+
+.jp-InputArea-editor,
+.jp-OutputArea-output {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.jp-InputArea-editor {
+  border: 1px solid var(--ai-labs-line);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.jp-OutputArea-output {
+  border-radius: 8px;
+}
+
+.jp-RenderedText pre {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid var(--ai-labs-line);
+}
+
+.jp-RenderedHTMLCommon img,
+.jp-OutputArea-output img,
+.jp-OutputArea-output svg {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+  body.jp-Notebook {
+    padding-bottom: 40px;
+  }
+
+  #ai-labs-chrome {
+    min-height: 56px;
+    margin-bottom: 18px;
+  }
+
+  #ai-labs-chrome span {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  #ai-labs-top {
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .jp-Notebook .jp-InputPrompt,
+  .jp-Notebook .jp-OutputPrompt {
+    display: none;
+  }
+
+  .jp-Notebook .jp-Cell-inputWrapper,
+  .jp-Notebook .jp-Cell-outputWrapper {
+    padding-left: 0;
+  }
+
+  .jp-Notebook .jp-MarkdownCell:first-of-type {
+    padding: 14px;
+  }
+}
+</style>"""
+CHROME_RE = re.compile(r'<(?:div|nav) id="ai-labs-chrome"[^>]*>.*?</(?:div|nav)>\s*', re.DOTALL)
+STYLE_RE = re.compile(r'<style id="ai-labs-render-style">.*?</style>\s*', re.DOTALL)
+TOP_BUTTON_RE = re.compile(r'<button id="ai-labs-top"[^>]*>.*?</button>\s*', re.DOTALL)
+READER_SCRIPT_RE = re.compile(r'<script id="ai-labs-reader-script">.*?</script>\s*', re.DOTALL)
+REQUIRE_JS_RE = re.compile(
+    r'<script\s+src="https://cdnjs\.cloudflare\.com/ajax/libs/require\.js/2\.1\.10/require\.min\.js"></script>\s*',
+    re.IGNORECASE,
+)
+MATHJAX_RE = re.compile(
+    r"<!-- Load mathjax -->.*?<!-- End of mathjax configuration -->",
+    re.DOTALL | re.IGNORECASE,
+)
+MERMAID_RE = re.compile(
+    r'<script type="module">\s*document\.addEventListener\("DOMContentLoaded", async \(\) => \{.*?<!-- End of mermaid configuration -->',
+    re.DOTALL,
+)
+DEFAULT_IMAGE_ALT_RE = re.compile(r'alt="No description has been provided for this image"')
 
 
 def list_notebooks(pattern: list[str] | None = None) -> list[Path]:
@@ -63,23 +357,111 @@ def export_html(path: Path) -> Path:
         ]
     )
     out = RENDERED_DIR / f"{stem}.html"
-    inject_chrome(out)
+    inject_chrome(out, path)
     return out
 
 
-def inject_chrome(html_path: Path) -> None:
-    text = html_path.read_text(encoding="utf-8")
+def notebook_title(notebook_path: Path) -> str:
+    nb = json.loads(notebook_path.read_text(encoding="utf-8"))
+    for cell in nb.get("cells", []):
+        if cell.get("cell_type") != "markdown":
+            continue
+        source = "".join(cell.get("source", []))
+        for line in source.splitlines():
+            if line.startswith("#"):
+                return line.lstrip("#").strip()
+    return notebook_path.stem
 
-    old = re.compile(
-        r'<div id="ai-labs-chrome"[^>]*>.*?</div>',
-        re.DOTALL,
+
+def chapter_number(notebook_path: Path) -> str | None:
+    match = re.match(r"ch(\d{2})_", notebook_path.stem)
+    if not match:
+        return None
+    return str(int(match.group(1)))
+
+
+def reader_chrome(notebook_path: Path) -> str:
+    ch = chapter_number(notebook_path)
+    chapter_link = f'<a href="../../ch{ch}.html">章节网页</a>' if ch else '<a href="../../hub.html">章节目录</a>'
+    return (
+        '<nav id="ai-labs-chrome" aria-label="Notebook 导航">'
+        '<a href="../index.html">Notebook 索引</a>'
+        f"{chapter_link}"
+        '<a href="../../hub.html">章节目录</a>'
+        f'<a href="../{notebook_path.name}" download>下载 .ipynb</a>'
+        '<span>阅读进度</span>'
+        "</nav>"
     )
-    if old.search(text):
-        text = old.sub(CHROME, text, count=1)
-    elif "<body" in text:
-        text = text.replace("<body", f"{CHROME}<body", 1)
+
+
+def set_html_lang(text: str) -> str:
+    def repl(match: re.Match[str]) -> str:
+        tag = match.group(0)
+        if re.search(r"\blang=", tag):
+            return re.sub(r'\blang=(["\']).*?\1', 'lang="zh-CN"', tag, count=1)
+        return tag.replace("<html", '<html lang="zh-CN"', 1)
+
+    return re.sub(r"<html\b[^>]*>", repl, text, count=1)
+
+
+def set_head_metadata(text: str, title: str) -> str:
+    escaped_title = html.escape(f"{title} · AI思维 Notebook")
+    description = html.escape(f"{title}，AI思维配套 Jupyter 预渲染代码实验。")
+    favicon = '<link rel="icon" href="../../favicon.svg" type="image/svg+xml"/>'
+
+    if re.search(r"<title>.*?</title>", text, re.DOTALL):
+        text = re.sub(r"<title>.*?</title>", f"<title>{escaped_title}</title>", text, count=1, flags=re.DOTALL)
     else:
-        text = CHROME + text
+        text = text.replace("</head>", f"<title>{escaped_title}</title>\n</head>", 1)
+
+    meta = f'<meta name="description" content="{description}"/>'
+    if re.search(r'<meta\s+name=["\']description["\'][^>]*>', text, re.IGNORECASE):
+        text = re.sub(r'<meta\s+name=["\']description["\'][^>]*>', meta, text, count=1, flags=re.IGNORECASE)
+    else:
+        text = re.sub(r"</title>", f"</title>\n{meta}", text, count=1)
+
+    if re.search(r'<link\s+rel=["\']icon["\'][^>]*>', text, re.IGNORECASE):
+        text = re.sub(r'<link\s+rel=["\']icon["\'][^>]*>', favicon, text, count=1, flags=re.IGNORECASE)
+    else:
+        text = re.sub(
+            r'(<meta\s+name=["\']description["\'][^>]*>)',
+            lambda match: f"{match.group(1)}\n{favicon}",
+            text,
+            count=1,
+            flags=re.IGNORECASE,
+        )
+
+    return text
+
+
+def inject_chrome(html_path: Path, notebook_path: Path) -> None:
+    text = html_path.read_text(encoding="utf-8")
+    title = notebook_title(notebook_path)
+    chrome = reader_chrome(notebook_path)
+
+    text = set_html_lang(text)
+    text = set_head_metadata(text, title)
+    text = REQUIRE_JS_RE.sub("", text)
+    text = MATHJAX_RE.sub("", text)
+    text = MERMAID_RE.sub("", text)
+    text = STYLE_RE.sub("", text)
+    text = TOP_BUTTON_RE.sub("", text)
+    text = READER_SCRIPT_RE.sub("", text)
+    text = DEFAULT_IMAGE_ALT_RE.sub('alt="Notebook 输出图表，请结合前后文字说明阅读"', text)
+    text = text.replace("</head>", f"{RENDER_STYLE}\n</head>", 1)
+    text = CHROME_RE.sub("", text)
+    text = re.sub(r'href="\.\./(ch(?:[5-9]|1[0-2])\.html)"', r'href="../../\1"', text)
+
+    if re.search(r"<body\b[^>]*>", text):
+        text = re.sub(
+            r"(<body\b[^>]*>)",
+            lambda match: f'{match.group(1)}\n{chrome}\n<button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>',
+            text,
+            count=1,
+        )
+    else:
+        text = chrome + text
+    text = text.replace("</body>", f"{READER_SCRIPT}\n</body>", 1)
     html_path.write_text(text, encoding="utf-8")
 
 

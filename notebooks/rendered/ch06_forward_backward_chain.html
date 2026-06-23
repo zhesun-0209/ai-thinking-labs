@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="zh-CN">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>ch06_forward_backward_chain</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
-<style type="text/css">
+<title>第 6 章 · 前向链与后向链 · AI思维 Notebook</title>
+<meta name="description" content="第 6 章 · 前向链与后向链，AI思维配套 Jupyter 预渲染代码实验。"/>
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml"/><style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
 span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7291,519 +7292,280 @@ a.anchor-link {
   }
 }
 </style>
-<!-- Load mathjax -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
-<!-- MathJax configuration -->
-<script type="text/x-mathjax-config">
-    init_mathjax = function() {
-        if (window.MathJax) {
-        // MathJax loaded
-            MathJax.Hub.Config({
-                TeX: {
-                    equationNumbers: {
-                    autoNumber: "AMS",
-                    useLabelIds: true
-                    }
-                },
-                tex2jax: {
-                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
-                    processEscapes: true,
-                    processEnvironments: true
-                },
-                displayAlign: 'center',
-                messageStyle: 'none',
-                CommonHTML: {
-                    linebreaks: {
-                    automatic: true
-                    }
-                }
-            });
+<style id="ai-labs-render-style">
+:root {
+  --ai-labs-accent: #0d6b62;
+  --ai-labs-accent-dark: #09524b;
+  --ai-labs-blue: #2563eb;
+  --ai-labs-amber: #b45309;
+  --ai-labs-line: #dbe4ef;
+  --ai-labs-gutter: clamp(18px, 6vw, 96px);
+  --ai-labs-read-progress: 0%;
+}
 
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-        }
-    }
-    init_mathjax();
-    </script>
-<!-- End of mathjax configuration --><script type="module">
-  document.addEventListener("DOMContentLoaded", async () => {
-    const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
-    // do not load mermaidjs if not needed
-    if (!diagrams.length) {
-      return;
-    }
-    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.10.0/mermaid.esm.min.mjs")).default;
-    const elkUrl = "https://cdnjs.cloudflare.com/ajax/libs/mermaid-layout-elk/0.1.9/mermaid-layout-elk.esm.min.mjs";
-    if(elkUrl) {
-      const elkLayouts = (await import(elkUrl)).default;
-      mermaid.registerLayoutLoaders(elkLayouts);
-    }
-    const parser = new DOMParser();
+html[lang="zh-CN"] {
+  scroll-padding-top: 72px;
+}
 
-    mermaid.initialize({
-      maxTextSize: 100000,
-      maxEdges: 100000,
-      startOnLoad: false,
-      fontFamily: window
-        .getComputedStyle(document.body)
-        .getPropertyValue("--jp-ui-font-family"),
-      theme: document.querySelector("body[data-jp-theme-light='true']")
-        ? "default"
-        : "dark",
-    });
+body.jp-Notebook {
+  margin: 0;
+  padding: 0 var(--ai-labs-gutter) 56px;
+  background:
+    linear-gradient(180deg, #f3faf8 0, #fff 260px),
+    #fff;
+  color: #111827;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
 
-    let _nextMermaidId = 0;
+#ai-labs-chrome {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  margin: 0 calc(-1 * var(--ai-labs-gutter)) 22px;
+  padding: 10px var(--ai-labs-gutter);
+  min-height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+  background: var(--ai-labs-accent);
+  color: #fff;
+  border-bottom: 1px solid var(--ai-labs-accent-dark);
+  font: 700 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
 
-    function makeMermaidImage(svg) {
-      const img = document.createElement("img");
-      const doc = parser.parseFromString(svg, "image/svg+xml");
-      const svgEl = doc.querySelector("svg");
-      const { maxWidth } = svgEl?.style || {};
-      const firstTitle = doc.querySelector("title");
-      const firstDesc = doc.querySelector("desc");
+#ai-labs-chrome::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b var(--ai-labs-read-progress), transparent 0);
+}
 
-      img.setAttribute("src", `data:image/svg+xml,${encodeURIComponent(svg)}`);
-      if (maxWidth) {
-        img.width = parseInt(maxWidth);
-      }
-      if (firstTitle) {
-        img.setAttribute("alt", firstTitle.textContent);
-      }
-      if (firstDesc) {
-        const caption = document.createElement("figcaption");
-        caption.className = "sr-only";
-        caption.textContent = firstDesc.textContent;
-        return [img, caption];
-      }
-      return [img];
-    }
+#ai-labs-chrome a {
+  color: #fff;
+  min-height: 32px;
+  padding: 0 2px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
 
-    async function makeMermaidError(text) {
-      let errorMessage = "";
-      try {
-        await mermaid.parse(text);
-      } catch (err) {
-        errorMessage = `${err}`;
-      }
+#ai-labs-chrome a:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
+}
 
-      const result = document.createElement("details");
-      result.className = 'jp-RenderedMermaid-Details';
-      const summary = document.createElement("summary");
-      summary.className = 'jp-RenderedMermaid-Summary';
-      const pre = document.createElement("pre");
-      const code = document.createElement("code");
-      code.innerText = text;
-      pre.appendChild(code);
-      summary.appendChild(pre);
-      result.appendChild(summary);
+#ai-labs-chrome span {
+  margin-left: auto;
+  opacity: 0.9;
+}
 
-      const warning = document.createElement("pre");
-      warning.innerText = errorMessage;
-      result.appendChild(warning);
-      return [result];
-    }
+#ai-labs-top {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9998;
+  min-width: 42px;
+  min-height: 42px;
+  border: 1px solid var(--ai-labs-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ai-labs-accent-dark);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+  font: 800 16px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  cursor: pointer;
+}
 
-    async function renderOneMarmaid(src) {
-      const id = `jp-mermaid-${_nextMermaidId++}`;
-      const parent = src.parentNode;
-      let raw = src.textContent.trim();
-      const el = document.createElement("div");
-      el.style.visibility = "hidden";
-      document.body.appendChild(el);
-      let results = null;
-      let output = null;
-      try {
-        let { svg } = await mermaid.render(id, raw, el);
-        svg = cleanMermaidSvg(svg);
-        results = makeMermaidImage(svg);
-        output = document.createElement("figure");
-        results.map(output.appendChild, output);
-      } catch (err) {
-        parent.classList.add("jp-mod-warning");
-        results = await makeMermaidError(raw);
-        output = results[0];
-      } finally {
-        el.remove();
-      }
-      parent.classList.add("jp-RenderedMermaid");
-      parent.appendChild(output);
-    }
+#ai-labs-top[hidden] {
+  display: none;
+}
 
+.jp-Notebook .jp-Cell {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 10px;
+}
 
-    /**
-     * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
-     */
-    function cleanMermaidSvg(svg) {
-      svg = svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
-      return `${SVG_XML_HEADER}${svg}`;
-    }
+.jp-Notebook .jp-CodeCell {
+  max-width: min(1120px, 100%);
+}
 
+.jp-Notebook .jp-MarkdownCell:first-of-type {
+  padding: 18px 20px;
+  border: 1px solid var(--ai-labs-line);
+  border-left: 5px solid var(--ai-labs-accent);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
 
-    /**
-     * A regular expression for all void elements, which may include attributes and
-     * a slash.
-     *
-     * @see https://developer.mozilla.org/en-US/docs/Glossary/Void_element
-     *
-     * Of these, only `<br>` is generated by Mermaid in place of `\n`,
-     * but _any_ "malformed" tag will break the SVG rendering entirely.
-     */
-    const RE_VOID_ELEMENT =
-      /<\s*(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\s*([^>]*?)\s*>/gi;
+.jp-RenderedHTMLCommon,
+.jp-RenderedHTMLCommon p,
+.jp-RenderedHTMLCommon li {
+  line-height: 1.72;
+}
 
-    /**
-     * Ensure a void element is closed with a slash, preserving any attributes.
-     */
-    function replaceVoidElement(match, tag, rest) {
-      rest = rest.trim();
-      if (!rest.endsWith('/')) {
-        rest = `${rest} /`;
-      }
-      return `<${tag} ${rest}>`;
-    }
+.jp-RenderedHTMLCommon p,
+.jp-RenderedHTMLCommon ul,
+.jp-RenderedHTMLCommon ol {
+  max-width: 840px;
+}
 
+.jp-RenderedHTMLCommon h1,
+.jp-RenderedHTMLCommon h2,
+.jp-RenderedHTMLCommon h3 {
+  letter-spacing: 0;
+  color: #1f2937;
+}
 
-  /**
-   * Named HTML entities with their decimal equivalent codes.
-   *
-   * @see https://www.w3.org/TR/WD-html40-970708/sgml/entities.html
-   * */
-  const HTML_ENTITIES = `<!ENTITY Aacute "&#193;">
-<!ENTITY aacute "&#225;">
-<!ENTITY Acirc "&#194;">
-<!ENTITY acirc "&#226;">
-<!ENTITY acute "&#180;">
-<!ENTITY AElig "&#198;">
-<!ENTITY aelig "&#230;">
-<!ENTITY Agrave "&#192;">
-<!ENTITY agrave "&#224;">
-<!ENTITY alefsym "&#8501;">
-<!ENTITY Alpha "&#913;">
-<!ENTITY alpha "&#945;">
-<!ENTITY amp "&#38;">
-<!ENTITY and "&#8869;">
-<!ENTITY ang "&#8736;">
-<!ENTITY Aring "&#197;">
-<!ENTITY aring "&#229;">
-<!ENTITY asymp "&#8776;">
-<!ENTITY Atilde "&#195;">
-<!ENTITY atilde "&#227;">
-<!ENTITY Auml "&#196;">
-<!ENTITY auml "&#228;">
-<!ENTITY bdquo "&#8222;">
-<!ENTITY Beta "&#914;">
-<!ENTITY beta "&#946;">
-<!ENTITY brvbar "&#166;">
-<!ENTITY bull "&#8226;">
-<!ENTITY cap "&#8745;">
-<!ENTITY Ccedil "&#199;">
-<!ENTITY ccedil "&#231;">
-<!ENTITY cedil "&#184;">
-<!ENTITY cent "&#162;">
-<!ENTITY Chi "&#935;">
-<!ENTITY chi "&#967;">
-<!ENTITY circ "&#710;">
-<!ENTITY clubs "&#9827;">
-<!ENTITY cong "&#8773;">
-<!ENTITY copy "&#169;">
-<!ENTITY crarr "&#8629;">
-<!ENTITY cup "&#8746;">
-<!ENTITY curren "&#164;">
-<!ENTITY dagger "&#8224;">
-<!ENTITY Dagger "&#8225;">
-<!ENTITY darr "&#8595;">
-<!ENTITY dArr "&#8659;">
-<!ENTITY deg "&#176;">
-<!ENTITY Delta "&#916;">
-<!ENTITY delta "&#948;">
-<!ENTITY diams "&#9830;">
-<!ENTITY divide "&#247;">
-<!ENTITY Eacute "&#201;">
-<!ENTITY eacute "&#233;">
-<!ENTITY Ecirc "&#202;">
-<!ENTITY ecirc "&#234;">
-<!ENTITY Egrave "&#200;">
-<!ENTITY egrave "&#232;">
-<!ENTITY empty "&#8709;">
-<!ENTITY emsp "&#8195;">
-<!ENTITY ensp "&#8194;">
-<!ENTITY epsilon "&#949;">
-<!ENTITY Epsilon "&#917;">
-<!ENTITY equiv "&#8801;">
-<!ENTITY Eta "&#919;">
-<!ENTITY eta "&#951;">
-<!ENTITY ETH "&#208;">
-<!ENTITY eth "&#240;">
-<!ENTITY Euml "&#203;">
-<!ENTITY euml "&#235;">
-<!ENTITY exist "&#8707;">
-<!ENTITY fnof "&#402;">
-<!ENTITY forall "&#8704;">
-<!ENTITY frac12 "&#189;">
-<!ENTITY frac14 "&#188;">
-<!ENTITY frac34 "&#190;">
-<!ENTITY frasl "&#8260;">
-<!ENTITY Gamma "&#915;">
-<!ENTITY gamma "&#947;">
-<!ENTITY ge "&#8805;">
-<!ENTITY gt "&#62;">
-<!ENTITY harr "&#8596;">
-<!ENTITY hArr "&#8660;">
-<!ENTITY hearts "&#9829;">
-<!ENTITY hellip "&#8230;">
-<!ENTITY Iacute "&#205;">
-<!ENTITY iacute "&#237;">
-<!ENTITY Icirc "&#206;">
-<!ENTITY icirc "&#238;">
-<!ENTITY iexcl "&#161;">
-<!ENTITY Igrave "&#204;">
-<!ENTITY igrave "&#236;">
-<!ENTITY image "&#8465;">
-<!ENTITY infin "&#8734;">
-<!ENTITY int "&#8747;">
-<!ENTITY Iota "&#921;">
-<!ENTITY iota "&#953;">
-<!ENTITY iquest "&#191;">
-<!ENTITY isin "&#8712;">
-<!ENTITY Iuml "&#207;">
-<!ENTITY iuml "&#239;">
-<!ENTITY Kappa "&#922;">
-<!ENTITY kappa "&#954;">
-<!ENTITY Lambda "&#923;">
-<!ENTITY lambda "&#955;">
-<!ENTITY lang "&#9001;">
-<!ENTITY laquo "&#171;">
-<!ENTITY larr "&#8592;">
-<!ENTITY lArr "&#8656;">
-<!ENTITY lceil "&#8968;">
-<!ENTITY ldquo "&#8220;">
-<!ENTITY le "&#8804;">
-<!ENTITY lfloor "&#8970;">
-<!ENTITY lowast "&#8727;">
-<!ENTITY loz "&#9674;">
-<!ENTITY lrm "&#8206;">
-<!ENTITY lsaquo "&#8249;">
-<!ENTITY lsquo "&#8216;">
-<!ENTITY lt "&#60;">
-<!ENTITY macr "&#175;">
-<!ENTITY mdash "&#8212;">
-<!ENTITY micro "&#181;">
-<!ENTITY middot "&#183;">
-<!ENTITY minus "&#8722;">
-<!ENTITY Mu "&#924;">
-<!ENTITY mu "&#956;">
-<!ENTITY nabla "&#8711;">
-<!ENTITY nbsp "&#160;">
-<!ENTITY ndash "&#8211;">
-<!ENTITY ne "&#8800;">
-<!ENTITY ni "&#8715;">
-<!ENTITY not "&#172;">
-<!ENTITY notin "&#8713;">
-<!ENTITY nsub "&#8836;">
-<!ENTITY Ntilde "&#209;">
-<!ENTITY ntilde "&#241;">
-<!ENTITY Nu "&#925;">
-<!ENTITY nu "&#957;">
-<!ENTITY Oacute "&#211;">
-<!ENTITY oacute "&#243;">
-<!ENTITY Ocirc "&#212;">
-<!ENTITY ocirc "&#244;">
-<!ENTITY OElig "&#338;">
-<!ENTITY oelig "&#339;">
-<!ENTITY Ograve "&#210;">
-<!ENTITY ograve "&#242;">
-<!ENTITY oline "&#8254;">
-<!ENTITY Omega "&#937;">
-<!ENTITY omega "&#969;">
-<!ENTITY Omicron "&#927;">
-<!ENTITY omicron "&#959;">
-<!ENTITY oplus "&#8853;">
-<!ENTITY or "&#8870;">
-<!ENTITY ordf "&#170;">
-<!ENTITY ordm "&#186;">
-<!ENTITY Oslash "&#216;">
-<!ENTITY oslash "&#248;">
-<!ENTITY Otilde "&#213;">
-<!ENTITY otilde "&#245;">
-<!ENTITY otimes "&#8855;">
-<!ENTITY Ouml "&#214;">
-<!ENTITY ouml "&#246;">
-<!ENTITY para "&#182;">
-<!ENTITY part "&#8706;">
-<!ENTITY permil "&#8240;">
-<!ENTITY perp "&#8869;">
-<!ENTITY Phi "&#934;">
-<!ENTITY phi "&#966;">
-<!ENTITY Pi "&#928;">
-<!ENTITY pi "&#960;">
-<!ENTITY piv "&#982;">
-<!ENTITY plusmn "&#177;">
-<!ENTITY pound "&#163;">
-<!ENTITY prime "&#8242;">
-<!ENTITY Prime "&#8243;">
-<!ENTITY prod "&#8719;">
-<!ENTITY prop "&#8733;">
-<!ENTITY Psi "&#936;">
-<!ENTITY psi "&#968;">
-<!ENTITY quot "&#34;">
-<!ENTITY radic "&#8730;">
-<!ENTITY rang "&#9002;">
-<!ENTITY raquo "&#187;">
-<!ENTITY rarr "&#8594;">
-<!ENTITY rArr "&#8658;">
-<!ENTITY rceil "&#8969;">
-<!ENTITY rdquo "&#8221;">
-<!ENTITY real "&#8476;">
-<!ENTITY reg "&#174;">
-<!ENTITY rfloor "&#8971;">
-<!ENTITY Rho "&#929;">
-<!ENTITY rho "&#961;">
-<!ENTITY rlm "&#8207;">
-<!ENTITY rsaquo "&#8250;">
-<!ENTITY rsquo "&#8217;">
-<!ENTITY sbquo "&#8218;">
-<!ENTITY Scaron "&#352;">
-<!ENTITY scaron "&#353;">
-<!ENTITY sdot "&#8901;">
-<!ENTITY sect "&#167;">
-<!ENTITY shy "&#173;">
-<!ENTITY Sigma "&#931;">
-<!ENTITY sigma "&#963;">
-<!ENTITY sigmaf "&#962;">
-<!ENTITY sim "&#8764;">
-<!ENTITY spades "&#9824;">
-<!ENTITY sub "&#8834;">
-<!ENTITY sube "&#8838;">
-<!ENTITY sum "&#8721;">
-<!ENTITY sup "&#8835;">
-<!ENTITY sup1 "&#185;">
-<!ENTITY sup2 "&#178;">
-<!ENTITY sup3 "&#179;">
-<!ENTITY supe "&#8839;">
-<!ENTITY szlig "&#223;">
-<!ENTITY Tau "&#932;">
-<!ENTITY tau "&#964;">
-<!ENTITY there4 "&#8756;">
-<!ENTITY Theta "&#920;">
-<!ENTITY theta "&#952;">
-<!ENTITY thetasym "&#977;">
-<!ENTITY thinsp "&#8201;">
-<!ENTITY THORN "&#222;">
-<!ENTITY thorn "&#254;">
-<!ENTITY tilde "&#732;">
-<!ENTITY times "&#215;">
-<!ENTITY trade "&#8482;">
-<!ENTITY Uacute "&#218;">
-<!ENTITY uacute "&#250;">
-<!ENTITY uarr "&#8593;">
-<!ENTITY uArr "&#8657;">
-<!ENTITY Ucirc "&#219;">
-<!ENTITY ucirc "&#251;">
-<!ENTITY Ugrave "&#217;">
-<!ENTITY ugrave "&#249;">
-<!ENTITY uml "&#168;">
-<!ENTITY upsih "&#978;">
-<!ENTITY Upsilon "&#933;">
-<!ENTITY upsilon "&#965;">
-<!ENTITY Uuml "&#220;">
-<!ENTITY uuml "&#252;">
-<!ENTITY weierp "&#8472;">
-<!ENTITY Xi "&#926;">
-<!ENTITY xi "&#958;">
-<!ENTITY Yacute "&#221;">
-<!ENTITY yacute "&#253;">
-<!ENTITY yen "&#165;">
-<!ENTITY Yuml "&#376;">
-<!ENTITY yuml "&#255;">
-<!ENTITY Zeta "&#918;">
-<!ENTITY zeta "&#950;">
-<!ENTITY zwj "&#8205;">
-<!ENTITY zwnj "&#8204;">`.replace(/\n/g, ' ');
+.jp-RenderedHTMLCommon h1 {
+  font-size: clamp(1.85rem, 5vw, 2.45rem);
+  line-height: 1.16;
+}
 
-  /**
-   * A reasonably strict xml declaration.
-   */
-  const XML_DECL = '<?xml version="1.0" standalone="no"?>';
+.jp-RenderedHTMLCommon h2 {
+  margin-top: 1.35em;
+  padding-top: 0.2em;
+  font-size: clamp(1.35rem, 3.6vw, 1.78rem);
+}
 
-  /**
-   * The beginning of the XML doctype declaration.
-   */
-  const DOCTYPE_START = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [`;
+.jp-RenderedHTMLCommon h3 {
+  color: var(--ai-labs-accent-dark);
+}
 
-  /**
-   * The end of the XML docype declaration.
-   */
-  const DOCTYPE_END = ']>';
+.jp-RenderedHTMLCommon a.anchor-link {
+  margin-left: 0.35em;
+  color: var(--ai-labs-accent);
+  font-size: 0.72em;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
 
-  /**
-   * A full header for an SVG XML document.
-   */
-  const SVG_XML_HEADER = `${XML_DECL}
-    ${DOCTYPE_START}${HTML_ENTITIES}${DOCTYPE_END}`;
+.jp-RenderedHTMLCommon h1:hover a.anchor-link,
+.jp-RenderedHTMLCommon h2:hover a.anchor-link,
+.jp-RenderedHTMLCommon h3:hover a.anchor-link,
+.jp-RenderedHTMLCommon a.anchor-link:focus-visible {
+  opacity: 0.75;
+}
 
-    void Promise.all([...diagrams].map(renderOneMarmaid));
-  });
-</script>
-<style>
-  .jp-Mermaid:not(.jp-RenderedMermaid) {
+.jp-RenderedHTMLCommon a.anchor-link:focus-visible {
+  outline: 2px solid rgba(13, 107, 98, 0.35);
+  outline-offset: 2px;
+}
+
+.jp-RenderedHTMLCommon a {
+  color: #075985;
+  font-weight: 700;
+}
+
+.jp-RenderedHTMLCommon code {
+  border-radius: 5px;
+  padding: 0.1em 0.35em;
+  background: #eef2f7;
+  color: #334155;
+}
+
+.jp-RenderedHTMLCommon details {
+  max-width: 840px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid #d6e5ef;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.jp-RenderedHTMLCommon summary {
+  cursor: pointer;
+  color: var(--ai-labs-accent-dark);
+  font-weight: 800;
+}
+
+.jp-InputArea-editor,
+.jp-OutputArea-output {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.jp-InputArea-editor {
+  border: 1px solid var(--ai-labs-line);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.jp-OutputArea-output {
+  border-radius: 8px;
+}
+
+.jp-RenderedText pre {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid var(--ai-labs-line);
+}
+
+.jp-RenderedHTMLCommon img,
+.jp-OutputArea-output img,
+.jp-OutputArea-output svg {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+  body.jp-Notebook {
+    padding-bottom: 40px;
+  }
+
+  #ai-labs-chrome {
+    min-height: 56px;
+    margin-bottom: 18px;
+  }
+
+  #ai-labs-chrome span {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  #ai-labs-top {
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .jp-Notebook .jp-InputPrompt,
+  .jp-Notebook .jp-OutputPrompt {
     display: none;
   }
 
-  .jp-RenderedMermaid {
-    overflow: auto;
-    display: flex;
+  .jp-Notebook .jp-Cell-inputWrapper,
+  .jp-Notebook .jp-Cell-outputWrapper {
+    padding-left: 0;
   }
 
-  .jp-RenderedMermaid.jp-mod-warning {
-    width: auto;
-    padding: 0.5em;
-    margin-top: 0.5em;
-    border: var(--jp-border-width) solid var(--jp-warn-color2);
-    border-radius: var(--jp-border-radius);
-    color: var(--jp-ui-font-color1);
-    font-size: var(--jp-ui-font-size1);
-    white-space: pre-wrap;
-    word-wrap: break-word;
+  .jp-Notebook .jp-MarkdownCell:first-of-type {
+    padding: 14px;
   }
-
-  .jp-RenderedMermaid figure {
-    margin: 0;
-    overflow: auto;
-    max-width: 100%;
-  }
-
-  .jp-RenderedMermaid img {
-    max-width: 100%;
-  }
-
-  .jp-RenderedMermaid-Details > pre {
-    margin-top: 1em;
-  }
-
-  .jp-RenderedMermaid-Summary {
-    color: var(--jp-warn-color2);
-  }
-
-  .jp-RenderedMermaid:not(.jp-mod-warning) pre {
-    display: none;
-  }
-
-  .jp-RenderedMermaid-Summary > pre {
-    display: inline-block;
-    white-space: normal;
-  }
+}
 </style>
-<!-- End of mermaid configuration --></head>
-<div id="ai-labs-chrome" style="position:sticky;top:0;z-index:9999;background:#0d6b62;color:#fff;font:600 13px system-ui,sans-serif;padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #0a5a52"><a href="../index.html" style="color:#fff;text-decoration:none">Notebook 索引</a><a href="../../hub.html" style="color:#fff;text-decoration:none">章节目录</a><span style="opacity:.85;margin-left:auto">Jupyter 预渲染 · 国内可访问</span></div><body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+</head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../index.html">Notebook 索引</a><a href="../../ch6.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch06_forward_backward_chain.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
+<button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=501367b9">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a69d50b4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E5%89%8D%E5%90%91%E9%93%BE%E4%B8%8E%E5%90%8E%E5%90%91%E9%93%BE">第 6 章 · 前向链与后向链<a class="anchor-link" href="#%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E5%89%8D%E5%90%91%E9%93%BE%E4%B8%8E%E5%90%8E%E5%90%91%E9%93%BE">¶</a></h1><p>苏格拉底三段论：逐步展示规则扫描、事实池增长与目标证明。</p>
-<p>配套交互演示：<a href="../ch6.html">章节网页</a></p>
+<p>配套交互演示：<a href="../../ch6.html">章节网页</a></p>
 <h2 id="%E6%9C%AC%E8%8A%82%E7%9B%AE%E6%A0%87">本节目标<a class="anchor-link" href="#%E6%9C%AC%E8%8A%82%E7%9B%AE%E6%A0%87">¶</a></h2><ul>
 <li>逐步模拟前向链</li>
 <li>观察 known 事实池如何扩展</li>
@@ -7814,7 +7576,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=db8afd97">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=71474c58">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7825,7 +7587,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=506f59cc">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ad851008">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7837,7 +7599,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c505eb5a">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a47ce1c5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7850,7 +7612,7 @@ IF 会死(x) THEN 终有一死(x)
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=035da26c">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=859f28f2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7872,13 +7634,12 @@ IF 会死(x) THEN 终有一死(x)
 <span class="n">configure_matplotlib</span><span class="p">()</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">Image</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">reasoning</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">common.codelens</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_frames</span> <span class="k">as</span> <span class="n">print_codelens</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c8b66255">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5af8120a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7892,7 +7653,7 @@ IF 会死(x) THEN 终有一死(x)
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=34c245a2">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4001d59c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7900,7 +7661,7 @@ IF 会死(x) THEN 终有一死(x)
 <div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">'facts:'</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">'facts'</span><span class="p">])</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">facts_goal_table</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -7912,14 +7673,48 @@ IF 会死(x) THEN 终有一死(x)
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>facts: ['人(苏格拉底)']
-</pre>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>项目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>初始事实</td>
+<td>人(苏格拉底)</td>
+</tr>
+<tr>
+<th>1</th>
+<td>证明目标</td>
+<td>终有一死(苏格拉底)</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e8e21927">
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7394d9c7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7927,7 +7722,7 @@ IF 会死(x) THEN 终有一死(x)
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">'goal:'</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">'goal'</span><span class="p">])</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">rules_table</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -7939,43 +7734,52 @@ IF 会死(x) THEN 终有一死(x)
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>goal: 终有一死(苏格拉底)
-</pre>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>规则</th>
+<th>IF</th>
+<th>THEN</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>R1</td>
+<td>人(X)</td>
+<td>会死(X)</td>
+</tr>
+<tr>
+<th>1</th>
+<td>R2</td>
+<td>会死(X)</td>
+<td>终有一死(X)</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=756f6131">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">'rules'</span><span class="p">]:</span> <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s1">'id'</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s1">'if'</span><span class="p">],</span> <span class="s1">'=&gt;'</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="s1">'then'</span><span class="p">])</span>
-</pre></div>
 </div>
 </div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>R1 ['人(X)'] =&gt; 会死(X)
-R2 ['会死(X)'] =&gt; 终有一死(X)
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=57a263e1">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ccb3f33c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7989,7 +7793,7 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=05704d75">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a4a696b9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8000,7 +7804,7 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d733c68d">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1c5749b6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8011,7 +7815,7 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3781bb5e">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9de44e89">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8026,12 +7830,12 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=9561278d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2766cffb">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">fc_frames</span> <span class="o">=</span> <span class="n">codelens_forward_chain</span><span class="p">()</span>
@@ -8040,53 +7844,12 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a3740560">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8c51f46f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">print_codelens</span><span class="p">(</span><span class="n">fc_frames</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>── Step 0 ── 初始化
-   执行: known = facts
-   known = ['人(苏格拉底)']
-   goal = '终有一死(苏格拉底)'
-
-── Step 1 ── 第 1 轮触发 2 条规则
-   执行: round 1 scan rules
-   新增 = ['R1: 人(苏格拉底) ⇒ 会死(苏格拉底)', 'R2: 会死(苏格拉底) ⇒ 终有一死(苏格拉底)']
-   known = ['人(苏格拉底)', '会死(苏格拉底)', '终有一死(苏格拉底)']
-
-── Step 2 ── 检查目标是否在 known 中
-   执行: check goal
-   goal = '终有一死(苏格拉底)'
-    proved = True
-
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=856cd43d">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">animate_forward_chain</span><span class="p">()</span>
@@ -8102,20 +7865,20 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
-<img alt="No description has been provided for this image" class="" src="data:image/png;base64,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yLChw4cQI0qcSLGixYsYM2rcyLGjx48gQ4ocSbKkyZMoU6pcybKly5cwY8qcSbOmzZs4c+rcybOnz59AgwodSrSo0aNIkypdyrSp06dQo0qdSrWq1atYs2rdyrWr169gw4odS7as2bNo06pdy7at27dw48qdS7eu3bt48+rdy7ev37+AAwseTLiw4cOIEytezLix48eQI0ueTLmy5cuYM2vezLmz58+gQ4seTbq06dOoU6tezbq169ewY8ueTbu27du4c+vezbu379/AgwsfTry48ePIkytfzry58+fQo0ufTr269evYs2vfzr279+/gw4v/H0++vPnz6NOrX8++vfv38OPLn0+/vv37+PPr38+/v///AAYo4IAEFmjggQgmqOCCDDbo4IMQRijhhBRWaOGFGGao4YYcGhhCCHJ92OGI0hUgYlwPgEjiis19WECIJ7Io41cxfhjCizKlqKJFMTJUo402AflQj0MSaZCJO86opFYn2ohjTDYmSZGRCf1I5UtCOnTlQllWKeWSYFIlopM0bRmRmQXFmCJOXfr4pUNPKoRmmHQqFeWNBN1J5J0D9Yhnn3q2CQCfAvFppZB6Dkpmmk1GKRCSWQaaJ0FIFqqjjiASCimhjDpa6I2eAurkmCpKCmidqEYVZZyDYhrpnQ98/5rnji5+6OqentqaqKK7hoBpq4K6+CmQm+o4LKg7Viorr7qSSmygRkJ7bKjNOtqojcYum+q2Sy06K62x8iqquOQCsCa1X1o5EKQAKDvssieyqq2iA6X4JJCIXntqq9+Wa6+oUror7qsvdmmsvgKt+am83DYsVKh9hguvlCcq7KuIlXYZLbid0uvlo1v6WSquHsN7MKmskjpuv7N6+WTGAatccsnCOmzzUKsy2nKbwjp77shJbrxvywojdOhBIi+ss687I+ux0D+mTGTRBpEM9ciz4ljzzVz7VCvFQWeKq9b4Ol3uzNoKTXXVQWeb9b5by9ojpLHKfDWgUku5dstNs//9dNhYdy04T6RKPHOjOlt6LdB8N850v2Yaufer7xL0c0G/slv5qeqyPLTffVNqN+DzDm56TQgfzvjmi9q6cuk0x8iuxogXCjvlCf85MNi0Jj1uj25DfHbZSwM/Ostznq58Sp37vinPvUff+OfVZivtsM+/+SPAuaYrPfe/zq2n29znmzi0Ys8r5AOGL+9+SyKnT73wMxtOO+jc0+zqt2Jfuf26nBJavap2K/kB0FRp2l/pDpW+2lUuee+LIGIgWBZBSfCCi7HgWiiIwQ568IMgDKEIR0jCEprwhChMoQpXyMIWuvCFMIyhDGdIwxra8IY4zKEOd8jDHvrwh0AMohD/h0jEIhrxiEhMohKXyMQmOvGJUIyiFKdIxSpa8YpYzKIWt8jFLnrxi2AMoxjHSMYymvGMaEyjGtfIxja68Y1wjKMc50jHOtrxjnjMox73yMc++vGPgAykIIXIAAEY8pCITKQiF8nIRjrykZBUZARY5YBIWvKSmMykIzVQkEpq8pOgDKUiOTnIFqHvlKhMpSpXycoPZYAgDAiALGdJy1ra8pa4zKUud8lLXHKAIA7opTCHScxi7pIDpCylchrQymY685nNTKYAjEnNalozlw4YCAauyc1uGpMBylwOM6FJznKaUwIDmaY318lOXGZTIBFopzznCc5wJmec5synPlWJ/06BqHOeAO3mOwEQz4Aa1Jr1tOdx8LnPhjrURv0EwD8PStFhDrSgFc0oLxOq0OIw9KEgzWdEJ6rRktryoiZNqS052tHhfDSkMH3mSFVKU1mitKYqZWlLg/PSmPp0lTPFaUpvKtSS6nSnv+npT5eKvqAWVaNEfWpFj4rU3iiVqViNklOlStGoctWgVK3qbq6a1axu9asB9Spa6SlW4ZC1rEw961rlqda5sjOsbcXNW+H6U7nadZ11/Ws38ZpX2+yVrzH1q2C5GdjFIrSwSUWsZBXr2Go2trLfhKxvDitZkFIWs8W8LGiHSVjNyoaznXXoZ0crTNGydqOm5Q1qU7vP1f++dpeuvW0uSxvb18yWtiJNp24tOxCMDpeYvO1ta34L3HLa9rgnLS50i5lc5a6Guc2F5nOnO8vccleW1bVuarCbXWdu97ve/W54xXsa8pa3leflbnq5u172lsa97wWqcL/by/lOt772HQ1+85vK+E7Xv9AFcIBDM+BVxikE2dQAXA1czTg1AJzbNCmCqWlhcBYgwxpV8II/02BWQooBGWgAs5ZKYWsW4AKzxACIoSpdjb44AAxA8QU0QNKDinjEnSmxg0XEgQ9FgAFm3W9GbyxLGQ+1xkuGMQA4IMsGBDPEQI6NkFVpoi2bV8kVZXIAnKxhKIcZxhmYpQBAYNQsw8b/y6hEEpJHhdUWVxjGTZ5xRjd8Z1peoABpxrKbXQPnU3bZAZMFM0XFTOaS8pnDeA7Anxtg0h8PGjOFRh/MQnDkJPuzpIzWc0UfbUwmZ6AAlK70pZeb1U2leMV9VfRBQ/1keIIazQXYQE5XzZpMQwtJGYjwhGVtUFqX2dY2vkAGkimQNvNaNb4mcAjsrFtSv9bSz55MtAlM7dtam7XYznZktp3fbr/226MNt7gfQ+73mpu16AatutfdmHaX992jjTdm503vxdg7u/gGrb4ry+9+J+bfzQ04Zgfu2IIb/DAIB67CK8vwxTr84YWJOG0n7tiKC/biGB+MxlPL8cV6/K8g/w95YEbe2ZIL9uR2TbnK/8LyRH+av7yE+VxlPvO+1ByxLv+rztfK857v5ed8Dbpdh47Wohs9L0gf9s1xrkumf9XpT79L1Muq9LlanatYz3pdtu5piVIdt2Y++0rFrhmy15nYardp2uM+y7CzXS5ujyvc4/51qdr97nDJO4v3rva+P/XvgHeL4GM9dbrT0vBFRXzi2bJ4n3Z9rZAXquQnr5bKJ5bwZ888TjfPebR4HqaXR6voa0r60pvl9CFN/VdXT9PWu54ssPcs6KlO+13fHjICkDZMk2lcx8syoqJ2/EB/7xjhgxQDBemA8dVckFRPXwDMz772t8/97nv/++APv//4x0/+8pv//OhPv/rXz/72u//98I+//OdP//rb//74z7/+98///vv//wAYgAI4gARYgAZ4gAiYgAq4gAzYgA74gBAYgRI4gRRYgRZ4gRiYgRq4gRzYgR74gSAYgiI4giRYgiZ4giiYgiq4gizYgi74gjAYgzI4gzRYgzZ4gziYgzq4gzzYgz74g0AYhEI4hERYhEZ4hEiYhEq4hEzYhE74hFAYhVI4hVRYhVZ4hViYhVq4hVzYhV74hWAYhmI4hmRYhrkRQG9SEQ8wAARghunRK2lIEQsAAW3ohuZRM73TEQhQh3ZYHriSL63TLHszEHvYh3foK/cCiN2DQAVRiIb66Ie4YzW+YxCO+IjkUQD/4jEFxDREIjCEyIeWSB61s4kGBDJvUomh6B3/40ByM4mNCIqpyB2moohkgj4IgYqxKIvoEj14CCtxiIu5CB8cFIz1MYzEOB/GeIzKuIzM2IzO+IzQGI3SOI3UWI3WeI3YmI3auI3c2I3e+I3gGI7iOI7kWI7meI7omI7quI7s2I7u+I7wGI/yOI/0WI/2eI/4mI/6uI/82I/++I8AGZACOZAEWZAGeZAImZAKuZAM2ZAO+ZAQGZESOZEUWZEWeZEYmZEauZEc2ZEe+ZEgGZIiOZIkWZImeZIomZIquZIs2ZIu+ZIwGZMymUIBAQAh+QQBZAAQACwAAAAAhANeAYf+/v4DAwOZmZnZ2dkZGRnn5+d6enqIiIhbW1u5ubk7OzsoKCioqKjHx8dGRkZoaGgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI/wABCBxIsKDBgwgTKlzIsKHDhxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJkyhTqlzJsqXLlzBjypxJs6bNmzhz6tzJs6fPn0CDCh1KtKjRo0iTKl3KtKnTp1CjSp1KtarVq1izat3KtavXr2DDih1LtqzZs2jTql3Ltq3bt3Djyp1Lt67du3jz6t3Lt6/fv4ADCx5MuLDhw4gTK17MuLHjx5AjS55MubLly5gza97MubPnz6BDix5NurTp06hTq17NurXr17Bjy55Nu7bt27hz697Nu7fv38CDCx9OvLjx48iTK1/OvLnz59CjS59Ovbr169iza9/Ovbv37+DDi/8fT768+fPo06tfz769+/fw48ufT7++/fv48+vfz7+///8ABijggAQWaOCBCCao4IIMNujggxBGKOGEFFZo4YUYZqjhhhwaKAADch2QQIckSlcABAfIBQEEJbbonAAQFCAXAxAM4OKNYa040AAryijTiixeZECQDekoUAMrGmBTAjVCZGREBzSp0IkC4GhlV0byGONMTBqgpJBEMgTBlwCseACINTFp40NPOglBA2KGeeWcVemopY8y0ajRkGyiWaacXErpUJsQ4akQoXQmCtWKdxIEgQBMruinQEOaOdCYjhqKIo8JwLjiiAVV+qSnmD46EJJApgiAlkACEOmWBfH/COefSQp0IpBVCgTko6ZeStCJaLL6po67fnnripAKShCqluoa464F0QjkiUrCqKsBzOYqUJSKdhvVrobSiuKnl5rZKgB8XqoqADQWIGyUygKA6ofOoihqrtIaAG+QnkL6Z6UGMemjtALAeau+56Z660DADsStq0nuy2KqNh4r8ZoE5btvveM+Ce8BolYb5K7waquntygzNa1B5Drr7KwQp8ipQNKWuyqjNhdkLc29AnBrlQvv+CalQSJp60Enu+wsnjCCiDPEa8J76ZdtAtzyn3iiirGtbcpKq8NbIknmvwDsjGzOEIeb8tpDAQkz2gA8jGJBRtZN7okjaukooDv//1kQklWmi1C61CaUtN83T+p3m5jSaiOSNsIYLrFE8qj4kFujC2i5eOKNOMOYmh1m0gKzbTpR4NK9btksIvk2u1vqKauOD1tOkOAD9T033VUiejuRnr7O8948h8ttm9wKXOrIgFI+ULsFqUn35kpf6nTzIleftkCln+79Tz0S2jPr8g6dMawQMMBnu43PPBDuAum+uq69U080QVqCej6eRkJP0PFhOhGq4jaxXCHKecX7W7x8p70y1Y9l2SvT2KQHu+9ZsCc6GuCltEW+Ms3vSamq15rcdz+dEYlQgNOcQuD3uVMJKkvpm14LaQWiY+VugROr3Pg0lzkWws2BMyyc2f8mKKW+XfCINjFSpDZIENFhjEnrQpWPACYQEqrQhM/r2c9uFiavXVFeDbyZ/kAIK9hdL1pkDFPVEOisJz5NaF0cmviqJLa9RbBx3JOSD5HIR5eMqnHj25nFzoU221URAvr74g33Zi9c8WxMG9vWowoQJS/tTnWFjFjCsDcQJr0tUghrVZsGCaTMwQ6Sm+Qd0RpZqyEShIIM7KMsU4I8UwUyTKKaX9wSGcdEstCIrKtVz5h1SS7CSVQIIeOvdqWtA24NUMTUG6GOlT4KKjCEDeyZtIh1RyKuCY+zDKdk9rgWK4rznI1BUiLd8jB0uvOd8IynPOdJz3ra8574zKc+98n/z376858ADahAB0rQghr0oAhNqEIXytCGOvShEI2oRCdK0Ypa9KIYzahGN8rRjnr0oyANqUhHStKSmvSkKE2pSlfK0pa69KUwjalMZ0rTmtr0pjjNqU53ytOe+vSnQA2qUIdK1KIa9ahITapSl8rUpjr1qVCNqlSnStWqWvWqWM2qVrfK1a569atgDatYx0rWspr1rGhNq1rXyta2uvWtcI2rXOdK17ra9a54zate98rXvvr1r4ANbEcOoLaSUFKwLm0ABzuSgHXqTHiINSkDHLuRxiokAYqLrEkFYMrKUnZHi9VsSQlbRQEcoGC5GwADTiuj1QrAR5zt1Jlge4Da/yr2laDSpWhFethVcdZd9CrbARpQgE4xgLidih+kClBc0haXATLirMN8RNrdlrS30s1ddPUnoumWbVKY5R6oGoAm8mrXutcFWm3Xa9uyYSy77o0vw1Rl2W1F972dRW9HD0tJ5voXtvhNrXxtRV/9NbYAHHytfkeK3a2hCb4Qjhx40VRfn50pkdVdcEhJO4CCAffBAY5f5JbbXB+ZN3cZjpuGR5rdDp9WfxEWcGxNC90dnamTk+rwikVaYYrAdyE/7vGOO6pji/w4IUUW8JBxemSEHHfJUI6ylKdM5Spb+cpYzrKWt8zlLnv5y2AOs5jHTOYym/nMaE6zmtfM5ja7+f/NcI6znOdM5zrb+c54zrOe98znPvv5z4AOtKAHTehCG/rQiE60ohfN6EY7+tGQjrSkJ03pSlv60pjOtKY3zelOe/rToA61qEdN6lKb+tSoTrWqV83qVrv61bCOtaxnTeta2/rWuM61rnfN6177+tfADrawh03sYhv72MhOtrKXzexmO/vZ0I62tKdN7Wpb+9rYzra2t83tbnv72+AOt7jHTe5ym/vc6E63utfN7na7+93wjre8503vetv73vjOt773ze9++/vfAA/4SZilP3JO5AEECIACICvw3owJVbMyeEQcsIAENOABAchvw3ODJB8V3H4RaUDGB+KAB2w8OOL/c6TmVsY6YQkvAQi4nQNODpxI4UlL30wfeY3kKWxF6rMDWcDYaM4biL+PX3KaW9N+pxCEF5boubnVFJm3q1YBU4CDCwDDoa6bxqWLUQMIu9g7CDrIGiAAQOc6bQzQzC+lC5iIZN2kfHgAtKu9NzAqGOaIlvPjSiu6SWrAzw0igAAcQOwav3tstgkzDa68R/Gr0a6EV/gAWP7yin8OMDPfnc1zfjue/7zoR0/60pv+9KhPvepXz/rWu/71sI+97GdP+9rb/va4z73ud8/73vv+98APvvCHT/ziG//4yE++8pfP/OY7//nQj770p0/96lv/+tjPvva3z/3ue//74A+/NfjHT/7ym//86E+/+tfP/va7//3wj7/850//+tv//vjPv/73z//++///ABiAAjiABFiAcxYQADs="/>
+<img alt="Notebook 输出图表，请结合前后文字说明阅读" class="" src="data:image/png;base64,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yLChw4cQI0qcSLGixYsYM2rcyLGjx48gQ4ocSbKkyZMoU6pcybKly5cwY8qcSbOmzZs4c+rcybOnz59AgwodSrSo0aNIkypdyrSp06dQo0qdSrWq1atYs2rdyrWr169gw4odS7as2bNo06pdy7at27dw48qdS7eu3bt48+rdy7ev37+AAwseTLiw4cOIEytezLix48eQI0ueTLmy5cuYM2vezLmz58+gQ4seTbq06dOoU6tezbq169ewY8ueTbu27du4c+vezbu379/AgwsfTry48ePIkytfzry58+fQo0ufTr269evYs2vfzr279+/gw4v/H0++vPnz6NOrX8++vfv38OPLn0+/vv37+PPr38+/v///AAYo4IAEFmjggQgmqOCCDDbo4IMQRijhhBRWaOGFGGao4YYcGhhCCHJ92OGI0hUgYlwPgEjiis19WECIJ7Io41cxfhjCizKlqKJFMTJUo402AflQj0MSaZCJO86opFYn2ohjTDYmSZGRCf1I5UtCOnTlQllWKeWSYFIlopM0bRmRmQXFmCJOXfr4pUNPKoRmmHQqFeWNBN1J5J0D9Yhnn3q2CQCfAvFppZB6Dkpmmk1GKRCSWQaaJ0FIFqqjjiASCimhjDpa6I2eAurkmCpKCmidqEYVZZyDYhrpnQ98/5rnji5+6OqentqaqKK7hoBpq4K6+CmQm+o4LKg7Viorr7qSSmygRkJ7bKjNOtqojcYum+q2Sy06K62x8iqquOQCsCa1X1o5EKQAKDvssieyqq2iA6X4JJCIXntqq9+Wa6+oUror7qsvdmmsvgKt+am83DYsVKh9hguvlCcq7KuIlXYZLbid0uvlo1v6WSquHsN7MKmskjpuv7N6+WTGAatccsnCOmzzUKsy2nKbwjp77shJbrxvywojdOhBIi+ss687I+ux0D+mTGTRBpEM9ciz4ljzzVz7VCvFQWeKq9b4Ol3uzNoKTXXVQWeb9b5by9ojpLHKfDWgUku5dstNs//9dNhYdy04T6RKPHOjOlt6LdB8N850v2Yaufer7xL0c0G/slv5qeqyPLTffVNqN+DzDm56TQgfzvjmi9q6cuk0x8iuxogXCjvlCf85MNi0Jj1uj25DfHbZSwM/Ostznq58Sp37vinPvUff+OfVZivtsM+/+SPAuaYrPfe/zq2n29znmzi0Ys8r5AOGL+9+SyKn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sKHDhxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJkyhTqlzJsqXLlzBjypxJs6bNmzhz6tzJs6fPn0CDCh1KtKjRo0iTKl3KtKnTp1CjSp1KtarVq1izat3KtavXr2DDih1LtqzZs2jTql3Ltq3bt3Djyp1Lt67du3jz6t3Lt6/fv4ADCx5MuLDhw4gTK17MuLHjx5AjS55MubLly5gza97MubPnz6BDix5NurTp06hTq17NurXr17Bjy55Nu7bt27hz697Nu7fv38CDCx9OvLjx48iTK1/OvLnz59CjS59Ovbr169iza9/Ovbv37+DDi/8fT768+fPo06tfz769+/fw48ufT7++/fv48+vfz7+///8ABijggAQWaOCBCCao4IIMNujggxBGKOGEFFZo4YUYZqjhhhwaKAADch2QQIckSlcABAfIBQEEJbbonAAQFCAXAxAM4OKNYa040AAryijTiixeZECQDekoUAMrGmBTAjVCZGREBzSp0IkC4GhlV0byGONMTBqgpJBEMgTBlwCseACINTFp40NPOglBA2KGeeWcVemopY8y0ajRkGyiWaacXErpUJsQ4akQoXQmCtWKdxIEgQBMruinQEOaOdCYjhqKIo8JwLjiiAVV+qSnmD46EJJApgiAlkACEOmWBfH/COefSQp0IpBVCgTko6ZeStCJaLL6po67fnnripAKShCqluoa464F0QjkiUrCqKsBzOYqUJSKdhvVrobSiuKnl5rZKgB8XqoqADQWIGyUygKA6ofOoihqrtIaAG+QnkL6Z6UGMemjtALAeau+56Z660DADsStq0nuy2KqNh4r8ZoE5btvveM+Ce8BolYb5K7waquntygzNa1B5Drr7KwQp8ipQNKWuyqjNhdkLc29AnBrlQvv+CalQSJp60Enu+wsnjCCiDPEa8J76ZdtAtzyn3iiirGtbcpKq8NbIknmvwDsjGzOEIeb8tpDAQkz2gA8jGJBRtZN7okjaukooDv//1kQklWmi1C61CaUtN83T+p3m5jSaiOSNsIYLrFE8qj4kFujC2i5eOKNOMOYmh1m0gKzbTpR4NK9btksIvk2u1vqKauOD1tOkOAD9T033VUiejuRnr7O8948h8ttm9wKXOrIgFI+ULsFqUn35kpf6nTzIleftkCln+79Tz0S2jPr8g6dMawQMMBnu43PPBDuAum+uq69U080QVqCej6eRkJP0PFhOhGq4jaxXCHKecX7W7x8p70y1Y9l2SvT2KQHu+9ZsCc6GuCltEW+Ms3vSamq15rcdz+dEYlQgNOcQuD3uVMJKkvpm14LaQWiY+VugROr3Pg0lzkWws2BMyyc2f8mKKW+XfCINjFSpDZIENFhjEnrQpWPACYQEqrQhM/r2c9uFiavXVFeDbyZ/kAIK9hdL1pkDFPVEOisJz5NaF0cmviqJLa9RbBx3JOSD5HIR5eMqnHj25nFzoU221URAvr74g33Zi9c8WxMG9vWowoQJS/tTnWFjFjCsDcQJr0tUghrVZsGCaTMwQ6Sm+Qd0RpZqyEShIIM7KMsU4I8UwUyTKKaX9wSGcdEstCIrKtVz5h1SS7CSVQIIeOvdqWtA24NUMTUG6GOlT4KKjCEDeyZtIh1RyKuCY+zDKdk9rgWK4rznI1BUiLd8jB0uvOd8IynPOdJz3ra8574zKc+98n/z376858ADahAB0rQghr0oAhNqEIXytCGOvShEI2oRCdK0Ypa9KIYzahGN8rRjnr0oyANqUhHStKSmvSkKE2pSlfK0pa69KUwjalMZ0rTmtr0pjjNqU53ytOe+vSnQA2qUIdK1KIa9ahITapSl8rUpjr1qVCNqlSnStWqWvWqWM2qVrfK1a569atgDatYx0rWspr1rGhNq1rXyta2uvWtcI2rXOdK17ra9a54zate98rXvvr1r4ANbEcOoLaSUFKwLm0ABzuSgHXqTHiINSkDHLuRxiokAYqLrEkFYMrKUnZHi9VsSQlbRQEcoGC5GwADTiuj1QrAR5zt1Jlge4Da/yr2laDSpWhFethVcdZd9CrbARpQgE4xgLidih+kClBc0haXATLirMN8RNrdlrS30s1ddPUnoumWbVKY5R6oGoAm8mrXutcFWm3Xa9uyYSy77o0vw1Rl2W1F972dRW9HD0tJ5voXtvhNrXxtRV/9NbYAHHytfkeK3a2hCb4Qjhx40VRfn50pkdVdcEhJO4CCAffBAY5f5JbbXB+ZN3cZjpuGR5rdDp9WfxEWcGxNC90dnamTk+rwikVaYYrAdyE/7vGOO6pji/w4IUUW8JBxemSEHHfJUI6ylKdM5Spb+cpYzrKWt8zlLnv5y2AOs5jHTOYym/nMaE6zmtfM5ja7+f/NcI6znOdM5zrb+c54zrOe98znPvv5z4AOtKAHTehCG/rQiE60ohfN6EY7+tGQjrSkJ03pSlv60pjOtKY3zelOe/rToA61qEdN6lKb+tSoTrWqV83qVrv61bCOtaxnTeta2/rWuM61rnfN6177+tfADrawh03sYhv72MhOtrKXzexmO/vZ0I62tKdN7Wpb+9rYzra2t83tbnv72+AOt7jHTe5ym/vc6E63utfN7na7+93wjre8503vetv73vjOt773ze9++/vfAA/4SZilP3JO5AEECIACICvw3owJVbMyeEQcsIAENOABAchvw3ODJB8V3H4RaUDGB+KAB2w8OOL/c6TmVsY6YQkvAQi4nQNODpxI4UlL30wfeY3kKWxF6rMDWcDYaM4biL+PX3KaW9N+pxCEF5boubnVFJm3q1YBU4CDCwDDoa6bxqWLUQMIu9g7CDrIGiAAQOc6bQzQzC+lC5iIZN2kfHgAtKu9NzAqGOaIlvPjSiu6SWrAzw0igAAcQOwav3tstgkzDa68R/Gr0a6EV/gAWP7yin8OMDPfnc1zfjue/7zoR0/60pv+9KhPvepXz/rWu/71sI+97GdP+9rb/va4z73ud8/73vv+98APvvCHT/ziG//4yE++8pfP/OY7//nQj770p0/96lv/+tjPvva3z/3ue//74A+/NfjHT/7ym//86E+/+tfP/va7//3wj7/850//+tv//vjPv/73z//++///ABiAAjiABFiAcxYQADs="/>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8e9f3403">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e4db1b8f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">forward_chain</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">forward_chain_table</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -8127,17 +7890,66 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>初始事实: 人(苏格拉底)
-第 1 轮: R1: 人(苏格拉底) ⇒ 会死(苏格拉底); R2: 会死(苏格拉底) ⇒ 终有一死(苏格拉底)
-目标 终有一死(苏格拉底): ✓
-</pre>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>步</th>
+<th>动作</th>
+<th>新增事实</th>
+<th>事实数</th>
+<th>目标成立</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>0</td>
+<td>初始化</td>
+<td></td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<th>1</th>
+<td>1</td>
+<td>第 1 轮触发 2 条规则</td>
+<td>R1: 人(苏格拉底) ⇒ 会死(苏格拉底)；R2: 会死(苏格拉底) ⇒ 终有一死(苏格拉底)</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<th>2</th>
+<td>2</td>
+<td>检查目标是否在 known 中</td>
+<td></td>
+<td>0</td>
+<td>True</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=49d6b9c5">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1ee2749e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8151,7 +7963,7 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=caf42ea8">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=651621fb">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8165,7 +7977,7 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5d03c5b9">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f51732c4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8176,7 +7988,7 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8fef4fc9">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d8c7ba02">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8187,7 +7999,7 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=495aa494">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=46e71423">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8201,15 +8013,15 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c663c2ad">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=baddd2c0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">backward_chain</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="s1">' '</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">backward_chain_table</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -8221,18 +8033,66 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>  目标: 终有一死(苏格拉底)
-  子目标: 会死(苏格拉底) (R2)
-  子目标: 人(苏格拉底) (R1)
-  匹配事实: True → 证明成立
-</pre>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>步</th>
+<th>当前目标</th>
+<th>使用规则</th>
+<th>下一子目标</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>1</td>
+<td>终有一死(苏格拉底)</td>
+<td>R2</td>
+<td>会死(苏格拉底)</td>
+<td>继续证明</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2</td>
+<td>会死(苏格拉底)</td>
+<td>R1</td>
+<td>人(苏格拉底)</td>
+<td>继续证明</td>
+</tr>
+<tr>
+<th>2</th>
+<td>3</td>
+<td>人(苏格拉底)</td>
+<td>事实库</td>
+<td>—</td>
+<td>证明成立</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=832ddfe9">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3999eb7a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8243,7 +8103,7 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=513dd7c2">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=60669ac1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8255,7 +8115,7 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=171898c8">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=69a48193">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8269,19 +8129,19 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=90e12749">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8bc835c8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="%E5%B0%8F%E7%BB%93">小结<a class="anchor-link" href="#%E5%B0%8F%E7%BB%93">¶</a></h2><p>前向链用 known 事实池驱动推理；后向链从 goal 倒推子目标。</p>
-<p>对照 <a href="../ch6.html">ch6.html</a> 步进动画验证每一轮 known 变化。</p>
+<p>对照 <a href="../../ch6.html">ch6.html</a> 步进动画验证每一轮 known 变化。</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=48d37154">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6131c6bf">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8296,5 +8156,20 @@ R2 ['会死(X)'] =&gt; 终有一死(X)
 </div>
 </div>
 </main>
+<script id="ai-labs-reader-script">
+(() => {
+  const root = document.documentElement;
+  const topButton = document.getElementById("ai-labs-top");
+  const updateProgress = () => {
+    const scrollable = Math.max(1, root.scrollHeight - root.clientHeight);
+    const progress = Math.min(1, Math.max(0, root.scrollTop / scrollable));
+    root.style.setProperty("--ai-labs-read-progress", `${Math.round(progress * 100)}%`);
+    if (topButton) topButton.hidden = root.scrollTop < 520;
+  };
+  document.addEventListener("scroll", updateProgress, { passive: true });
+  topButton?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  updateProgress();
+})();
+</script>
 </body>
 </html>

@@ -77,6 +77,17 @@ def demo_first_merge() -> None:
     print(f"\n第 1 次合并 {first} → {spec['merges'][0]['result']}")
 
 
+def first_merge_table() -> pd.DataFrame:
+    spec = load_bpe_spec()
+    tokens = list(spec["initial_tokens"])
+    pairs = count_pairs(tokens).most_common(3)
+    rows = [{"项目": "初始 token", "内容": " / ".join(tokens)}]
+    rows.extend({"项目": f"TOP{i} pair", "内容": f"{a}+{b}: {count} 次"} for i, ((a, b), count) in enumerate(pairs, start=1))
+    first = spec["merges"][0]
+    rows.append({"项目": "第 1 次合并", "内容": f"{'+'.join(first['pair'])} -> {first['result']}"})
+    return pd.DataFrame(rows)
+
+
 def codelens_bpe_merges() -> list:
     import sys
     from pathlib import Path

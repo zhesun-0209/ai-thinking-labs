@@ -7,7 +7,7 @@ from notebook_content.runestone import boot, flatten
 
 B = boot(
     "ch07",
-    "from learning import *\nfrom common.codelens import print_frames as print_codelens",
+    "from learning import *",
 )
 
 
@@ -32,7 +32,7 @@ def _tree() -> list:
         *rs.stepcode(
             B,
             "display(error_distribution_df())",
-            "decision_tree_demo()",
+            "display(tree_split_table())",
         ),
         *rs.stepcode("plot_error_pie()"),
         rs.self_check("哪类错误最多？", answer="计算错误 20 题。"),
@@ -45,9 +45,9 @@ def _tree() -> list:
         rs.listing("K-means", "repeat:\n  labels = argmin ||x - mu_k||\n  mu_k = mean(x in cluster k)"),
         *rs.stepcode(
             "km_frames = codelens_kmeans()",
-            "print_codelens(km_frames)",
+            "animate_kmeans()",
+            "display(kmeans_iteration_table())",
         ),
-        *rs.stepcode("animate_kmeans()"),
         *rs.stepcode(
             "kmeans_demo()",
             "plot_kmeans()",
@@ -80,10 +80,7 @@ def _gd() -> list:
         *rs.stepcode(
             B,
             "gd_frames = codelens_gd()",
-            "print_codelens(gd_frames)",
-        ),
-        *rs.stepcode(
-            "gd_demo()",
+            "display(gd_iteration_table())",
             "plot_gd_mse()",
         ),
         rs.self_check("MSE 从 8420 降到多少？", answer="约 920，单调下降。"),

@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="zh-CN">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>ch09_attention_lm</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
-<style type="text/css">
+<title>第 9 章 · Self-Attention 与 LM · AI思维 Notebook</title>
+<meta name="description" content="第 9 章 · Self-Attention 与 LM，AI思维配套 Jupyter 预渲染代码实验。"/>
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml"/><style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
 span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7291,519 +7292,280 @@ a.anchor-link {
   }
 }
 </style>
-<!-- Load mathjax -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
-<!-- MathJax configuration -->
-<script type="text/x-mathjax-config">
-    init_mathjax = function() {
-        if (window.MathJax) {
-        // MathJax loaded
-            MathJax.Hub.Config({
-                TeX: {
-                    equationNumbers: {
-                    autoNumber: "AMS",
-                    useLabelIds: true
-                    }
-                },
-                tex2jax: {
-                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
-                    processEscapes: true,
-                    processEnvironments: true
-                },
-                displayAlign: 'center',
-                messageStyle: 'none',
-                CommonHTML: {
-                    linebreaks: {
-                    automatic: true
-                    }
-                }
-            });
+<style id="ai-labs-render-style">
+:root {
+  --ai-labs-accent: #0d6b62;
+  --ai-labs-accent-dark: #09524b;
+  --ai-labs-blue: #2563eb;
+  --ai-labs-amber: #b45309;
+  --ai-labs-line: #dbe4ef;
+  --ai-labs-gutter: clamp(18px, 6vw, 96px);
+  --ai-labs-read-progress: 0%;
+}
 
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-        }
-    }
-    init_mathjax();
-    </script>
-<!-- End of mathjax configuration --><script type="module">
-  document.addEventListener("DOMContentLoaded", async () => {
-    const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
-    // do not load mermaidjs if not needed
-    if (!diagrams.length) {
-      return;
-    }
-    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.10.0/mermaid.esm.min.mjs")).default;
-    const elkUrl = "https://cdnjs.cloudflare.com/ajax/libs/mermaid-layout-elk/0.1.9/mermaid-layout-elk.esm.min.mjs";
-    if(elkUrl) {
-      const elkLayouts = (await import(elkUrl)).default;
-      mermaid.registerLayoutLoaders(elkLayouts);
-    }
-    const parser = new DOMParser();
+html[lang="zh-CN"] {
+  scroll-padding-top: 72px;
+}
 
-    mermaid.initialize({
-      maxTextSize: 100000,
-      maxEdges: 100000,
-      startOnLoad: false,
-      fontFamily: window
-        .getComputedStyle(document.body)
-        .getPropertyValue("--jp-ui-font-family"),
-      theme: document.querySelector("body[data-jp-theme-light='true']")
-        ? "default"
-        : "dark",
-    });
+body.jp-Notebook {
+  margin: 0;
+  padding: 0 var(--ai-labs-gutter) 56px;
+  background:
+    linear-gradient(180deg, #f3faf8 0, #fff 260px),
+    #fff;
+  color: #111827;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
 
-    let _nextMermaidId = 0;
+#ai-labs-chrome {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  margin: 0 calc(-1 * var(--ai-labs-gutter)) 22px;
+  padding: 10px var(--ai-labs-gutter);
+  min-height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+  background: var(--ai-labs-accent);
+  color: #fff;
+  border-bottom: 1px solid var(--ai-labs-accent-dark);
+  font: 700 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
 
-    function makeMermaidImage(svg) {
-      const img = document.createElement("img");
-      const doc = parser.parseFromString(svg, "image/svg+xml");
-      const svgEl = doc.querySelector("svg");
-      const { maxWidth } = svgEl?.style || {};
-      const firstTitle = doc.querySelector("title");
-      const firstDesc = doc.querySelector("desc");
+#ai-labs-chrome::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b var(--ai-labs-read-progress), transparent 0);
+}
 
-      img.setAttribute("src", `data:image/svg+xml,${encodeURIComponent(svg)}`);
-      if (maxWidth) {
-        img.width = parseInt(maxWidth);
-      }
-      if (firstTitle) {
-        img.setAttribute("alt", firstTitle.textContent);
-      }
-      if (firstDesc) {
-        const caption = document.createElement("figcaption");
-        caption.className = "sr-only";
-        caption.textContent = firstDesc.textContent;
-        return [img, caption];
-      }
-      return [img];
-    }
+#ai-labs-chrome a {
+  color: #fff;
+  min-height: 32px;
+  padding: 0 2px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
 
-    async function makeMermaidError(text) {
-      let errorMessage = "";
-      try {
-        await mermaid.parse(text);
-      } catch (err) {
-        errorMessage = `${err}`;
-      }
+#ai-labs-chrome a:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
+}
 
-      const result = document.createElement("details");
-      result.className = 'jp-RenderedMermaid-Details';
-      const summary = document.createElement("summary");
-      summary.className = 'jp-RenderedMermaid-Summary';
-      const pre = document.createElement("pre");
-      const code = document.createElement("code");
-      code.innerText = text;
-      pre.appendChild(code);
-      summary.appendChild(pre);
-      result.appendChild(summary);
+#ai-labs-chrome span {
+  margin-left: auto;
+  opacity: 0.9;
+}
 
-      const warning = document.createElement("pre");
-      warning.innerText = errorMessage;
-      result.appendChild(warning);
-      return [result];
-    }
+#ai-labs-top {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9998;
+  min-width: 42px;
+  min-height: 42px;
+  border: 1px solid var(--ai-labs-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ai-labs-accent-dark);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+  font: 800 16px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  cursor: pointer;
+}
 
-    async function renderOneMarmaid(src) {
-      const id = `jp-mermaid-${_nextMermaidId++}`;
-      const parent = src.parentNode;
-      let raw = src.textContent.trim();
-      const el = document.createElement("div");
-      el.style.visibility = "hidden";
-      document.body.appendChild(el);
-      let results = null;
-      let output = null;
-      try {
-        let { svg } = await mermaid.render(id, raw, el);
-        svg = cleanMermaidSvg(svg);
-        results = makeMermaidImage(svg);
-        output = document.createElement("figure");
-        results.map(output.appendChild, output);
-      } catch (err) {
-        parent.classList.add("jp-mod-warning");
-        results = await makeMermaidError(raw);
-        output = results[0];
-      } finally {
-        el.remove();
-      }
-      parent.classList.add("jp-RenderedMermaid");
-      parent.appendChild(output);
-    }
+#ai-labs-top[hidden] {
+  display: none;
+}
 
+.jp-Notebook .jp-Cell {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 10px;
+}
 
-    /**
-     * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
-     */
-    function cleanMermaidSvg(svg) {
-      svg = svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
-      return `${SVG_XML_HEADER}${svg}`;
-    }
+.jp-Notebook .jp-CodeCell {
+  max-width: min(1120px, 100%);
+}
 
+.jp-Notebook .jp-MarkdownCell:first-of-type {
+  padding: 18px 20px;
+  border: 1px solid var(--ai-labs-line);
+  border-left: 5px solid var(--ai-labs-accent);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
 
-    /**
-     * A regular expression for all void elements, which may include attributes and
-     * a slash.
-     *
-     * @see https://developer.mozilla.org/en-US/docs/Glossary/Void_element
-     *
-     * Of these, only `<br>` is generated by Mermaid in place of `\n`,
-     * but _any_ "malformed" tag will break the SVG rendering entirely.
-     */
-    const RE_VOID_ELEMENT =
-      /<\s*(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\s*([^>]*?)\s*>/gi;
+.jp-RenderedHTMLCommon,
+.jp-RenderedHTMLCommon p,
+.jp-RenderedHTMLCommon li {
+  line-height: 1.72;
+}
 
-    /**
-     * Ensure a void element is closed with a slash, preserving any attributes.
-     */
-    function replaceVoidElement(match, tag, rest) {
-      rest = rest.trim();
-      if (!rest.endsWith('/')) {
-        rest = `${rest} /`;
-      }
-      return `<${tag} ${rest}>`;
-    }
+.jp-RenderedHTMLCommon p,
+.jp-RenderedHTMLCommon ul,
+.jp-RenderedHTMLCommon ol {
+  max-width: 840px;
+}
 
+.jp-RenderedHTMLCommon h1,
+.jp-RenderedHTMLCommon h2,
+.jp-RenderedHTMLCommon h3 {
+  letter-spacing: 0;
+  color: #1f2937;
+}
 
-  /**
-   * Named HTML entities with their decimal equivalent codes.
-   *
-   * @see https://www.w3.org/TR/WD-html40-970708/sgml/entities.html
-   * */
-  const HTML_ENTITIES = `<!ENTITY Aacute "&#193;">
-<!ENTITY aacute "&#225;">
-<!ENTITY Acirc "&#194;">
-<!ENTITY acirc "&#226;">
-<!ENTITY acute "&#180;">
-<!ENTITY AElig "&#198;">
-<!ENTITY aelig "&#230;">
-<!ENTITY Agrave "&#192;">
-<!ENTITY agrave "&#224;">
-<!ENTITY alefsym "&#8501;">
-<!ENTITY Alpha "&#913;">
-<!ENTITY alpha "&#945;">
-<!ENTITY amp "&#38;">
-<!ENTITY and "&#8869;">
-<!ENTITY ang "&#8736;">
-<!ENTITY Aring "&#197;">
-<!ENTITY aring "&#229;">
-<!ENTITY asymp "&#8776;">
-<!ENTITY Atilde "&#195;">
-<!ENTITY atilde "&#227;">
-<!ENTITY Auml "&#196;">
-<!ENTITY auml "&#228;">
-<!ENTITY bdquo "&#8222;">
-<!ENTITY Beta "&#914;">
-<!ENTITY beta "&#946;">
-<!ENTITY brvbar "&#166;">
-<!ENTITY bull "&#8226;">
-<!ENTITY cap "&#8745;">
-<!ENTITY Ccedil "&#199;">
-<!ENTITY ccedil "&#231;">
-<!ENTITY cedil "&#184;">
-<!ENTITY cent "&#162;">
-<!ENTITY Chi "&#935;">
-<!ENTITY chi "&#967;">
-<!ENTITY circ "&#710;">
-<!ENTITY clubs "&#9827;">
-<!ENTITY cong "&#8773;">
-<!ENTITY copy "&#169;">
-<!ENTITY crarr "&#8629;">
-<!ENTITY cup "&#8746;">
-<!ENTITY curren "&#164;">
-<!ENTITY dagger "&#8224;">
-<!ENTITY Dagger "&#8225;">
-<!ENTITY darr "&#8595;">
-<!ENTITY dArr "&#8659;">
-<!ENTITY deg "&#176;">
-<!ENTITY Delta "&#916;">
-<!ENTITY delta "&#948;">
-<!ENTITY diams "&#9830;">
-<!ENTITY divide "&#247;">
-<!ENTITY Eacute "&#201;">
-<!ENTITY eacute "&#233;">
-<!ENTITY Ecirc "&#202;">
-<!ENTITY ecirc "&#234;">
-<!ENTITY Egrave "&#200;">
-<!ENTITY egrave "&#232;">
-<!ENTITY empty "&#8709;">
-<!ENTITY emsp "&#8195;">
-<!ENTITY ensp "&#8194;">
-<!ENTITY epsilon "&#949;">
-<!ENTITY Epsilon "&#917;">
-<!ENTITY equiv "&#8801;">
-<!ENTITY Eta "&#919;">
-<!ENTITY eta "&#951;">
-<!ENTITY ETH "&#208;">
-<!ENTITY eth "&#240;">
-<!ENTITY Euml "&#203;">
-<!ENTITY euml "&#235;">
-<!ENTITY exist "&#8707;">
-<!ENTITY fnof "&#402;">
-<!ENTITY forall "&#8704;">
-<!ENTITY frac12 "&#189;">
-<!ENTITY frac14 "&#188;">
-<!ENTITY frac34 "&#190;">
-<!ENTITY frasl "&#8260;">
-<!ENTITY Gamma "&#915;">
-<!ENTITY gamma "&#947;">
-<!ENTITY ge "&#8805;">
-<!ENTITY gt "&#62;">
-<!ENTITY harr "&#8596;">
-<!ENTITY hArr "&#8660;">
-<!ENTITY hearts "&#9829;">
-<!ENTITY hellip "&#8230;">
-<!ENTITY Iacute "&#205;">
-<!ENTITY iacute "&#237;">
-<!ENTITY Icirc "&#206;">
-<!ENTITY icirc "&#238;">
-<!ENTITY iexcl "&#161;">
-<!ENTITY Igrave "&#204;">
-<!ENTITY igrave "&#236;">
-<!ENTITY image "&#8465;">
-<!ENTITY infin "&#8734;">
-<!ENTITY int "&#8747;">
-<!ENTITY Iota "&#921;">
-<!ENTITY iota "&#953;">
-<!ENTITY iquest "&#191;">
-<!ENTITY isin "&#8712;">
-<!ENTITY Iuml "&#207;">
-<!ENTITY iuml "&#239;">
-<!ENTITY Kappa "&#922;">
-<!ENTITY kappa "&#954;">
-<!ENTITY Lambda "&#923;">
-<!ENTITY lambda "&#955;">
-<!ENTITY lang "&#9001;">
-<!ENTITY laquo "&#171;">
-<!ENTITY larr "&#8592;">
-<!ENTITY lArr "&#8656;">
-<!ENTITY lceil "&#8968;">
-<!ENTITY ldquo "&#8220;">
-<!ENTITY le "&#8804;">
-<!ENTITY lfloor "&#8970;">
-<!ENTITY lowast "&#8727;">
-<!ENTITY loz "&#9674;">
-<!ENTITY lrm "&#8206;">
-<!ENTITY lsaquo "&#8249;">
-<!ENTITY lsquo "&#8216;">
-<!ENTITY lt "&#60;">
-<!ENTITY macr "&#175;">
-<!ENTITY mdash "&#8212;">
-<!ENTITY micro "&#181;">
-<!ENTITY middot "&#183;">
-<!ENTITY minus "&#8722;">
-<!ENTITY Mu "&#924;">
-<!ENTITY mu "&#956;">
-<!ENTITY nabla "&#8711;">
-<!ENTITY nbsp "&#160;">
-<!ENTITY ndash "&#8211;">
-<!ENTITY ne "&#8800;">
-<!ENTITY ni "&#8715;">
-<!ENTITY not "&#172;">
-<!ENTITY notin "&#8713;">
-<!ENTITY nsub "&#8836;">
-<!ENTITY Ntilde "&#209;">
-<!ENTITY ntilde "&#241;">
-<!ENTITY Nu "&#925;">
-<!ENTITY nu "&#957;">
-<!ENTITY Oacute "&#211;">
-<!ENTITY oacute "&#243;">
-<!ENTITY Ocirc "&#212;">
-<!ENTITY ocirc "&#244;">
-<!ENTITY OElig "&#338;">
-<!ENTITY oelig "&#339;">
-<!ENTITY Ograve "&#210;">
-<!ENTITY ograve "&#242;">
-<!ENTITY oline "&#8254;">
-<!ENTITY Omega "&#937;">
-<!ENTITY omega "&#969;">
-<!ENTITY Omicron "&#927;">
-<!ENTITY omicron "&#959;">
-<!ENTITY oplus "&#8853;">
-<!ENTITY or "&#8870;">
-<!ENTITY ordf "&#170;">
-<!ENTITY ordm "&#186;">
-<!ENTITY Oslash "&#216;">
-<!ENTITY oslash "&#248;">
-<!ENTITY Otilde "&#213;">
-<!ENTITY otilde "&#245;">
-<!ENTITY otimes "&#8855;">
-<!ENTITY Ouml "&#214;">
-<!ENTITY ouml "&#246;">
-<!ENTITY para "&#182;">
-<!ENTITY part "&#8706;">
-<!ENTITY permil "&#8240;">
-<!ENTITY perp "&#8869;">
-<!ENTITY Phi "&#934;">
-<!ENTITY phi "&#966;">
-<!ENTITY Pi "&#928;">
-<!ENTITY pi "&#960;">
-<!ENTITY piv "&#982;">
-<!ENTITY plusmn "&#177;">
-<!ENTITY pound "&#163;">
-<!ENTITY prime "&#8242;">
-<!ENTITY Prime "&#8243;">
-<!ENTITY prod "&#8719;">
-<!ENTITY prop "&#8733;">
-<!ENTITY Psi "&#936;">
-<!ENTITY psi "&#968;">
-<!ENTITY quot "&#34;">
-<!ENTITY radic "&#8730;">
-<!ENTITY rang "&#9002;">
-<!ENTITY raquo "&#187;">
-<!ENTITY rarr "&#8594;">
-<!ENTITY rArr "&#8658;">
-<!ENTITY rceil "&#8969;">
-<!ENTITY rdquo "&#8221;">
-<!ENTITY real "&#8476;">
-<!ENTITY reg "&#174;">
-<!ENTITY rfloor "&#8971;">
-<!ENTITY Rho "&#929;">
-<!ENTITY rho "&#961;">
-<!ENTITY rlm "&#8207;">
-<!ENTITY rsaquo "&#8250;">
-<!ENTITY rsquo "&#8217;">
-<!ENTITY sbquo "&#8218;">
-<!ENTITY Scaron "&#352;">
-<!ENTITY scaron "&#353;">
-<!ENTITY sdot "&#8901;">
-<!ENTITY sect "&#167;">
-<!ENTITY shy "&#173;">
-<!ENTITY Sigma "&#931;">
-<!ENTITY sigma "&#963;">
-<!ENTITY sigmaf "&#962;">
-<!ENTITY sim "&#8764;">
-<!ENTITY spades "&#9824;">
-<!ENTITY sub "&#8834;">
-<!ENTITY sube "&#8838;">
-<!ENTITY sum "&#8721;">
-<!ENTITY sup "&#8835;">
-<!ENTITY sup1 "&#185;">
-<!ENTITY sup2 "&#178;">
-<!ENTITY sup3 "&#179;">
-<!ENTITY supe "&#8839;">
-<!ENTITY szlig "&#223;">
-<!ENTITY Tau "&#932;">
-<!ENTITY tau "&#964;">
-<!ENTITY there4 "&#8756;">
-<!ENTITY Theta "&#920;">
-<!ENTITY theta "&#952;">
-<!ENTITY thetasym "&#977;">
-<!ENTITY thinsp "&#8201;">
-<!ENTITY THORN "&#222;">
-<!ENTITY thorn "&#254;">
-<!ENTITY tilde "&#732;">
-<!ENTITY times "&#215;">
-<!ENTITY trade "&#8482;">
-<!ENTITY Uacute "&#218;">
-<!ENTITY uacute "&#250;">
-<!ENTITY uarr "&#8593;">
-<!ENTITY uArr "&#8657;">
-<!ENTITY Ucirc "&#219;">
-<!ENTITY ucirc "&#251;">
-<!ENTITY Ugrave "&#217;">
-<!ENTITY ugrave "&#249;">
-<!ENTITY uml "&#168;">
-<!ENTITY upsih "&#978;">
-<!ENTITY Upsilon "&#933;">
-<!ENTITY upsilon "&#965;">
-<!ENTITY Uuml "&#220;">
-<!ENTITY uuml "&#252;">
-<!ENTITY weierp "&#8472;">
-<!ENTITY Xi "&#926;">
-<!ENTITY xi "&#958;">
-<!ENTITY Yacute "&#221;">
-<!ENTITY yacute "&#253;">
-<!ENTITY yen "&#165;">
-<!ENTITY Yuml "&#376;">
-<!ENTITY yuml "&#255;">
-<!ENTITY Zeta "&#918;">
-<!ENTITY zeta "&#950;">
-<!ENTITY zwj "&#8205;">
-<!ENTITY zwnj "&#8204;">`.replace(/\n/g, ' ');
+.jp-RenderedHTMLCommon h1 {
+  font-size: clamp(1.85rem, 5vw, 2.45rem);
+  line-height: 1.16;
+}
 
-  /**
-   * A reasonably strict xml declaration.
-   */
-  const XML_DECL = '<?xml version="1.0" standalone="no"?>';
+.jp-RenderedHTMLCommon h2 {
+  margin-top: 1.35em;
+  padding-top: 0.2em;
+  font-size: clamp(1.35rem, 3.6vw, 1.78rem);
+}
 
-  /**
-   * The beginning of the XML doctype declaration.
-   */
-  const DOCTYPE_START = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [`;
+.jp-RenderedHTMLCommon h3 {
+  color: var(--ai-labs-accent-dark);
+}
 
-  /**
-   * The end of the XML docype declaration.
-   */
-  const DOCTYPE_END = ']>';
+.jp-RenderedHTMLCommon a.anchor-link {
+  margin-left: 0.35em;
+  color: var(--ai-labs-accent);
+  font-size: 0.72em;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
 
-  /**
-   * A full header for an SVG XML document.
-   */
-  const SVG_XML_HEADER = `${XML_DECL}
-    ${DOCTYPE_START}${HTML_ENTITIES}${DOCTYPE_END}`;
+.jp-RenderedHTMLCommon h1:hover a.anchor-link,
+.jp-RenderedHTMLCommon h2:hover a.anchor-link,
+.jp-RenderedHTMLCommon h3:hover a.anchor-link,
+.jp-RenderedHTMLCommon a.anchor-link:focus-visible {
+  opacity: 0.75;
+}
 
-    void Promise.all([...diagrams].map(renderOneMarmaid));
-  });
-</script>
-<style>
-  .jp-Mermaid:not(.jp-RenderedMermaid) {
+.jp-RenderedHTMLCommon a.anchor-link:focus-visible {
+  outline: 2px solid rgba(13, 107, 98, 0.35);
+  outline-offset: 2px;
+}
+
+.jp-RenderedHTMLCommon a {
+  color: #075985;
+  font-weight: 700;
+}
+
+.jp-RenderedHTMLCommon code {
+  border-radius: 5px;
+  padding: 0.1em 0.35em;
+  background: #eef2f7;
+  color: #334155;
+}
+
+.jp-RenderedHTMLCommon details {
+  max-width: 840px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid #d6e5ef;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.jp-RenderedHTMLCommon summary {
+  cursor: pointer;
+  color: var(--ai-labs-accent-dark);
+  font-weight: 800;
+}
+
+.jp-InputArea-editor,
+.jp-OutputArea-output {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.jp-InputArea-editor {
+  border: 1px solid var(--ai-labs-line);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.jp-OutputArea-output {
+  border-radius: 8px;
+}
+
+.jp-RenderedText pre {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid var(--ai-labs-line);
+}
+
+.jp-RenderedHTMLCommon img,
+.jp-OutputArea-output img,
+.jp-OutputArea-output svg {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+  body.jp-Notebook {
+    padding-bottom: 40px;
+  }
+
+  #ai-labs-chrome {
+    min-height: 56px;
+    margin-bottom: 18px;
+  }
+
+  #ai-labs-chrome span {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  #ai-labs-top {
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .jp-Notebook .jp-InputPrompt,
+  .jp-Notebook .jp-OutputPrompt {
     display: none;
   }
 
-  .jp-RenderedMermaid {
-    overflow: auto;
-    display: flex;
+  .jp-Notebook .jp-Cell-inputWrapper,
+  .jp-Notebook .jp-Cell-outputWrapper {
+    padding-left: 0;
   }
 
-  .jp-RenderedMermaid.jp-mod-warning {
-    width: auto;
-    padding: 0.5em;
-    margin-top: 0.5em;
-    border: var(--jp-border-width) solid var(--jp-warn-color2);
-    border-radius: var(--jp-border-radius);
-    color: var(--jp-ui-font-color1);
-    font-size: var(--jp-ui-font-size1);
-    white-space: pre-wrap;
-    word-wrap: break-word;
+  .jp-Notebook .jp-MarkdownCell:first-of-type {
+    padding: 14px;
   }
-
-  .jp-RenderedMermaid figure {
-    margin: 0;
-    overflow: auto;
-    max-width: 100%;
-  }
-
-  .jp-RenderedMermaid img {
-    max-width: 100%;
-  }
-
-  .jp-RenderedMermaid-Details > pre {
-    margin-top: 1em;
-  }
-
-  .jp-RenderedMermaid-Summary {
-    color: var(--jp-warn-color2);
-  }
-
-  .jp-RenderedMermaid:not(.jp-mod-warning) pre {
-    display: none;
-  }
-
-  .jp-RenderedMermaid-Summary > pre {
-    display: inline-block;
-    white-space: normal;
-  }
+}
 </style>
-<!-- End of mermaid configuration --></head>
-<div id="ai-labs-chrome" style="position:sticky;top:0;z-index:9999;background:#0d6b62;color:#fff;font:600 13px system-ui,sans-serif;padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #0a5a52"><a href="../index.html" style="color:#fff;text-decoration:none">Notebook 索引</a><a href="../../hub.html" style="color:#fff;text-decoration:none">章节目录</a><span style="opacity:.85;margin-left:auto">Jupyter 预渲染 · 国内可访问</span></div><body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+</head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../index.html">Notebook 索引</a><a href="../../ch9.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch09_attention_lm.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
+<button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=27db08c2">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ba89e910">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="%E7%AC%AC-9-%E7%AB%A0-%C2%B7-Self-Attention-%E4%B8%8E-LM">第 9 章 · Self-Attention 与 LM<a class="anchor-link" href="#%E7%AC%AC-9-%E7%AB%A0-%C2%B7-Self-Attention-%E4%B8%8E-LM">¶</a></h1><p>Q=「写」对全句权重 + 字符 bigram。</p>
-<p>配套交互演示：<a href="../ch9.html">章节网页</a></p>
+<p>配套交互演示：<a href="../../ch9.html">章节网页</a></p>
 <h2 id="%E6%9C%AC%E8%8A%82%E7%9B%AE%E6%A0%87">本节目标<a class="anchor-link" href="#%E6%9C%AC%E8%8A%82%E7%9B%AE%E6%A0%87">¶</a></h2><ul>
 <li>α 分布</li>
 <li>下一字符预测</li>
@@ -7812,7 +7574,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b8d8fa6c">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fa6e3656">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7823,7 +7585,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a7ceaed6">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f77cf499">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7833,7 +7595,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c6181454">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c627af47">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7860,7 +7622,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c290088c">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4663efa1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7942,7 +7704,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5c02311e">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1f91a71a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7970,13 +7732,13 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
-<img alt="No description has been provided for this image" class="" src="data:image/png;base64,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SqsugoKCdO2116pp06Yu6//qq6/UpEkTp4/be3hcmjsLevToofXr1+uJJ56otuyzzz6TJKcprPrud/z48XrmmWf06KOPyt/fX0OGDJEkPfTQQ8rIyNA333yjESNGOB1j9+7d9dtvv7k8JwUFBfrll19cPncrMjJSOTk5qqioqBZgTp48qa+++kqdO3d2ar/Y8zlu3Dj16dNHXbp00YoVK/TQQw9d1PaAKwX3OAENUEpKiu677z6VlpY62jZv3ixJateunSRp0qRJysvL0/Lly53WPX78uB588EFNnjxZJ06cuKg6UlNTVVBQoL/+9a9O7adOnVJKSorOnj1br+3abDZNnDhRL7zwgnbu3Om0bPfu3Ro2bJiee+65etddm9TUVH344YdatWqVU/u+ffs0depU9e3bt1rIqI927dppwIABWr58ucaOHSsvLy9Jv98fdfjwYeXm5iolJcVpnUmTJmnZsmXasGGDU3tpaalGjBih6dOnu3wMQkpKig4ePFjtuVyVlZV68sknVVJSoiZNmlz0MUm/T/9WfV+1adNGdrtdx44duyTbBq4EXHECGqDnn39et9xyi6KjozVhwgQVFRVpyZIluuOOOxQXFydJuu222zR16lSNHj1a7733nmJiYnT48GGtXLlShw4d0po1ayzf91OTW2+9Venp6Zo9e7a+/PJLDR48WBUVFVq5cqU8PT0d9x9V8fb2liS99957stlsSkhIcGp/8cUXNWjQIHXs2FEzZszQZ599pqioKI0dO1bh4eEqKCjQihUr1KZNGy1evLheNXt7e6uwsFBZWVkaO3ZsteXjxo1Tbm6uhg8fruHDhys6Olr79u1Tdna2mjZt6nTz9sVKTk7W2rVrnaZTW7Roofvuu0/5+fm65ZZbqvX/+OOPddttt2nUqFHq1q2bfvnlFy1fvlxNmjTRunXrXF4p6ty5sxYuXKi0tDR9/fXXuvfee1VRUaG1a9dqx44d6tixY72/F7y9vfX5559rxYoVGjVqlEaPHi3p9wD4ySef6PTp0xo4cGC9tg1ckdz3gT4Atdm1a5cZMmSICQwMNO3atTPTpk0zJ06cqNYvOzvbREVFGW9vbxMUFGSGDh3q9DFzY+r/OIIqK1euNL169TLe3t6mdevWJi0tzRw5csT06NHD6aPqxhhzzz33GC8vL/P444872kpKSkznzp2N3W53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MS1ZskT//e9/FRQU5M4yr3o1/c6rqKjQ2LFj1aNHDzdWd/lxxamBefTRRxUTE6NBgwZpx44deuCBBxQeHu7UJzw8XEeOHNHhw4d1zTXXuKnSq9f5Y9SqVSt3lwQXXI3T+WP10UcfqVevXm6qEDX9LB09elTNmzeXJN15551cEXSzmsbpySefVJMmTfTss88qKSnJvUVeRgSnBqZVq1bq0KGDJKlLly6qqKioNv1TFZaOHz9OcHKD88cIDdOFxmnt2rVaunSpNm/efLlLw//UNEb+/v7asGGDNm7cqKysLP3nP/9RbGysu8q86rkap9zcXL3xxhvavHmzDh065M7yLjuCUwPn4+OjkydPOrUdOXJEkrifBqin77//XiNHjtTcuXOvummGK4GHh4f69OmjPn36qHXr1nr00Ue1detWd5eF/zl8+LCSkpL07LPPqnv37lq3bp27S7qsuMepgbvuuuv0448/OrXt3r1bgYGBV9XNeMClUlJSokGDBmno0KF6/PHH3V0OzpGbm6vCwkKntpiYGG3btk38dbCGIzU1VcXFxXrqqafk6emp22+/Xfv375enp6d++uknd5f3hyM4NXDx8fFavXq1U9s777yj/v37u6ki4Mp1/PhxDR48WB07dtRrr73m7nJwnlWrVik9Pd2pbdOmTbrhhhtqfIYQLq/KykrNnDlT3333nfLz85Wfn68333xTLVu2VH5+vtq0aePuEv9wTNU1QB4ev+fZ/Px8JScna8GCBZo+fboefPBBbdiwQTk5Odq4caObq7y6nTtGXbt2lZeXl5srgivnjtONN96oxMRE/fLLL1q8eLF2797t6NepUydHX1xe545RamqqevfurcjISPXv319bt27VtGnTHI9jgftUjdO3335b7XfegQMH5OnpqcjISHeVd3kZNDgnT5403bt3N3a73ezcudNs3rzZ9OzZ03h5eZmuXbuajz76yN0lXvXOH6MqCQkJ5tVXX3VjZTjXueM0cOBAI8nl6/Dhw+4u9ap1/s9Sbm6uiYqKMn5+fiYyMtIsW7bM3SXC1Pw7zxhj8vLyTOvWrd1U2eVnM4aJYwAAACu4Ng0AAGARwQkAAMAighMAAIBFBCcAAACLCE4AAAAWEZwAAAAsIjgBAABYRHACAACwiOAEAABgEcEJAADAIoITAACARQQnAAAAi/4fY8elpXpd8zQAAAAASUVORK5CYII="/>
+<img alt="Notebook 输出图表，请结合前后文字说明阅读" class="" src="data:image/png;base64,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SqsugoKCdO2116pp06Yu6//qq6/UpEkTp4/be3hcmjsLevToofXr1+uJJ56otuyzzz6TJKcprPrud/z48XrmmWf06KOPyt/fX0OGDJEkPfTQQ8rIyNA333yjESNGOB1j9+7d9dtvv7k8JwUFBfrll19cPncrMjJSOTk5qqioqBZgTp48qa+++kqdO3d2ar/Y8zlu3Dj16dNHXbp00YoVK/TQQw9d1PaAKwX3OAENUEpKiu677z6VlpY62jZv3ixJateunSRp0qRJysvL0/Lly53WPX78uB588EFNnjxZJ06cuKg6UlNTVVBQoL/+9a9O7adOnVJKSorOnj1br+3abDZNnDhRL7zwgnbu3Om0bPfu3Ro2bJiee+65etddm9TUVH344YdatWqVU/u+ffs0depU9e3bt1rIqI927dppwIABWr58ucaOHSsvLy9Jv98fdfjwYeXm5iolJcVpnUmTJmnZsmXasGGDU3tpaalGjBih6dOnu3wMQkpKig4ePFjtuVyVlZV68sknVVJSoiZNmlz0MUm/T/9WfV+1adNGdrtdx44duyTbBq4EXHECGqDnn39et9xyi6KjozVhwgQVFRVpyZIluuOOOxQXFydJuu222zR16lSNHj1a7733nmJiYnT48GGtXLlShw4d0po1ayzf91OTW2+9Venp6Zo9e7a+/PJLDR48WBUVFVq5cqU8PT0d9x9V8fb2liS99957stlsSkhIcGp/8cUXNWjQIHXs2FEzZszQZ599pqioKI0dO1bh4eEqKCjQihUr1KZNGy1evLheNXt7e6uwsFBZWVkaO3ZsteXjxo1Tbm6uhg8fruHDhys6Olr79u1Tdna2mjZt6nTz9sVKTk7W2rVrnaZTW7Roofvuu0/5+fm65ZZbqvX/+OOPddttt2nUqFHq1q2bfvnlFy1fvlxNmjTRunXrXF4p6ty5sxYuXKi0tDR9/fXXuvfee1VRUaG1a9dqx44d6tixY72/F7y9vfX5559rxYoVGjVqlEaPHi3p9wD4ySef6PTp0xo4cGC9tg1ckdz3gT4Atdm1a5cZMmSICQwMNO3atTPTpk0zJ06cqNYvOzvbREVFGW9vbxMUFGSGDh3q9DFzY+r/OIIqK1euNL169TLe3t6mdevWJi0tzRw5csT06NHD6aPqxhhzzz33GC8vL/P444872kpKSkznzp2N3W53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MS1ZskT//e9/FRQU5M4yr3o1/c6rqKjQ2LFj1aNHDzdWd/lxxamBefTRRxUTE6NBgwZpx44deuCBBxQeHu7UJzw8XEeOHNHhw4d1zTXXuKnSq9f5Y9SqVSt3lwQXXI3T+WP10UcfqVevXm6qEDX9LB09elTNmzeXJN15551cEXSzmsbpySefVJMmTfTss88qKSnJvUVeRgSnBqZVq1bq0KGDJKlLly6qqKioNv1TFZaOHz9OcHKD88cIDdOFxmnt2rVaunSpNm/efLlLw//UNEb+/v7asGGDNm7cqKysLP3nP/9RbGysu8q86rkap9zcXL3xxhvavHmzDh065M7yLjuCUwPn4+OjkydPOrUdOXJEkrifBqin77//XiNHjtTcuXOvummGK4GHh4f69OmjPn36qHXr1nr00Ue1detWd5eF/zl8+LCSkpL07LPPqnv37lq3bp27S7qsuMepgbvuuuv0448/OrXt3r1bgYGBV9XNeMClUlJSokGDBmno0KF6/PHH3V0OzpGbm6vCwkKntpiYGG3btk38dbCGIzU1VcXFxXrqqafk6emp22+/Xfv375enp6d++uknd5f3hyM4NXDx8fFavXq1U9s777yj/v37u6ki4Mp1/PhxDR48WB07dtRrr73m7nJwnlWrVik9Pd2pbdOmTbrhhhtqfIYQLq/KykrNnDlT3333nfLz85Wfn68333xTLVu2VH5+vtq0aePuEv9wTNU1QB4ev+fZ/Px8JScna8GCBZo+fboefPBBbdiwQTk5Odq4caObq7y6nTtGXbt2lZeXl5srgivnjtONN96oxMRE/fLLL1q8eLF2797t6NepUydHX1xe545RamqqevfurcjISPXv319bt27VtGnTHI9jgftUjdO3335b7XfegQMH5OnpqcjISHeVd3kZNDgnT5403bt3N3a73ezcudNs3rzZ9OzZ03h5eZmuXbuajz76yN0lXvXOH6MqCQkJ5tVXX3VjZTjXueM0cOBAI8nl6/Dhw+4u9ap1/s9Sbm6uiYqKMn5+fiYyMtIsW7bM3SXC1Pw7zxhj8vLyTOvWrd1U2eVnM4aJYwAAACu4Ng0AAGARwQkAAMAighMAAIBFBCcAAACLCE4AAAAWEZwAAAAsIjgBAABYRHACAACwiOAEAABgEcEJAADAIoITAACARQQnAAAAi/4fY8elpXpd8zQAAAAASUVORK5CYII="/>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=aeb50e1d">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c71715be">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7987,7 +7749,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=242e3af5">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=052bcb47">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7998,7 +7760,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=587fc4ce">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7caf036d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8010,7 +7772,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=adc942df">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=eb0ccb36">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8045,7 +7807,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=be68b47b">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=afa47e2c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8059,18 +7821,18 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=05c40cd4">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8a761b13">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="%E5%B0%8F%E7%BB%93">小结<a class="anchor-link" href="#%E5%B0%8F%E7%BB%93">¶</a></h2><p>Attention 软对齐；LM 预测下一 token。对照 <a href="../ch9.html">ch9.html</a>。</p>
+<h2 id="%E5%B0%8F%E7%BB%93">小结<a class="anchor-link" href="#%E5%B0%8F%E7%BB%93">¶</a></h2><p>Attention 软对齐；LM 预测下一 token。对照 <a href="../../ch9.html">ch9.html</a>。</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cac4e3dd">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=54b9e5f8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8085,5 +7847,20 @@ a.anchor-link {
 </div>
 </div>
 </main>
+<script id="ai-labs-reader-script">
+(() => {
+  const root = document.documentElement;
+  const topButton = document.getElementById("ai-labs-top");
+  const updateProgress = () => {
+    const scrollable = Math.max(1, root.scrollHeight - root.clientHeight);
+    const progress = Math.min(1, Math.max(0, root.scrollTop / scrollable));
+    root.style.setProperty("--ai-labs-read-progress", `${Math.round(progress * 100)}%`);
+    if (topButton) topButton.hidden = root.scrollTop < 520;
+  };
+  document.addEventListener("scroll", updateProgress, { passive: true });
+  topButton?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  updateProgress();
+})();
+</script>
 </body>
 </html>

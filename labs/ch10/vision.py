@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 IMG = np.arange(16, dtype=float).reshape(4, 4)
 KERNEL = np.array([[1, 0, -1], [1, 0, -1], [1, 0, -1]], dtype=float)
@@ -25,6 +26,22 @@ def conv_demo() -> None:
     print("4x4 input → 2x2 conv特征:")
     print(feat.astype(int))
     print(f"MaxPool → {pooled:.0f}")
+
+
+def conv_output_table() -> pd.DataFrame:
+    feat = conv2d_valid(IMG, KERNEL)
+    rows = []
+    for i in range(feat.shape[0]):
+        for j in range(feat.shape[1]):
+            patch = IMG[i : i + KERNEL.shape[0], j : j + KERNEL.shape[1]]
+            rows.append(
+                {
+                    "输出位置": f"({i},{j})",
+                    "输入窗口": patch.astype(int).tolist(),
+                    "卷积值": int(feat[i, j]),
+                }
+            )
+    return pd.DataFrame(rows)
 
 
 def plot_conv() -> None:

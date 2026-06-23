@@ -7,7 +7,7 @@ from notebook_content.runestone import boot, flatten
 
 B = boot(
     "ch05",
-    "from search_algorithms import *\nfrom common.codelens import print_frames as print_codelens\nfrom common.viz_anim import animate_container, snapshots_from_codelens",
+    "from search_algorithms import *\nfrom common.codelens import frames_to_table",
 )
 
 
@@ -54,7 +54,7 @@ def _cells() -> list:
         ),
         *rs.stepcode(
             "frames_adj = codelens_build_adjacency()",
-            "print_codelens(frames_adj)",
+            "display(frames_to_table(frames_adj, ['边', '代价']))",
         ),
         *rs.stepcode("adj = build_adjacency(graph['edges'])", "print('adj[x] =', adj['x'])"),
         rs.section("4", "广度优先 BFS"),
@@ -63,8 +63,7 @@ def _cells() -> list:
             "BFS",
             "while queue:\n  u = queue.pop(0)\n  for v in neighbors(u): queue.append(v)",
         ),
-        *rs.stepcode("bfs_frames = codelens_bfs()", "print_codelens(bfs_frames)"),
-        *rs.stepcode("animate_bfs_queue()"),
+        *rs.stepcode("bfs_frames = codelens_bfs()", "animate_bfs_queue()"),
         *rs.stepcode(
             "display(trace_search('bfs'))",
             "path_bfs = run_all()['bfs']['path']",
@@ -75,8 +74,7 @@ def _cells() -> list:
         rs.section("5", "深度优先 DFS"),
         rs.subsection("5.1", "栈与回溯", "LIFO 栈：栈顶出；本图先深入 j→s2→s1。"),
         rs.listing("DFS", "while stack:\n  u = stack.pop()\n  push unvisited neighbors"),
-        *rs.stepcode("dfs_frames = codelens_dfs()", "print_codelens(dfs_frames)"),
-        *rs.stepcode("animate_dfs_stack()"),
+        *rs.stepcode("dfs_frames = codelens_dfs()", "animate_dfs_stack()"),
         *rs.stepcode(
             "display(trace_search('dfs'))",
             "plot_campus(run_all()['dfs']['path'], title='DFS path (4 steps, cost 13)')",

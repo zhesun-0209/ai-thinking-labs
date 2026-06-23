@@ -68,7 +68,7 @@ def _ch08() -> dict[str, list]:
 def _ch09() -> dict[str, list]:
     B = boot(
         "ch09",
-        "from bpe import *\nfrom common.codelens import print_frames as print_codelens",
+        "from bpe import *",
     )
     Bl = boot("ch09", "from language import *")
     return {
@@ -81,15 +81,14 @@ def _ch09() -> dict[str, list]:
             ),
             rs.section("1", "初始 token"),
             rs.reading("语料先切成字符级 token；统计相邻 pair 出现次数。"),
-            *rs.stepcode(B, "demo_first_merge()"),
+            *rs.stepcode(B, "display(first_merge_table())"),
             rs.section("2", "逐步合并"),
             rs.listing("BPE", "while vocab large:\n  pair = argmax count(a,b)\n  merge pair -> new token"),
             *rs.stepcode(
                 "bpe_frames = codelens_bpe_merges()",
-                "print_codelens(bpe_frames)",
+                "animate_bpe_merges()",
+                "display(steps_table())",
             ),
-            *rs.stepcode("animate_bpe_merges()"),
-            *rs.stepcode("display(steps_table())", "print_steps()"),
             rs.self_check("第一次合并哪一对？", answer="见 demo_first_merge 最高频 pair。"),
             rs.section("3", "与网页验证"),
             rs.reading("每步 `与网页一致` 字段应为 True。"),
@@ -135,7 +134,7 @@ def _ch09() -> dict[str, list]:
 def _ch10() -> dict[str, list]:
     B = boot(
         "ch10",
-        "from vision import *\nfrom common.codelens import print_frames as print_codelens",
+        "from vision import *",
     )
     return {
         "ch10_conv2d_numpy.ipynb": flatten([
@@ -151,10 +150,10 @@ def _ch10() -> dict[str, list]:
             *rs.stepcode(
                 B,
                 "conv_frames = codelens_conv()",
-                "print_codelens(conv_frames)",
+                "animate_conv_slide()",
+                "display(conv_output_table())",
             ),
-            *rs.stepcode("animate_conv_slide()"),
-            *rs.stepcode("conv_demo()", "plot_conv()"),
+            *rs.stepcode("plot_conv()"),
             rs.self_check("2×2 输出有几个值？", answer="4 个，对应 4 个滑动位置。"),
             rs.summary("局部连接+权值共享。对照 [ch10.html](../ch10.html)。"),
             rs.exercises("padding=1 输出尺寸？", "stride=2 呢？"),
@@ -207,7 +206,7 @@ def _ch10() -> dict[str, list]:
 def _ch11() -> dict[str, list]:
     B = boot(
         "ch11",
-        "from rl import *\nfrom common.codelens import print_frames as print_codelens",
+        "from rl import *",
     )
     return {
         "ch11_mdp_value_iteration.ipynb": flatten([
@@ -226,10 +225,10 @@ def _ch11() -> dict[str, list]:
             rs.listing("Bellman", "V(s) <- R(s) + gamma * V(s')"),
             *rs.stepcode(
                 "vi_frames = codelens_value_iteration()",
-                "print_codelens(vi_frames)",
+                "animate_value_iteration()",
+                "display(value_iteration_table())",
             ),
-            *rs.stepcode("animate_value_iteration()"),
-            *rs.stepcode("value_iteration()", "plot_value_iteration()"),
+            *rs.stepcode("plot_value_iteration()"),
             rs.self_check("V(S0) 收敛约？", answer="约 9.8，见输出。"),
             rs.summary("长期回报用 γ 折扣；迭代至 V 稳定。对照 [ch11.html](../ch11.html)。"),
             rs.exercises("γ=0 时策略？", "γ→1 时？"),
@@ -310,15 +309,46 @@ def _ch12() -> dict[str, list]:
             rs.reading("每步 x ← x + ε，ε~N(0,σ²)，数据逐渐变为噪声。"),
             rs.listing("Forward", "x_{t+1} = x_t + epsilon,  epsilon ~ N(0, sigma^2)"),
             *rs.stepcode(
-                boot("ch12", "from create import *\nfrom common.codelens import print_frames as print_codelens"),
+                boot("ch12", "from create import *"),
                 "diff_frames = codelens_diffusion_1d()",
-                "print_codelens(diff_frames)",
+                "animate_diffusion_1d()",
+                "diffusion_1d_table()",
             ),
-            *rs.stepcode("animate_diffusion_1d()"),
-            *rs.stepcode("xs=diffusion_1d()", "plot_diffusion_1d(xs)"),
+            *rs.stepcode("xs = diffusion_1d_values()", "plot_diffusion_1d(xs)"),
             rs.self_check("步数？", answer="5 步加噪 + 初始点。"),
             rs.summary("扩散前向逐步破坏结构。对照 [ch12.html](../ch12.html)。"),
             rs.exercises("σ 增大？", "与 DDPM 关系？"),
+        ]),
+        "ch12_diffusion_digits.ipynb": flatten([
+            rs.chapter_link(
+                "第 12 章 · 小图像 Diffusion 经典缩影",
+                "用 sklearn digits 的 8×8 手写数字展示 DDPM 的前向加噪、反向去噪和采样轨迹。",
+                ["真实小图像案例", "DDPM 加噪公式", "从噪声逐步回到数字形状", "对比 toy 与经典图像生成"],
+                "../ch12.html",
+            ),
+            rs.section("1", "为什么要换成小图像"),
+            rs.reading(
+                "1D toy 适合讲公式，但读者很难把它和「生成图像」联系起来。这里用经典 `sklearn.datasets.load_digits`：每张图只有 8×8，足够快，也能看清数字结构如何被噪声破坏。",
+                "这个 notebook 不训练大模型；它用同类数字的平均图像作为教学版 denoiser，展示 diffusion 的过程缩影。",
+            ),
+            rs.section("2", "前向扩散：清晰数字如何变成噪声"),
+            rs.listing("DDPM forward", "x_t = sqrt(alpha_bar_t) * x0 + sqrt(1-alpha_bar_t) * epsilon"),
+            *rs.stepcode(B, "digits_diffusion_table()", "plot_digits_forward(seed=7, digit=3)"),
+            rs.self_check("t 越大，signal_scale 和 noise_scale 如何变化？", answer="signal_scale 下降，noise_scale 上升，图像越来越像噪声。"),
+            rs.section("3", "反向去噪：模型到底学什么"),
+            rs.reading(
+                "真实 diffusion 模型会学习预测噪声或 score。这里用「同类数字原型」模拟一个已经学到数字结构的 denoiser：每一步都把噪声图往数字原型拉近一点。",
+                "这不是生产模型，但能清楚展示为什么 reverse process 是一串小步修复，而不是一次性画图。",
+            ),
+            *rs.stepcode("plot_digits_reverse(seed=7, digit=3)", "plot_digits_denoiser_comparison(seed=7, digit=3)", "digits_diffusion_summary(seed=7, digit=3)"),
+            rs.self_check("denoised 的 MSE 是否应低于 noisy？", answer="应低于 noisy，说明去噪轨迹把图像拉回了数据分布附近。"),
+            rs.section("4", "和真实 DDPM 的边界"),
+            rs.reading(
+                "**相同点**：都有前向加噪、按时间步逐步反推、从纯噪声回到数据分布。",
+                "**不同点**：真实 DDPM 的 denoiser 是神经网络，这里用类原型代替，只用于理解过程。",
+            ),
+            rs.summary("经典图像 diffusion 的核心不是魔法生成，而是学习每个噪声强度下如何做一小步去噪。对照 [ch12.html](../ch12.html)。"),
+            rs.exercises("把 digit=3 改成 digit=8，反向轨迹有什么差别？", "如果 denoiser 用错类别原型，会发生什么？"),
         ]),
         "ch12_gan_toy.ipynb": flatten([
             rs.chapter_link(
@@ -345,11 +375,12 @@ def _ch12() -> dict[str, list]:
             rs.reading("前向加噪；学习网络逐步去噪，从噪声恢复数据。"),
             rs.listing("Reverse", "x_{t-1} = denoise_net(x_t, t)"),
             *rs.stepcode(
-                boot("ch12", "from create import *\nfrom common.codelens import print_frames as print_codelens"),
+                boot("ch12", "from create import *"),
                 "diff_frames = codelens_diffusion_1d()",
-                "print_codelens(diff_frames)",
+                "animate_diffusion_1d()",
+                "diffusion_1d_table()",
             ),
-            *rs.stepcode("xs=diffusion_1d()", "plot_diffusion_1d(xs)"),
+            *rs.stepcode("xs = diffusion_1d_values()", "plot_diffusion_1d(xs)"),
             rs.self_check("图中两条线含义？", answer="蓝=前向加噪，绿=概念性反向去噪。"),
             rs.summary("生成 = 学逆扩散。对照 [ch12.html](../ch12.html)。"),
             rs.exercises("去噪步数 T？", "与 score matching？"),

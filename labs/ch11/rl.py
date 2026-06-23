@@ -7,6 +7,7 @@ import random
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 GAMMA = 0.9
 STATES = ["待搜索", "已比价", "已下单", "已确认"]
@@ -48,6 +49,17 @@ def codelens_value_iteration(max_rounds: int = 6) -> list:
             )
         )
     return frames
+
+
+def value_iteration_table(max_rounds: int = 6) -> pd.DataFrame:
+    rows = []
+    for frame in codelens_value_iteration(max_rounds=max_rounds):
+        vals = frame.state.get("V", [])
+        row = {"轮次": frame.step, "动作": frame.narrative}
+        for sid, val in zip(STATE_IDS, vals):
+            row[f"V({sid})"] = val
+        rows.append(row)
+    return pd.DataFrame(rows)
 
 
 def animate_value_iteration() -> None:

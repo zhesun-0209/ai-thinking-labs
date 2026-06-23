@@ -14,7 +14,7 @@ Hub 目录页使用独立轻量 `hub.css`；章节页采用系统字体栈，无
 
 - **Notebook 索引**：https://zhesun-0209.github.io/ai-thinking-labs/notebooks/index.html  
 - **Jupyter 预渲染**（真实执行 + Lab 模板，无需 Colab）：例如 [ch5 搜索](https://zhesun-0209.github.io/ai-thinking-labs/notebooks/rendered/ch05_campus_search.html)  
-- 第 5–12 章共 23 本 notebook 均可在线阅读
+- 第 5–12 章共 24 本 notebook 均可在线阅读；默认推荐 15 个核心过程实验，扩展实验可在索引页切换查看
 
 维护者重新生成：
 

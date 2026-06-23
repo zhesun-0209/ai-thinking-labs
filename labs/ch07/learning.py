@@ -52,6 +52,18 @@ def decision_tree_demo() -> None:
     print(f"分裂「含分数」→ 左叶 {left[0]} 纯计算错误; 右子树 概念/粗心 {right[1:]}")
 
 
+def tree_split_table() -> pd.DataFrame:
+    left = [20, 0, 0]
+    right = [0, 18, 12]
+    return pd.DataFrame(
+        [
+            {"节点": "根节点", "样本": sum(ERROR_COUNTS), "分布": dict(zip(ERROR_LABELS, ERROR_COUNTS)), "熵": round(entropy(ERROR_COUNTS), 3), "下一步": "按「含分数」分裂"},
+            {"节点": "左叶", "样本": sum(left), "分布": dict(zip(ERROR_LABELS, left)), "熵": round(entropy(left), 3), "下一步": "停止"},
+            {"节点": "右子树", "样本": sum(right), "分布": dict(zip(ERROR_LABELS, right)), "熵": round(entropy(right), 3), "下一步": "继续区分概念/粗心"},
+        ]
+    )
+
+
 def plot_error_pie() -> None:
     fig, ax = plt.subplots()
     ax.pie(ERROR_COUNTS, labels=["calc", "concept", "careless"], autopct="%1.0f%%", colors=["#0d6b62", "#3498db", "#e67e22"])
@@ -147,6 +159,15 @@ def codelens_gd() -> list:
     return frames
 
 
+def gd_iteration_table() -> pd.DataFrame:
+    return pd.DataFrame(
+        [
+            {"轮次": f.step, "w": f.state["w"], "MSE": f.state["MSE"], "动作": f.narrative}
+            for f in codelens_gd()
+        ]
+    )
+
+
 def codelens_kmeans(max_iter: int = 3) -> list:
     from common.codelens import Frame
 
@@ -172,6 +193,23 @@ def codelens_kmeans(max_iter: int = 3) -> list:
             )
         )
     return frames
+
+
+def kmeans_iteration_table() -> pd.DataFrame:
+    rows = []
+    for f in codelens_kmeans():
+        centers = f.state["centers"]
+        sizes = f.state.get("cluster_sizes", ["—", "—"])
+        rows.append(
+            {
+                "轮次": f.step,
+                "C0 中心": centers[0],
+                "C1 中心": centers[1],
+                "簇大小": sizes,
+                "动作": f.narrative,
+            }
+        )
+    return pd.DataFrame(rows)
 
 
 def animate_kmeans() -> None:

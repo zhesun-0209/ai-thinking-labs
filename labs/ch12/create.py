@@ -55,16 +55,31 @@ def plot_uct() -> None:
     plt.show()
 
 
-def diffusion_1d() -> None:
+def diffusion_1d() -> list[float]:
+    xs = diffusion_1d_values()
+    print("前向加噪 x:", [round(v, 3) for v in xs])
+    return xs
+
+
+def diffusion_1d_values(steps: int = 5, seed: int = 0, sigma: float = 0.3) -> list[float]:
     random.seed(0)
-    x0, steps = 1.0, 5
+    if seed != 0:
+        random.seed(seed)
+    x0 = 1.0
     xs = [x0]
     x = x0
     for _ in range(steps):
-        x += random.gauss(0, 0.3)
+        x += random.gauss(0, sigma)
         xs.append(x)
-    print("前向加噪 x:", [round(v, 3) for v in xs])
     return xs
+
+
+def diffusion_1d_table(steps: int = 5, seed: int = 0, sigma: float = 0.3) -> None:
+    import pandas as pd
+    from IPython.display import display
+
+    xs = diffusion_1d_values(steps=steps, seed=seed, sigma=sigma)
+    display(pd.DataFrame({"t": list(range(len(xs))), "x_t": [round(v, 3) for v in xs]}))
 
 
 def codelens_diffusion_1d(steps: int = 5) -> list:
@@ -103,6 +118,122 @@ def plot_diffusion_1d(xs: list[float] | None = None) -> None:
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.show()
+
+
+def _digits_sample(digit: int = 3) -> tuple[np.ndarray, np.ndarray, int]:
+    from sklearn.datasets import load_digits
+
+    digits = load_digits()
+    images = digits.images.astype(float) / 16.0
+    labels = digits.target
+    idx = int(np.where(labels == digit)[0][3])
+    prototype = images[labels == digit].mean(axis=0)
+    return images[idx], prototype, int(labels[idx])
+
+
+def _diffusion_schedule(steps: int = 6) -> tuple[np.ndarray, np.ndarray]:
+    betas = np.linspace(0.06, 0.24, steps)
+    alpha_bar = np.cumprod(1.0 - betas)
+    return betas, alpha_bar
+
+
+def digits_diffusion_table(steps: int = 6) -> None:
+    import pandas as pd
+    from IPython.display import display
+
+    betas, alpha_bar = _diffusion_schedule(steps)
+    rows = []
+    for t, (beta, abar) in enumerate(zip(betas, alpha_bar), start=1):
+        rows.append(
+            {
+                "t": t,
+                "beta_t": round(float(beta), 3),
+                "signal_scale sqrt(alpha_bar)": round(float(np.sqrt(abar)), 3),
+                "noise_scale sqrt(1-alpha_bar)": round(float(np.sqrt(1 - abar)), 3),
+            }
+        )
+    display(pd.DataFrame(rows))
+
+
+def make_digits_diffusion(seed: int = 7, digit: int = 3, steps: int = 6) -> dict:
+    rng = np.random.default_rng(seed)
+    image, prototype, label = _digits_sample(digit)
+    betas, alpha_bar = _diffusion_schedule(steps)
+    noise = rng.normal(0, 1, size=image.shape)
+
+    forward = [image]
+    for abar in alpha_bar:
+        xt = np.sqrt(abar) * image + np.sqrt(1 - abar) * noise
+        forward.append(np.clip(xt, 0, 1))
+
+    reverse = [forward[-1]]
+    x = forward[-1]
+    # A tiny teaching denoiser: use the class prototype as a stand-in for a learned score model.
+    for t in range(steps, 0, -1):
+        blend = 0.18 + 0.09 * (steps - t)
+        x = (1 - blend) * x + blend * prototype
+        x = np.clip(x, 0, 1)
+        reverse.append(x)
+
+    return {
+        "label": label,
+        "image": image,
+        "prototype": prototype,
+        "forward": forward,
+        "reverse": reverse,
+        "betas": betas,
+        "alpha_bar": alpha_bar,
+    }
+
+
+def plot_digits_forward(seed: int = 7, digit: int = 3) -> None:
+    data = make_digits_diffusion(seed=seed, digit=digit)
+    frames = data["forward"]
+    fig, axes = plt.subplots(1, len(frames), figsize=(1.55 * len(frames), 1.8))
+    for i, (ax, img) in enumerate(zip(axes, frames)):
+        ax.imshow(img, cmap="gray", vmin=0, vmax=1)
+        ax.set_title("x0" if i == 0 else f"x{i}")
+        ax.axis("off")
+    fig.suptitle(f"Forward diffusion on sklearn digits: label {data['label']}", y=1.05)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_digits_reverse(seed: int = 7, digit: int = 3) -> None:
+    data = make_digits_diffusion(seed=seed, digit=digit)
+    frames = data["reverse"]
+    fig, axes = plt.subplots(1, len(frames), figsize=(1.55 * len(frames), 1.8))
+    for i, (ax, img) in enumerate(zip(axes, frames)):
+        ax.imshow(img, cmap="gray", vmin=0, vmax=1)
+        ax.set_title("noise" if i == 0 else f"rev {i}")
+        ax.axis("off")
+    fig.suptitle("Reverse denoising path with a class-prototype denoiser", y=1.05)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_digits_denoiser_comparison(seed: int = 7, digit: int = 3) -> None:
+    data = make_digits_diffusion(seed=seed, digit=digit)
+    images = [data["image"], data["forward"][-1], data["prototype"], data["reverse"][-1]]
+    titles = ["clean x0", "noisy xT", "class prototype", "denoised"]
+    fig, axes = plt.subplots(1, 4, figsize=(7.2, 2.1))
+    for ax, img, title in zip(axes, images, titles):
+        ax.imshow(img, cmap="gray", vmin=0, vmax=1)
+        ax.set_title(title)
+        ax.axis("off")
+    plt.tight_layout()
+    plt.show()
+
+
+def digits_diffusion_summary(seed: int = 7, digit: int = 3) -> None:
+    data = make_digits_diffusion(seed=seed, digit=digit)
+    clean = data["image"]
+    noisy = data["forward"][-1]
+    denoised = data["reverse"][-1]
+    print(f"digit label: {data['label']}")
+    print(f"MSE(noisy, clean)   = {np.mean((noisy - clean) ** 2):.4f}")
+    print(f"MSE(denoised, clean)= {np.mean((denoised - clean) ** 2):.4f}")
+    print("这个 notebook 用类原型代替真实神经网络，目的是展示经典图像 diffusion 的过程缩影。")
 
 
 def gan_toy() -> None:
