@@ -75,6 +75,49 @@ def graph_multihop() -> list[str]:
     return lines
 
 
+def codelens_forward_chain(max_steps: int = 10) -> list:
+    """前向链每一轮：已知事实集 + 新推导。"""
+    from common.codelens import Frame
+
+    data = load_rules()
+    known = set(data["facts"])
+    frames = [
+        Frame(0, "known = facts", "初始化", {"known": sorted(known), "goal": data["goal"]}),
+    ]
+    step = 0
+    for round_i in range(1, max_steps + 1):
+        added = []
+        for rule in data["rules"]:
+            cond = rule["if"][0]
+            var = cond[cond.index("(") + 1 : cond.index(")")]
+            inst = cond.replace(f"({var})", "(苏格拉底)")
+            if inst in known:
+                concl = rule["then"].replace(f"({var})", "(苏格拉底)")
+                if concl not in known:
+                    known.add(concl)
+                    added.append(f"{rule['id']}: {inst} ⇒ {concl}")
+        if not added:
+            break
+        step += 1
+        frames.append(
+            Frame(
+                step,
+                f"round {round_i} scan rules",
+                f"第 {round_i} 轮触发 {len(added)} 条规则",
+                {"新增": added, "known": sorted(known)},
+            )
+        )
+    frames.append(
+        Frame(
+            step + 1,
+            "check goal",
+            "检查目标是否在 known 中",
+            {"goal": data["goal"], " proved": data["goal"] in known},
+        )
+    )
+    return frames
+
+
 def path_ranking() -> None:
     kg = load_kg()
     scores = kg["path_scores"]

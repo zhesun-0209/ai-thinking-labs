@@ -7796,28 +7796,25 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <div id="ai-labs-chrome" style="position:sticky;top:0;z-index:9999;background:#0d6b62;color:#fff;font:600 13px system-ui,sans-serif;padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #0a5a52"><a href="../index.html" style="color:#fff;text-decoration:none">Notebook 索引</a><a href="../../hub.html" style="color:#fff;text-decoration:none">章节目录</a><span style="opacity:.85;margin-left:auto">Jupyter 预渲染 · 国内可访问</span></div><body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2a327250">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2b454493">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E7%AC%AC-10-%E7%AB%A0-%C2%B7-ViT-Patch-%E8%AF%8D%E5%85%83%E5%8C%96">第 10 章 · ViT Patch 词元化<a class="anchor-link" href="#%E7%AC%AC-10-%E7%AB%A0-%C2%B7-ViT-Patch-%E8%AF%8D%E5%85%83%E5%8C%96">¶</a></h1>
+<h1 id="%E7%AC%AC-10-%E7%AB%A0-%C2%B7-ViT-Patchify">第 10 章 · ViT Patchify<a class="anchor-link" href="#%E7%AC%AC-10-%E7%AB%A0-%C2%B7-ViT-Patchify">¶</a></h1><p>4×4→4 token。</p>
+<blockquote>
+<p>本 notebook 采用 <a href="https://runestone.academy/ns/books/published/pythonds/index.html">Runestone Academy · PythonDS</a> 式结构：
+<strong>Reading（阅读）→ Listing（清单/伪代码）→ ActiveCode（运行）→ CodeLens（分步状态）→ Self-Check（自测）</strong>。
+配套交互网页见各章 <code>chN.html</code>。</p>
+</blockquote>
+<h2 id="%E5%AD%A6%E4%B9%A0%E7%9B%AE%E6%A0%87">学习目标<a class="anchor-link" href="#%E5%AD%A6%E4%B9%A0%E7%9B%AE%E6%A0%87">¶</a></h2><ul>
+<li>读 patch 像素</li>
+</ul>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3483502e">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-%E4%BB%8E%E5%83%8F%E7%B4%A0%E5%88%B0-token">1. 从像素到 token<a class="anchor-link" href="#1.-%E4%BB%8E%E5%83%8F%E7%B4%A0%E5%88%B0-token">¶</a></h2><p>4×4 图切成 4 个 2×2 patch，类比 NLP 的「词」。</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=adc4d21d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=619bcf29">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7832,9 +7829,12 @@ a.anchor-link {
     <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span>
 <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">))</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">))</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span> <span class="o">/</span> <span class="s2">"ch10"</span><span class="p">))</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">"font.sans-serif"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"PingFang SC"</span><span class="p">,</span> <span class="s2">"Heiti SC"</span><span class="p">,</span> <span class="s2">"Arial Unicode MS"</span><span class="p">,</span> <span class="s2">"DejaVu Sans"</span><span class="p">]</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">"axes.unicode_minus"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">Markdown</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">vision</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="n">vit_patchify</span><span class="p">()</span>
 <span class="n">plot_patches</span><span class="p">()</span>

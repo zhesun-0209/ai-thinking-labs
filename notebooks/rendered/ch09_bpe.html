@@ -7796,41 +7796,50 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <div id="ai-labs-chrome" style="position:sticky;top:0;z-index:9999;background:#0d6b62;color:#fff;font:600 13px system-ui,sans-serif;padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #0a5a52"><a href="../index.html" style="color:#fff;text-decoration:none">Notebook 索引</a><a href="../../hub.html" style="color:#fff;text-decoration:none">章节目录</a><span style="opacity:.85;margin-left:auto">Jupyter 预渲染 · 国内可访问</span></div><body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5f265694">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b8d6b7a6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E7%AC%AC-9-%E7%AB%A0-%C2%B7-BPE-%E5%AD%97%E8%8A%82%E5%AF%B9%E5%90%88%E5%B9%B6">第 9 章 · BPE 字节对合并<a class="anchor-link" href="#%E7%AC%AC-9-%E7%AB%A0-%C2%B7-BPE-%E5%AD%97%E8%8A%82%E5%AF%B9%E5%90%88%E5%B9%B6">¶</a></h1><blockquote>
-<p>配套 <a href="../ch9.html">ch9.html</a> · 语料：「鲁迅写了狂人日记」</p>
+<h1 id="%E7%AC%AC-9-%E7%AB%A0-%C2%B7-BPE">第 9 章 · BPE<a class="anchor-link" href="#%E7%AC%AC-9-%E7%AB%A0-%C2%B7-BPE">¶</a></h1><p>CodeLens：每次 merge 前后 token 序列。</p>
+<blockquote>
+<p>本 notebook 采用 <a href="https://runestone.academy/ns/books/published/pythonds/index.html">Runestone Academy · PythonDS</a> 式结构：
+<strong>Reading（阅读）→ Listing（清单/伪代码）→ ActiveCode（运行）→ CodeLens（分步状态）→ Self-Check（自测）</strong>。
+配套交互网页见各章 <code>chN.html</code>。</p>
 </blockquote>
+<h2 id="%E5%AD%A6%E4%B9%A0%E7%9B%AE%E6%A0%87">学习目标<a class="anchor-link" href="#%E5%AD%A6%E4%B9%A0%E7%9B%AE%E6%A0%87">¶</a></h2><ul>
+<li>数 pair 频次</li>
+<li>逐步 merge</li>
+</ul>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=af021af4">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=67e572bf">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-%E8%AF%AD%E8%A8%80-Pipeline-%E7%AC%AC%E4%B8%80%E6%AD%A5">1. 语言 Pipeline 第一步<a class="anchor-link" href="#1.-%E8%AF%AD%E8%A8%80-Pipeline-%E7%AC%AC%E4%B8%80%E6%AD%A5">¶</a></h2><p>BPE 把字符序列压缩成<strong>子词表</strong>——与网页步进动画同一合并顺序。</p>
+<h2 id="1.-Reading-%C2%B7-%E5%AD%90%E8%AF%8D%E5%88%92%E5%88%86">1. Reading · 子词划分<a class="anchor-link" href="#1.-Reading-%C2%B7-%E5%AD%90%E8%AF%8D%E5%88%92%E5%88%86">¶</a></h2>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5854a9ef">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9f9c86ad">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>🤔 预测</strong> · 初始序列里，哪一对相邻 token 出现次数最多？</p>
+<p><strong>Listing · BPE</strong></p>
+<div class="highlight"><pre><span></span>count pairs → merge max → repeat
+</pre></div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=982cb88f">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fc90d9e4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7845,11 +7854,14 @@ a.anchor-link {
     <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span>
 <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">))</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">))</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span> <span class="o">/</span> <span class="s2">"ch09"</span><span class="p">))</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">"font.sans-serif"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"PingFang SC"</span><span class="p">,</span> <span class="s2">"Heiti SC"</span><span class="p">,</span> <span class="s2">"Arial Unicode MS"</span><span class="p">,</span> <span class="s2">"DejaVu Sans"</span><span class="p">]</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">"axes.unicode_minus"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">Markdown</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bpe</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">common.codelens</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_frames</span> <span class="k">as</span> <span class="n">print_codelens</span>
 <span class="n">demo_first_merge</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -7875,7 +7887,18 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=93de4a03">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2fe75eb6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="2.-CodeLens-%C2%B7-%E5%85%A8%E9%83%A8%E5%90%88%E5%B9%B6%E6%AD%A5">2. CodeLens · 全部合并步<a class="anchor-link" href="#2.-CodeLens-%C2%B7-%E5%85%A8%E9%83%A8%E5%90%88%E5%B9%B6%E6%AD%A5">¶</a></h2>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8a6b1cf5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7883,7 +7906,58 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">frames</span> <span class="o">=</span> <span class="n">codelens_bpe_merges</span><span class="p">()</span>
+<span class="n">print_codelens</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>── Step 0 ── 字符级切分
+   执行: tokens = initial
+   tokens = ['鲁', '迅', '写', '了', '狂', '人', '日', '记']
+   pairs_top3 = [(('鲁', '迅'), 1), (('迅', '写'), 1), (('写', '了'), 1)]
+
+── Step 1 ── 第 1 次合并（频次 12）
+   执行: merge ['日', '记'] → 日记
+   合并对 = ['日', '记']
+   合并后 = ['鲁', '迅', '写', '了', '狂', '人', '日记']
+   与网页一致 = True
+
+── Step 2 ── 第 2 次合并（频次 8）
+   执行: merge ['狂', '人'] → 狂人
+   合并对 = ['狂', '人']
+   合并后 = ['鲁', '迅', '写', '了', '狂人', '日记']
+   与网页一致 = True
+
+── Step 3 ── 第 3 次合并（频次 6）
+   执行: merge ['鲁', '迅'] → 鲁迅
+   合并对 = ['鲁', '迅']
+   合并后 = ['鲁迅', '写', '了', '狂人', '日记']
+   与网页一致 = True
+
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=027075ca">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">steps_table</span><span class="p">())</span>
+<span class="n">print_steps</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -7949,37 +8023,6 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6d395006">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.-%E9%80%90%E6%AD%A5%E5%90%88%E5%B9%B6">2. 逐步合并<a class="anchor-link" href="#2.-%E9%80%90%E6%AD%A5%E5%90%88%E5%B9%B6">¶</a></h2><p>每次合并最高频 pair，直到词表够用。</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=59fe74d2">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">print_steps</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
@@ -7995,17 +8038,6 @@ a.anchor-link {
 最终子词表：鲁迅 / 写 / 了 / 狂人 / 日记  (✓ 与网页一致)
 </pre>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6a6caca5">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Pipeline 位置</strong>：BPE → 向量(Skip-gram) → Self-Attn → LM。下一本 notebook 继续。</p>
 </div>
 </div>
 </div>

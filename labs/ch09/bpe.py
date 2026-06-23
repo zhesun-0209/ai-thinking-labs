@@ -77,6 +77,39 @@ def demo_first_merge() -> None:
     print(f"\n第 1 次合并 {first} → {spec['merges'][0]['result']}")
 
 
+def codelens_bpe_merges() -> list:
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+    from common.codelens import Frame
+
+    spec = load_bpe_spec()
+    tokens = list(spec["initial_tokens"])
+    frames = [
+        Frame(
+            0,
+            "tokens = initial",
+            "字符级切分",
+            {"tokens": tokens, "pairs_top3": count_pairs(tokens).most_common(3)},
+        ),
+    ]
+    history = run_bpe(tokens)
+    for i, merge in enumerate(spec["merges"], start=1):
+        pair = merge["pair"]
+        frames.append(
+            Frame(
+                i,
+                f"merge {pair} → {merge['result']}",
+                f"第 {i} 次合并（频次 {merge['count']}）",
+                {"合并对": pair, "合并后": history[i], "与网页一致": history[i] == merge["tokens_after"]},
+            )
+        )
+    return frames
+
+
 def print_steps() -> None:
     spec = load_bpe_spec()
     history = run_from_spec()

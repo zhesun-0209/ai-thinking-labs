@@ -7796,31 +7796,62 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <div id="ai-labs-chrome" style="position:sticky;top:0;z-index:9999;background:#0d6b62;color:#fff;font:600 13px system-ui,sans-serif;padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #0a5a52"><a href="../index.html" style="color:#fff;text-decoration:none">Notebook 索引</a><a href="../../hub.html" style="color:#fff;text-decoration:none">章节目录</a><span style="opacity:.85;margin-left:auto">Jupyter 预渲染 · 国内可访问</span></div><body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9d9bb633">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=73262d32">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E7%AC%AC-7-%E7%AB%A0-%C2%B7-%E5%86%B3%E7%AD%96%E6%A0%91%E4%B8%8E-K-%E5%9D%87%E5%80%BC">第 7 章 · 决策树与 K-均值<a class="anchor-link" href="#%E7%AC%AC-7-%E7%AB%A0-%C2%B7-%E5%86%B3%E7%AD%96%E6%A0%91%E4%B8%8E-K-%E5%9D%87%E5%80%BC">¶</a></h1><blockquote>
-<p>配套 <a href="../ch7.html">ch7.html</a> · <strong>18 分钟</strong></p>
+<h1 id="%E7%AC%AC-7-%E7%AB%A0-%C2%B7-%E5%86%B3%E7%AD%96%E6%A0%91%E4%B8%8E-K-%E5%9D%87%E5%80%BC">第 7 章 · 决策树与 K-均值<a class="anchor-link" href="#%E7%AC%AC-7-%E7%AB%A0-%C2%B7-%E5%86%B3%E7%AD%96%E6%A0%91%E4%B8%8E-K-%E5%9D%87%E5%80%BC">¶</a></h1><p>Runestone 式：先读概念，再 ActiveCode 看<strong>每一步分裂/迭代</strong>的数据变化。</p>
+<blockquote>
+<p>本 notebook 采用 <a href="https://runestone.academy/ns/books/published/pythonds/index.html">Runestone Academy · PythonDS</a> 式结构：
+<strong>Reading（阅读）→ Listing（清单/伪代码）→ ActiveCode（运行）→ CodeLens（分步状态）→ Self-Check（自测）</strong>。
+配套交互网页见各章 <code>chN.html</code>。</p>
 </blockquote>
-<p><strong>带走什么</strong>：学习 = <strong>压缩数据</strong>——树压缩成 if-else 规则，K-均值压缩成簇中心。</p>
+<h2 id="%E5%AD%A6%E4%B9%A0%E7%9B%AE%E6%A0%87">学习目标<a class="anchor-link" href="#%E5%AD%A6%E4%B9%A0%E7%9B%AE%E6%A0%87">¶</a></h2><ul>
+<li>理解熵与信息增益</li>
+<li>观察 K-均值中心移动</li>
+<li>对比两种「压缩」</li>
+</ul>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=93106d21">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=633fa16e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-%E5%86%B3%E7%AD%96%E6%A0%91%EF%BC%9A50-%E9%81%93%E9%94%99%E9%A2%98%E8%AF%8A%E6%96%AD">1. 决策树：50 道错题诊断<a class="anchor-link" href="#1.-%E5%86%B3%E7%AD%96%E6%A0%91%EF%BC%9A50-%E9%81%93%E9%94%99%E9%A2%98%E8%AF%8A%E6%96%AD">¶</a></h2><p>根节点问「是否含分数」——信息增益最大的分裂。</p>
+<h2 id="1.-Reading-%C2%B7-%E5%AD%A6%E4%B9%A0-=-%E5%8E%8B%E7%BC%A9">1. Reading · 学习 = 压缩<a class="anchor-link" href="#1.-Reading-%C2%B7-%E5%AD%A6%E4%B9%A0-=-%E5%8E%8B%E7%BC%A9">¶</a></h2>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=65da01b9">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f390e58f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>决策树把 50 道题<strong>压缩</strong>成 if-else；K-均值把 14 个点<strong>压缩</strong>成 2 个中心。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=239edf28">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Listing · 熵</strong></p>
+<div class="highlight"><pre><span></span>H = -Σ p log2 p
+</pre></div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e54e48ae">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7828,17 +7859,20 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ActiveCode · 50 题分布与根熵</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="n">ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
     <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span>
 <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">))</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">))</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span> <span class="o">/</span> <span class="s2">"ch07"</span><span class="p">))</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">"font.sans-serif"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"PingFang SC"</span><span class="p">,</span> <span class="s2">"Heiti SC"</span><span class="p">,</span> <span class="s2">"Arial Unicode MS"</span><span class="p">,</span> <span class="s2">"DejaVu Sans"</span><span class="p">]</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">"axes.unicode_minus"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">Markdown</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">learning</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="n">display</span><span class="p">(</span><span class="n">error_distribution_df</span><span class="p">())</span>
 <span class="n">decision_tree_demo</span><span class="p">()</span>
@@ -7908,7 +7942,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7655ffd9">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2becb187">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7916,7 +7950,8 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">plot_error_pie</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ActiveCode · 可视化分布</span>
+<span class="n">plot_error_pie</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -7935,28 +7970,44 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8889df88">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3686dd0f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>⚠️ 误区</strong> · 树越深不一定越好——网页演示右子树仍混有概念/粗心，继续分裂才纯化。</p>
+<p><strong>Self-Check</strong> · 根节点为何选「含分数」分裂？</p>
+<details><summary>点击展开答案</summary>
+</details>
+<p>该特征使左右子集更纯（计算错误集中在一侧）。</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4b8bf304">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=644ec78a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.-K-%E5%9D%87%E5%80%BC%EF%BC%9A%E6%88%90%E7%BB%A9%E6%95%A3%E7%82%B9%E8%81%9A%E7%B1%BB">2. K-均值：成绩散点聚类<a class="anchor-link" href="#2.-K-%E5%9D%87%E5%80%BC%EF%BC%9A%E6%88%90%E7%BB%A9%E6%95%A3%E7%82%B9%E8%81%9A%E7%B1%BB">¶</a></h2><p>无标签时，用簇中心代表两组学生。</p>
+<h2 id="2.-K-%E5%9D%87%E5%80%BC-CodeLens-%E5%BC%8F%E8%BF%AD%E4%BB%A3">2. K-均值 CodeLens 式迭代<a class="anchor-link" href="#2.-K-%E5%9D%87%E5%80%BC-CodeLens-%E5%BC%8F%E8%BF%AD%E4%BB%A3">¶</a></h2>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=18bfaa18">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=01d8812d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Listing · K-means</strong></p>
+<div class="highlight"><pre><span></span>assign → update centers → repeat
+</pre></div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c4ce0367">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7964,7 +8015,9 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">kmeans_demo</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ActiveCode · 14 点 · 初始中心与最终结果</span>
+<span class="n">kmeans_demo</span><span class="p">()</span>
+<span class="n">plot_kmeans</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -7982,26 +8035,6 @@ a.anchor-link {
 </pre>
 </div>
 </div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7c4bd0fc">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">plot_kmeans</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
@@ -8011,24 +8044,13 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=25d57c5a">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d2bdc2da">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>✅ 自测</strong> · K-均值与决策树的「压缩物」分别是什么？（簇中心 vs 可读规则）</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6ae9f2a1">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>回到 <a href="../ch7.html">ch7.html</a> 看树的分裂动画与 K-均值中心移动。</p>
+<h2 id="%E6%9C%AC%E7%AB%A0%E5%B0%8F%E7%BB%93">本章小结<a class="anchor-link" href="#%E6%9C%AC%E7%AB%A0%E5%B0%8F%E7%BB%93">¶</a></h2><p>树的可解释性 vs 聚类的几何中心——两种压缩物。</p>
 </div>
 </div>
 </div>

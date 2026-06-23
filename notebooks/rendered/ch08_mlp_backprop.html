@@ -7796,30 +7796,50 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <div id="ai-labs-chrome" style="position:sticky;top:0;z-index:9999;background:#0d6b62;color:#fff;font:600 13px system-ui,sans-serif;padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #0a5a52"><a href="../index.html" style="color:#fff;text-decoration:none">Notebook 索引</a><a href="../../hub.html" style="color:#fff;text-decoration:none">章节目录</a><span style="opacity:.85;margin-left:auto">Jupyter 预渲染 · 国内可访问</span></div><body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4c0806b9">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4e77320b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E7%AC%AC-8-%E7%AB%A0-%C2%B7-MLP-%E5%89%8D%E5%90%91%E4%B8%8E%E5%8F%8D%E5%90%91%E4%BC%A0%E6%92%AD">第 8 章 · MLP 前向与反向传播<a class="anchor-link" href="#%E7%AC%AC-8-%E7%AB%A0-%C2%B7-MLP-%E5%89%8D%E5%90%91%E4%B8%8E%E5%8F%8D%E5%90%91%E4%BC%A0%E6%92%AD">¶</a></h1><blockquote>
-<p>配套 <a href="../ch8.html">ch8.html</a> · 案例：血糖+运动 → 风险</p>
+<h1 id="%E7%AC%AC-8-%E7%AB%A0-%C2%B7-MLP-%E5%89%8D%E5%90%91%E4%B8%8E%E5%8F%8D%E5%90%91">第 8 章 · MLP 前向与反向<a class="anchor-link" href="#%E7%AC%AC-8-%E7%AB%A0-%C2%B7-MLP-%E5%89%8D%E5%90%91%E4%B8%8E%E5%8F%8D%E5%90%91">¶</a></h1><p>逐层 ActiveCode + 中间变量表。</p>
+<blockquote>
+<p>本 notebook 采用 <a href="https://runestone.academy/ns/books/published/pythonds/index.html">Runestone Academy · PythonDS</a> 式结构：
+<strong>Reading（阅读）→ Listing（清单/伪代码）→ ActiveCode（运行）→ CodeLens（分步状态）→ Self-Check（自测）</strong>。
+配套交互网页见各章 <code>chN.html</code>。</p>
 </blockquote>
+<h2 id="%E5%AD%A6%E4%B9%A0%E7%9B%AE%E6%A0%87">学习目标<a class="anchor-link" href="#%E5%AD%A6%E4%B9%A0%E7%9B%AE%E6%A0%87">¶</a></h2><ul>
+<li>跟踪 x→h→ŷ</li>
+<li>读 δ 回传</li>
+</ul>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b79b05d8">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5b12c5e7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-%E5%89%8D%E5%90%91%E4%BC%A0%E6%92%AD%EF%BC%9A%E8%AE%A1%E7%AE%97%E5%9B%BE%E6%B5%81%E6%B0%B4%E7%BA%BF">1. 前向传播：计算图流水线<a class="anchor-link" href="#1.-%E5%89%8D%E5%90%91%E4%BC%A0%E6%92%AD%EF%BC%9A%E8%AE%A1%E7%AE%97%E5%9B%BE%E6%B5%81%E6%B0%B4%E7%BA%BF">¶</a></h2><p>数据沿层流动；ReLU 截断负值；Sigmoid 输出概率。</p>
+<h2 id="1.-%E5%89%8D%E5%90%91%E4%BC%A0%E6%92%AD-CodeLens">1. 前向传播 CodeLens<a class="anchor-link" href="#1.-%E5%89%8D%E5%90%91%E4%BC%A0%E6%92%AD-CodeLens">¶</a></h2>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f38d7d01">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7252eb07">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Listing · MLP</strong></p>
+<div class="highlight"><pre><span></span>z1=W1x+b1; h=ReLU(z1); ŷ=σ(W2h+b2)
+</pre></div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a8348650">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7834,10 +7854,12 @@ a.anchor-link {
     <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span>
 <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">))</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">))</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span> <span class="o">/</span> <span class="s2">"ch08"</span><span class="p">))</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">"font.sans-serif"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"PingFang SC"</span><span class="p">,</span> <span class="s2">"Heiti SC"</span><span class="p">,</span> <span class="s2">"Arial Unicode MS"</span><span class="p">,</span> <span class="s2">"DejaVu Sans"</span><span class="p">]</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">"axes.unicode_minus"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">Markdown</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">neural</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="n">display</span><span class="p">(</span><span class="n">forward_trace</span><span class="p">())</span>
 <span class="n">plot_mlp_flow</span><span class="p">()</span>
@@ -7910,28 +7932,17 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8d8c0cec">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=62304e6d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>⚠️ 误区</strong> · 前向不只推理时用——训练每个 batch 都要重算并<strong>保存激活 a</strong> 供反向用。</p>
+<h2 id="2.-%E5%8F%8D%E5%90%91%E4%BC%A0%E6%92%AD">2. 反向传播<a class="anchor-link" href="#2.-%E5%8F%8D%E5%90%91%E4%BC%A0%E6%92%AD">¶</a></h2>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=de6779cf">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.-%E5%8F%8D%E5%90%91%E4%BC%A0%E6%92%AD%EF%BC%9A%E8%AF%AF%E5%B7%AE%E5%88%86%E8%B4%A3%E4%BB%BB">2. 反向传播：误差分责任<a class="anchor-link" href="#2.-%E5%8F%8D%E5%90%91%E4%BC%A0%E6%92%AD%EF%BC%9A%E8%AF%AF%E5%B7%AE%E5%88%86%E8%B4%A3%E4%BB%BB">¶</a></h2><p>链式法则从 δ_out 回传到各层权重。</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=080de523">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=00b0de0b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7960,13 +7971,16 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=191f2769">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8bdc13a3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>✅ 自测</strong> · 若隐藏层 ReLU 输出全为 0，该层还能收到梯度吗？（ReLU′=0 则截断）</p>
+<p><strong>Self-Check</strong> · ReLU 全 0 时隐藏层梯度？</p>
+<details><summary>点击展开答案</summary>
+</details>
+<p>ReLU′=0 截断，几乎无梯度。</p>
 </div>
 </div>
 </div>

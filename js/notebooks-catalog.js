@@ -250,7 +250,7 @@ function renderIndexPage() {
     .map((n) => renderChapterSection(Number(n)))
     .join("");
   mainEl.innerHTML = `
-    <p class="nb-lead">配套《AI思维》第 5–12 章。点击<strong>在线阅读</strong>打开 Jupyter Lab 预渲染页（真实执行输出），不依赖 Google Colab。</p>
+    <p class="nb-lead">Runestone 式交互教材结构：<strong>Reading → Listing → ActiveCode → CodeLens 分步状态 → Self-Check</strong>。全部 cell 真实执行后导出，国内可访问。</p>
     <ul class="nb-toc">
       ${Object.keys(CHAPTER_NOTEBOOKS)
         .sort((a, b) => Number(a) - Number(b))

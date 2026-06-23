@@ -11,6 +11,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+sys_path_common = Path(__file__).resolve().parent.parent
+import sys as _sys
+
+if str(sys_path_common) not in _sys.path:
+    _sys.path.insert(0, str(sys_path_common))
+from common.codelens import Frame  # noqa: E402
+
 GRAPH_PATH = Path(__file__).resolve().parent.parent / "common" / "campus_graph.json"
 
 # 与 ch5.html 地图布局大致一致（仅用于可视化）
@@ -432,3 +439,161 @@ def verify_against_web(graph: dict | None = None) -> None:
 if __name__ == "__main__":
     print("校园搜索图 — Python 复现（与 ch5 网页同一案例）\n")
     print_comparison()
+
+
+# ── Runestone CodeLens：逐步展示全部变量 ─────────────────────────────
+
+
+def codelens_build_adjacency(graph: dict | None = None) -> list[Frame]:
+    """逐条边构建邻接表，每加一条边输出一次 adj。"""
+    graph = graph or load_graph()
+    adj: dict[str, list[tuple[str, int]]] = {}
+    frames: list[Frame] = [
+        Frame(0, "adj = {}", "初始化空邻接表", {"adj": adj, "已处理边": 0}),
+    ]
+    for i, edge in enumerate(graph["edges"], start=1):
+        a, b, cost = edge["from"], edge["to"], edge["cost"]
+        adj.setdefault(a, []).append((b, cost))
+        adj.setdefault(b, []).append((a, cost))
+        for neighbors in adj.values():
+            neighbors.sort(key=lambda x: x[0])
+        snap = {k: list(v) for k, v in adj.items()}
+        frames.append(
+            Frame(
+                i,
+                f"添加 {a}↔{b} cost={cost}",
+                f"第 {i} 条边写入邻接表",
+                {"adj": snap, "边": f"{a}↔{b}", "代价": cost},
+            )
+        )
+    return frames
+
+
+def codelens_bfs(graph: dict | None = None) -> list[Frame]:
+    """BFS CodeLens：每次 pop / 入队都记录 queue、visited、parent。"""
+    graph = graph or load_graph()
+    start, goal = graph["start"], graph["goal"]
+    adj = build_adjacency(graph["edges"])
+    frontier: list[str] = [start]
+    visited: set[str] = set()
+    parent: dict[str, str] = {}
+    frames: list[Frame] = []
+    step = 0
+    frames.append(
+        Frame(
+            step,
+            "frontier = [start]",
+            "BFS 初始化：队列仅含起点",
+            {"frontier": list(frontier), "visited": set(visited), "parent": dict(parent)},
+        )
+    )
+    while frontier:
+        step += 1
+        current = frontier.pop(0)
+        if current in visited:
+            frames.append(
+                Frame(
+                    step,
+                    f"current={current} 已访问，跳过",
+                    "重复入队节点被忽略",
+                    {"frontier": list(frontier), "visited": set(visited), "current": current},
+                )
+            )
+            continue
+        visited.add(current)
+        frames.append(
+            Frame(
+                step,
+                f"current = frontier.pop(0)  # {current}",
+                "弹出队头并标记 visited",
+                {
+                    "current": current,
+                    "frontier": list(frontier),
+                    "visited": set(visited),
+                    "到达目标?": current == goal,
+                },
+            )
+        )
+        if current == goal:
+            path = reconstruct(parent, goal)
+            frames.append(
+                Frame(
+                    step + 1,
+                    "break",
+                    "发现目标，沿 parent 回溯路径",
+                    {"path": path, "步数": len(path) - 1, "代价": path_cost(path, adj)},
+                )
+            )
+            break
+        for nbr, edge_cost in adj[current]:
+            if nbr not in visited and nbr not in frontier:
+                parent[nbr] = current
+                frontier.append(nbr)
+                frames.append(
+                    Frame(
+                        step,
+                        f"frontier.append({nbr})  # 经 {current} 来，边权 {edge_cost}",
+                        f"扩展邻居 {nbr}",
+                        {
+                            "扩展": nbr,
+                            "经": current,
+                            "frontier": list(frontier),
+                            "parent": dict(parent),
+                        },
+                    )
+                )
+    return frames
+
+
+def codelens_dfs(graph: dict | None = None) -> list[Frame]:
+    """DFS CodeLens：栈顶弹出，邻居逆序入栈（与网页一致）。"""
+    graph = graph or load_graph()
+    start, goal = graph["start"], graph["goal"]
+    adj = build_adjacency(graph["edges"])
+    stack = [start]
+    visited: set[str] = set()
+    parent: dict[str, str] = {}
+    frames: list[Frame] = []
+    step = 0
+    frames.append(
+        Frame(0, "stack=[start]", "DFS 初始化", {"stack": list(stack), "visited": set(visited)}),
+    )
+    while stack:
+        step += 1
+        current = stack.pop()
+        if current in visited:
+            continue
+        visited.add(current)
+        frames.append(
+            Frame(
+                step,
+                f"current = stack.pop()  # {current}",
+                "栈顶弹出",
+                {"current": current, "stack": list(stack), "visited": set(visited)},
+            )
+        )
+        if current == goal:
+            path = reconstruct(parent, goal)
+            frames.append(
+                Frame(step, "break", "到达目标", {"path": path, "代价": path_cost(path, adj)}),
+            )
+            break
+        for nbr, edge_cost in reversed(adj[current]):
+            if nbr not in visited and nbr not in stack:
+                parent[nbr] = current
+                stack.append(nbr)
+                frames.append(
+                    Frame(
+                        step,
+                        f"stack.append({nbr})",
+                        f"逆序入栈邻居 {nbr} (cost={edge_cost})",
+                        {"stack": list(stack), "parent": dict(parent)},
+                    )
+                )
+    return frames
+
+
+def print_codelens(frames: list[Frame], limit: int | None = None) -> None:
+    from common.codelens import print_frames
+
+    print_frames(frames, stop=limit)
