@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import html
+
 Cell = tuple[str, str]
 
 
@@ -69,7 +71,8 @@ def self_check(question: str, hint: str = "", answer: str = "") -> list[Cell]:
     hint_block = f"\n\n*{hint}*" if hint else ""
     ans_block = ""
     if answer:
-        ans_block = f"\n\n<details><summary>查看答案</summary>\n\n{answer}\n\n</details>"
+        escaped = html.escape(answer)
+        ans_block = f'\n\n<details class="ai-self-check"><summary>查看答案</summary><p>{escaped}</p></details>'
     return [md(f"**思考** · {question}{hint_block}{ans_block}")]
 
 

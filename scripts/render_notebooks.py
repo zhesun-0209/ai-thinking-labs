@@ -36,6 +36,8 @@ RENDER_STYLE = """<style id="ai-labs-render-style">
   --ai-labs-blue: #2563eb;
   --ai-labs-amber: #b45309;
   --ai-labs-line: #dbe4ef;
+  --ai-labs-surface: #ffffff;
+  --ai-labs-soft: #f6f8fb;
   --ai-labs-gutter: clamp(18px, 6vw, 96px);
   --ai-labs-read-progress: 0%;
 }
@@ -48,8 +50,8 @@ body.jp-Notebook {
   margin: 0;
   padding: 0 var(--ai-labs-gutter) 56px;
   background:
-    linear-gradient(180deg, #f3faf8 0, #fff 260px),
-    #fff;
+    linear-gradient(180deg, #eef8f4 0, #f8fafc 260px, #ffffff 760px),
+    #ffffff;
   color: #111827;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
@@ -66,9 +68,10 @@ body.jp-Notebook {
   flex-wrap: wrap;
   gap: 10px 18px;
   align-items: center;
-  background: var(--ai-labs-accent);
+  background: #102a43;
   color: #fff;
-  border-bottom: 1px solid var(--ai-labs-accent-dark);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
   font: 700 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -133,12 +136,12 @@ body.jp-Notebook {
 }
 
 .jp-Notebook .jp-MarkdownCell:first-of-type {
-  padding: 18px 20px;
-  border: 1px solid var(--ai-labs-line);
+  padding: 22px 24px;
+  border: 1px solid rgba(13, 107, 98, 0.18);
   border-left: 5px solid var(--ai-labs-accent);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
 }
 
 .jp-RenderedHTMLCommon,
@@ -223,6 +226,96 @@ body.jp-Notebook {
   font-weight: 800;
 }
 
+.jp-RenderedHTMLCommon details.ai-self-check {
+  padding: 0;
+  overflow: hidden;
+  border-color: #fed7aa;
+  background: #fffaf2;
+}
+
+.jp-RenderedHTMLCommon details.ai-self-check summary {
+  min-height: 44px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #7c2d12;
+  list-style: none;
+}
+
+.jp-RenderedHTMLCommon details.ai-self-check summary::-webkit-details-marker {
+  display: none;
+}
+
+.jp-RenderedHTMLCommon details.ai-self-check summary::after {
+  content: "展开";
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #ffedd5;
+  color: #9a3412;
+  font-size: 12px;
+}
+
+.jp-RenderedHTMLCommon details.ai-self-check[open] summary::after {
+  content: "收起";
+}
+
+.jp-RenderedHTMLCommon details.ai-self-check p {
+  max-width: none;
+  margin: 0;
+  padding: 12px 14px 14px;
+  border-top: 1px solid #fed7aa;
+  background: #fff;
+  color: #334155;
+}
+
+.jp-RenderedHTMLCommon table,
+.jp-RenderedHTMLCommon table.dataframe {
+  width: max-content;
+  min-width: min(100%, 720px);
+  max-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 10px 0 18px;
+  overflow: hidden;
+  border: 1px solid var(--ai-labs-line);
+  border-radius: 8px;
+  background: var(--ai-labs-surface);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.jp-RenderedHTMLCommon thead th {
+  background: #e6f4ef;
+  color: #0f3f3b;
+  font-weight: 800;
+  border-bottom: 1px solid #cfe7dc;
+}
+
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td {
+  padding: 9px 11px;
+  border-right: 1px solid #eef2f7;
+  border-bottom: 1px solid #eef2f7;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.jp-RenderedHTMLCommon tr:nth-child(even) td,
+.jp-RenderedHTMLCommon tr:nth-child(even) th {
+  background: #f8fafc;
+}
+
+.jp-RenderedHTMLCommon tr:last-child td,
+.jp-RenderedHTMLCommon tr:last-child th {
+  border-bottom: 0;
+}
+
+.jp-RenderedHTMLCommon tr > :last-child {
+  border-right: 0;
+}
+
 .jp-InputArea-editor,
 .jp-OutputArea-output {
   max-width: 100%;
@@ -234,6 +327,7 @@ body.jp-Notebook {
   border: 1px solid var(--ai-labs-line);
   border-radius: 8px;
   background: #f8fafc;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .jp-OutputArea-output {
@@ -253,6 +347,9 @@ body.jp-Notebook {
   max-width: 100%;
   height: auto;
   border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid var(--ai-labs-line);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 @media (max-width: 640px) {
