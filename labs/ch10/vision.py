@@ -1,7 +1,8 @@
-"""Chapter 10 vision demos — numpy only."""
+"""Chapter 10 vision demos — pedagogical API."""
 
 from __future__ import annotations
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 IMG = np.arange(16, dtype=float).reshape(4, 4)
@@ -26,18 +27,60 @@ def conv_demo() -> None:
     print(f"MaxPool → {pooled:.0f}")
 
 
+def plot_conv() -> None:
+    feat = conv2d_valid(IMG, KERNEL)
+    fig, axes = plt.subplots(1, 3, figsize=(9, 3))
+    axes[0].imshow(IMG, cmap="gray")
+    axes[0].set_title("4×4 输入")
+    axes[1].imshow(feat, cmap="viridis")
+    axes[1].set_title("2×2 卷积")
+    axes[2].bar(["max"], [feat.max()], color="#0d6b62")
+    axes[2].set_title(f"MaxPool={feat.max():.0f}")
+    for ax in axes[:2]:
+        ax.axis("off")
+    plt.suptitle("CNN 流水线（与 ch10 网页同数）")
+    plt.tight_layout()
+    plt.show()
+
+
 def vit_patchify() -> None:
-    # 4×4 → 2×2 网格，每格 2×2 patch
     patches = IMG.reshape(2, 2, 2, 2).transpose(0, 2, 1, 3).reshape(4, 4)
-    print("4 个 2×2 patch 展平为 token (ViT patchify):")
+    print("4 个 2×2 patch → token:")
     for i, p in enumerate(patches):
         print(f"  P{i+1}: {p.astype(int).tolist()}")
 
 
+def plot_patches() -> None:
+    fig, axes = plt.subplots(1, 5, figsize=(10, 2.5))
+    axes[0].imshow(IMG, cmap="gray")
+    axes[0].set_title("原图")
+    patches = IMG.reshape(2, 2, 2, 2).transpose(0, 2, 1, 3)
+    for i in range(4):
+        axes[i + 1].imshow(patches[i // 2, i % 2], cmap="gray")
+        axes[i + 1].set_title(f"P{i+1}")
+    for ax in axes:
+        ax.axis("off")
+    plt.suptitle("ViT Patchify")
+    plt.tight_layout()
+    plt.show()
+
+
 def mae_demo() -> None:
-    mask = np.array([0, 1, 1, 1])  # 只保留 P1
-    print("MAE 掩码 75%: 可见 patch", np.where(mask == 0)[0].tolist())
-    print("Encoder 仅处理可见 token; Decoder 重构全部像素 MSE")
+    mask = np.array([0, 1, 1, 1])
+    print("MAE 掩码 75%: 可见 patch 索引", np.where(mask == 0)[0].tolist())
+    print("Encoder 只看 25% token → Decoder 重构全图 MSE")
+
+
+def plot_mae_mask() -> None:
+    mask = np.array([0, 1, 1, 1])
+    fig, ax = plt.subplots(figsize=(4, 4))
+    grid = np.arange(4).reshape(2, 2)
+    show = np.where(mask.reshape(2, 2) == 0, grid, np.nan)
+    ax.imshow(show, cmap="Greens")
+    ax.set_title("MAE：仅 P1 可见（75% 掩码）")
+    ax.axis("off")
+    plt.tight_layout()
+    plt.show()
 
 
 def clip_infonce() -> None:
@@ -47,3 +90,14 @@ def clip_infonce() -> None:
     cos = lambda a, b: float(a @ b / (np.linalg.norm(a) * np.linalg.norm(b)))
     print(f"正例 cos={cos(v_i, v_t_pos):.2f} (网页 0.91)")
     print(f"负例 cos={cos(v_i, v_t_neg):.2f} (网页 0.08)")
+
+
+def plot_clip_cos() -> None:
+    labels = ["正例图文", "负例图文"]
+    vals = [0.91, 0.08]
+    fig, ax = plt.subplots()
+    ax.bar(labels, vals, color=["#0d6b62", "#e74c3c"])
+    ax.set_ylim(0, 1)
+    ax.set_title("CLIP：对比学习拉大正负 cos 差距")
+    plt.tight_layout()
+    plt.show()

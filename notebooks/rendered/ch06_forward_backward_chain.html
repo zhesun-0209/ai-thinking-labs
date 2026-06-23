@@ -7796,17 +7796,31 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <div id="ai-labs-chrome" style="position:sticky;top:0;z-index:9999;background:#0d6b62;color:#fff;font:600 13px system-ui,sans-serif;padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #0a5a52"><a href="../index.html" style="color:#fff;text-decoration:none">Notebook 索引</a><a href="../../hub.html" style="color:#fff;text-decoration:none">章节目录</a><span style="opacity:.85;margin-left:auto">Jupyter 预渲染 · 国内可访问</span></div><body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=69d8588b">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2336997d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E5%89%8D%E5%90%91%E9%93%BE%E4%B8%8E%E5%90%8E%E5%90%91%E9%93%BE">前向链与后向链<a class="anchor-link" href="#%E5%89%8D%E5%90%91%E9%93%BE%E4%B8%8E%E5%90%8E%E5%90%91%E9%93%BE">¶</a></h1><p>配套 <a href="../ch6.html">ch6.html</a> · 苏格拉底三段论规则库。</p>
+<h1 id="%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E5%89%8D%E5%90%91%E9%93%BE%E4%B8%8E%E5%90%8E%E5%90%91%E9%93%BE">第 6 章 · 前向链与后向链<a class="anchor-link" href="#%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E5%89%8D%E5%90%91%E9%93%BE%E4%B8%8E%E5%90%8E%E5%90%91%E9%93%BE">¶</a></h1><blockquote>
+<p>配套 <a href="../ch6.html">ch6.html</a> · <strong>15 分钟</strong> · 案例：苏格拉底三段论</p>
+</blockquote>
+<p><strong>带走什么</strong>：能判断何时<strong>从事实前推</strong>（前向链）、何时<strong>从目标倒推</strong>（后向链）。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b970d6a3">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1b5d9467">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="1.-%E8%A7%84%E5%88%99%E5%BA%93%E4%B8%8E%E4%BA%8B%E5%AE%9E">1. 规则库与事实<a class="anchor-link" href="#1.-%E8%A7%84%E5%88%99%E5%BA%93%E4%B8%8E%E4%BA%8B%E5%AE%9E">¶</a></h2><p>推理 = 在既定表征下把隐含结论显式化。下面与网页使用同一 JSON 规则库。</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b72d2f9a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7821,10 +7835,70 @@ a.anchor-link {
     <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span>
 <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">))</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s1">'labs'</span> <span class="o">/</span> <span class="s1">'ch06'</span><span class="p">))</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">reasoning</span><span class="w"> </span><span class="kn">import</span> <span class="n">forward_chain</span>
-<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">forward_chain</span><span class="p">():</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span> <span class="o">/</span> <span class="s2">"ch06"</span><span class="p">))</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">"font.sans-serif"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"PingFang SC"</span><span class="p">,</span> <span class="s2">"Heiti SC"</span><span class="p">,</span> <span class="s2">"Arial Unicode MS"</span><span class="p">,</span> <span class="s2">"DejaVu Sans"</span><span class="p">]</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">reasoning</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">load_rules</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"事实库:"</span><span class="p">,</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"facts"</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"目标:"</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s2">"goal"</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">"rules"</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'id'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'if'</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> ⇒ </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'then'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>事实库: 人(苏格拉底)
+目标: 终有一死(苏格拉底)
+  R1: 人(X) ⇒ 会死(X)
+  R2: 会死(X) ⇒ 终有一死(X)
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=96d800c9">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="2.-%E5%89%8D%E5%90%91%E9%93%BE%EF%BC%9A%E6%95%B0%E6%8D%AE%E9%A9%B1%E5%8A%A8%E6%92%92%E7%BD%91">2. 前向链：数据驱动撒网<a class="anchor-link" href="#2.-%E5%89%8D%E5%90%91%E9%93%BE%EF%BC%9A%E6%95%B0%E6%8D%AE%E9%A9%B1%E5%8A%A8%E6%92%92%E7%BD%91">¶</a></h2><p><strong>心智模型</strong>：事实池 + 规则扫描；能推则推，直到推不动。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d19f3c16">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>🤔 预测</strong> · 第一轮哪条规则会被触发？会新增哪条事实？</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cf60875b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">forward_chain</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">↔ 网页动画：每轮高亮被触发的规则 ✓"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7840,22 +7914,46 @@ a.anchor-link {
 <pre>初始事实: 人(苏格拉底)
 第 1 轮: R1: 人(苏格拉底) ⇒ 会死(苏格拉底); R2: 会死(苏格拉底) ⇒ 终有一死(苏格拉底)
 目标 终有一死(苏格拉底): ✓
+
+↔ 网页动画：每轮高亮被触发的规则 ✓
 </pre>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f949d80a">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8e986615">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>⚠️ 误区</strong> · 前向链不一定比后向链「更正确」——方向不同，都依赖规则是否完备。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5ed8a2b1">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="3.-%E5%90%8E%E5%90%91%E9%93%BE%EF%BC%9A%E4%BB%8E%E7%9B%AE%E6%A0%87%E5%80%92%E6%8E%A8">3. 后向链：从目标倒推<a class="anchor-link" href="#3.-%E5%90%8E%E5%90%91%E9%93%BE%EF%BC%9A%E4%BB%8E%E7%9B%AE%E6%A0%87%E5%80%92%E6%8E%A8">¶</a></h2><p><strong>心智模型</strong>：目标栈 → 匹配规则 → 子目标 → 直到命中事实。</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5ee27a37">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">reasoning</span><span class="w"> </span><span class="kn">import</span> <span class="n">backward_chain</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"后向证明 trace："</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">backward_chain</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7868,12 +7966,56 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>目标: 终有一死(苏格拉底)
-子目标: 会死(苏格拉底) (R2)
-子目标: 人(苏格拉底) (R1)
-匹配事实: True → 证明成立
+<pre>后向证明 trace：
+  目标: 终有一死(苏格拉底)
+  子目标: 会死(苏格拉底) (R2)
+  子目标: 人(苏格拉底) (R1)
+  匹配事实: True → 证明成立
 </pre>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9f3cef3b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>✅ 自测</strong> · 若只有目标、事实很少，你会选前向还是后向？本例目标明确，后向更聚焦。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8c998f3c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="%E5%B0%8F%E7%BB%93">小结<a class="anchor-link" href="#%E5%B0%8F%E7%BB%93">¶</a></h3><table>
+<thead>
+<tr>
+<th>方向</th>
+<th>驱动</th>
+<th>本例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>前向</td>
+<td>已知事实</td>
+<td>多轮扫描直到推出「终有一死(苏格拉底)」</td>
+</tr>
+<tr>
+<td>后向</td>
+<td>目标</td>
+<td>终有一死 → 会死 → 人 → 命中事实</td>
+</tr>
+</tbody>
+</table>
+<p>回到 <a href="../ch6.html">ch6.html</a> 对比两种链的步进动画。</p>
 </div>
 </div>
 </div>

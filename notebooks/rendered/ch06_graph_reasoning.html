@@ -7796,17 +7796,30 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <div id="ai-labs-chrome" style="position:sticky;top:0;z-index:9999;background:#0d6b62;color:#fff;font:600 13px system-ui,sans-serif;padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #0a5a52"><a href="../index.html" style="color:#fff;text-decoration:none">Notebook 索引</a><a href="../../hub.html" style="color:#fff;text-decoration:none">章节目录</a><span style="opacity:.85;margin-left:auto">Jupyter 预渲染 · 国内可访问</span></div><body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=609c6345">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=dc18190a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E5%9B%BE%E8%B0%B1%E5%A4%9A%E8%B7%B3%E4%B8%8E%E8%B7%AF%E5%BE%84%E6%8E%92%E5%BA%8F">图谱多跳与路径排序<a class="anchor-link" href="#%E5%9B%BE%E8%B0%B1%E5%A4%9A%E8%B7%B3%E4%B8%8E%E8%B7%AF%E5%BE%84%E6%8E%92%E5%BA%8F">¶</a></h1><p>鲁迅/莫言知识图谱，与 ch6 实验室一致。</p>
+<h1 id="%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E5%9B%BE%E8%B0%B1%E5%A4%9A%E8%B7%B3%E4%B8%8E%E8%B7%AF%E5%BE%84%E6%8E%92%E5%BA%8F">第 6 章 · 图谱多跳与路径排序<a class="anchor-link" href="#%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E5%9B%BE%E8%B0%B1%E5%A4%9A%E8%B7%B3%E4%B8%8E%E8%B7%AF%E5%BE%84%E6%8E%92%E5%BA%8F">¶</a></h1><blockquote>
+<p>配套 <a href="../ch6.html">ch6.html</a> · 案例：鲁迅 / 莫言文学知识图谱</p>
+</blockquote>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=06c7685d">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f74fec4d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="1.-%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1%E7%BB%93%E6%9E%84">1. 知识图谱结构<a class="anchor-link" href="#1.-%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1%E7%BB%93%E6%9E%84">¶</a></h2><p>三元组 (头, 关系, 尾) + <strong>关系类型约束</strong>——不是裸 BFS。</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f8460e0d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7821,9 +7834,77 @@ a.anchor-link {
     <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span>
 <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">))</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s1">'labs'</span> <span class="o">/</span> <span class="s1">'ch06'</span><span class="p">))</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">reasoning</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_multihop</span>
-<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">graph_multihop</span><span class="p">():</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span> <span class="o">/</span> <span class="s2">"ch06"</span><span class="p">))</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">"font.sans-serif"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"PingFang SC"</span><span class="p">,</span> <span class="s2">"Heiti SC"</span><span class="p">,</span> <span class="s2">"Arial Unicode MS"</span><span class="p">,</span> <span class="s2">"DejaVu Sans"</span><span class="p">]</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">reasoning</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="n">kg</span> <span class="o">=</span> <span class="n">load_kg</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"查询模式:"</span><span class="p">,</span> <span class="n">kg</span><span class="p">[</span><span class="s2">"query"</span><span class="p">][</span><span class="s2">"pattern"</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"标准答案 Y ="</span><span class="p">,</span> <span class="n">kg</span><span class="p">[</span><span class="s2">"query"</span><span class="p">][</span><span class="s2">"answer_y"</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">边（节选）:"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">h</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">kg</span><span class="p">[</span><span class="s2">"edges"</span><span class="p">][:</span><span class="mi">8</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  (</span><span class="si">{</span><span class="n">h</span><span class="si">}</span><span class="s2">) --[</span><span class="si">{</span><span class="n">r</span><span class="si">}</span><span class="s2">]--&gt; (</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>查询模式: ['鲁迅', '创作', '?X', '?X', '发表于', '?Y']
+标准答案 Y = 文学周报社
+
+边（节选）:
+  (鲁迅) --[创作]--&gt; (狂人日记)
+  (鲁迅) --[创作]--&gt; (呐喊)
+  (狂人日记) --[发表于]--&gt; (文学周报社)
+  (呐喊) --[发表于]--&gt; (文学周报社)
+  (狂人日记) --[获得]--&gt; (茅盾文学奖)
+  (莫言) --[创作]--&gt; (蛙)
+  (莫言) --[创作]--&gt; (红高粱)
+  (蛙) --[获得]--&gt; (茅盾文学奖)
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b19a1185">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="2.-%E5%A4%9A%E8%B7%B3%E6%9F%A5%E8%AF%A2">2. 多跳查询<a class="anchor-link" href="#2.-%E5%A4%9A%E8%B7%B3%E6%9F%A5%E8%AF%A2">¶</a></h2><p>模板 <code>(鲁迅,创作,?X)</code> 且 <code>(?X,发表于,?Y)</code> 像 SQL JOIN。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=511fc8d6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>🤔 预测</strong> · 鲁迅创作的作品有哪些？它们是否都发表于同一期刊？</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=23c45eda">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">graph_multihop</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -7846,16 +7927,37 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0e246394">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=025e9685">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>⚠️ 误区</strong> · 图谱推理 ≠ 忽略边类型的图搜索——否则会连出「鲁迅→发表于→桌子」这类荒谬路径。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e09f76d7">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="3.-%E8%BD%AF%E8%87%AA%E6%B4%BD%EF%BC%9A%E8%B7%AF%E5%BE%84%E8%AE%A1%E7%A5%A8%E6%8E%92%E5%BA%8F">3. 软自洽：路径计票排序<a class="anchor-link" href="#3.-%E8%BD%AF%E8%87%AA%E6%B4%BD%EF%BC%9A%E8%B7%AF%E5%BE%84%E8%AE%A1%E7%A5%A8%E6%8E%92%E5%BA%8F">¶</a></h2><p>缺直接边时，多条间接路径<strong>计票</strong>；硬约束仍守关系类型。</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=17152ad6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">reasoning</span><span class="w"> </span><span class="kn">import</span> <span class="n">path_ranking</span>
-<span class="n">path_ranking</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">path_ranking</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -7877,6 +7979,21 @@ a.anchor-link {
 最高分路径: 蛙→茅盾文学奖
 </pre>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=41457b51">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="%E6%80%9D%E8%80%83%E9%A2%98">思考题<a class="anchor-link" href="#%E6%80%9D%E8%80%83%E9%A2%98">¶</a></h3><ul>
+<li>若去掉「发表于」约束，会多出哪些错误答案？</li>
+<li>「莫言→获得→诺奖→代表→红高粱」哪一段是软推断？</li>
+</ul>
+<p>实现见 <code>labs/ch06/reasoning.py</code>。</p>
 </div>
 </div>
 </div>

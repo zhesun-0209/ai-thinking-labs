@@ -229,7 +229,7 @@ function renderChapterPage(chNum) {
   if (mainEl) {
     const cards = ch.items.map(renderNotebookCard).join("");
     mainEl.innerHTML = `
-      <p class="nb-lead">Notebook 由 <strong>Jupyter nbconvert</strong> 真实执行后导出为 Lab 风格静态 HTML，国内可直接阅读，无需 Colab。</p>
+      <p class="nb-lead">Notebook 由 Jupyter 真实执行后导出。含<strong>学习目标、分步讲解、图表与自测</strong>，与章节网页互补；国内可直接阅读。</p>
       <div class="nb-chapter-head">
         <span class="nb-chapter-num">${chNum}</span>
         <div>

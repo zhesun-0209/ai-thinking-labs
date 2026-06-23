@@ -6,6 +6,8 @@ import json
 from collections import Counter
 from pathlib import Path
 
+import pandas as pd
+
 BPE_PATH = Path(__file__).resolve().parent.parent / "common" / "luxun_bpe.json"
 
 
@@ -50,6 +52,29 @@ def run_bpe(tokens: list[str], merges: list[dict] | None = None) -> list[list[st
 def run_from_spec() -> list[list[str]]:
     spec = load_bpe_spec()
     return run_bpe(spec["initial_tokens"])
+
+
+def steps_table() -> pd.DataFrame:
+    spec = load_bpe_spec()
+    history = run_from_spec()
+    rows = [{"步骤": 0, "合并对": "—", "序列": " / ".join(history[0])}]
+    for i, merge in enumerate(spec["merges"], start=1):
+        pair = "+".join(merge["pair"])
+        rows.append({"步骤": i, "合并对": f"{pair}({merge['count']}次)", "序列": " / ".join(history[i])})
+    return pd.DataFrame(rows)
+
+
+def demo_first_merge() -> None:
+    spec = load_bpe_spec()
+    tokens = list(spec["initial_tokens"])
+    pairs = count_pairs(tokens)
+    top = pairs.most_common(3)
+    print("初始 token:", tokens)
+    print("最高频 byte pair TOP3:")
+    for (a, b), c in top:
+        print(f"  ({a},{b}): {c} 次")
+    first = spec["merges"][0]["pair"]
+    print(f"\n第 1 次合并 {first} → {spec['merges'][0]['result']}")
 
 
 def print_steps() -> None:
