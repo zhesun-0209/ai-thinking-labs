@@ -1,0 +1,3 @@
+# Minimal dependencies for labs/ scripts (ch7+ may use these later).
+numpy>=1.24
+scikit-learn>=1.3

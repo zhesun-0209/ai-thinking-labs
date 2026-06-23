@@ -1,0 +1,30 @@
+{
+  "goal": "c1",
+  "start": "x",
+  "nodes": {
+    "x": { "name": "校门口", "h": 7 },
+    "c2": { "name": "超市", "h": 1 },
+    "j": { "name": "教学楼", "h": 4 },
+    "s2": { "name": "实验楼", "h": 4 },
+    "s1": { "name": "食堂", "h": 3 },
+    "t": { "name": "图书馆", "h": 2 },
+    "c1": { "name": "操场", "h": 0 }
+  },
+  "edges": [
+    { "from": "x", "to": "c2", "cost": 7 },
+    { "from": "x", "to": "j", "cost": 2 },
+    { "from": "x", "to": "s1", "cost": 2 },
+    { "from": "j", "to": "s2", "cost": 4 },
+    { "from": "s2", "to": "s1", "cost": 1 },
+    { "from": "s1", "to": "t", "cost": 3 },
+    { "from": "s1", "to": "c1", "cost": 6 },
+    { "from": "t", "to": "c1", "cost": 2 }
+  ],
+  "expected": {
+    "dfs": { "path": ["x", "j", "s2", "s1", "c1"], "steps": 4, "cost": 13 },
+    "bfs": { "path": ["x", "s1", "c1"], "steps": 2, "cost": 8 },
+    "ucs": { "path": ["x", "s1", "t", "c1"], "steps": 3, "cost": 7 },
+    "greedy": { "path": ["x", "s1", "c1"], "steps": 2, "cost": 8 },
+    "astar": { "path": ["x", "s1", "t", "c1"], "steps": 3, "cost": 7 }
+  }
+}
