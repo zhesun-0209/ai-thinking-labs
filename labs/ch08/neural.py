@@ -51,7 +51,7 @@ def backward_demo() -> None:
 
 def plot_mlp_flow() -> None:
     fig, ax = plt.subplots(figsize=(8, 3))
-    layers = ["x₁,x₂", "h₁,h₂", "ŷ"]
+    layers = ["x1,x2", "h1,h2", "y_hat"]
     xs = [0, 1, 2]
     ax.scatter(xs, [0, 0, 0], s=200, c=["#3498db", "#0d6b62", "#e67e22"])
     for i in range(len(xs) - 1):
@@ -77,9 +77,9 @@ def plot_transe() -> None:
     r = np.array([1.0, 0.5])
     t_pos = h + r
     t_neg = np.array([2.5, 1.8])
-    ax.scatter(*h, s=120, label="h (鲁迅)")
-    ax.scatter(*t_pos, s=120, label="t+ (呐喊)")
-    ax.scatter(*t_neg, s=120, label="t- (红楼梦)")
+    ax.scatter(*h, s=120, label="h")
+    ax.scatter(*t_pos, s=120, label="t+")
+    ax.scatter(*t_neg, s=120, label="t-")
     ax.arrow(h[0], h[1], r[0], r[1], head_width=0.08, color="#0d6b62", length_includes_head=True)
     ax.set_title("TransE: h + r ~ t")
     ax.legend()
@@ -110,6 +110,6 @@ def plot_attention() -> None:
     ax.bar(tokens, weights, color="#0d6b62")
     ax.set_ylim(0, 1)
     ax.set_title("Cross-attention weights")
-    ax.set_ylabel("α (softmax)")
+    ax.set_ylabel("alpha (softmax)")
     plt.tight_layout()
     plt.show()

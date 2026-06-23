@@ -42,18 +42,20 @@ def self_attention_matrix() -> pd.DataFrame:
     tokens = ["鲁迅", "写", "了", "狂人", "日记"]
     scores = np.array([1.2, 0.3, 0.1, 0.4, 0.2])
     w = np.exp(scores) / np.exp(scores).sum()
-    return pd.DataFrame({"token": tokens, "score": scores, "α": w.round(2)})
+    return pd.DataFrame({"token": tokens, "score": scores, "alpha": w.round(2)})
 
 
 def plot_attention_heatmap() -> None:
-    tokens = ["鲁迅", "写", "了", "狂人", "日记"]
-    w = self_attention_matrix()["α"].values
+    raw = ["鲁迅", "写", "了", "狂人", "日记"]
+    tokens = ["t0", "t1", "t2", "t3", "t4"]
+    w = self_attention_matrix()["alpha"].values
+    print("token map:", ", ".join(f"{t}={w}" for t, w in zip(tokens, raw)))
     fig, ax = plt.subplots(figsize=(6, 2))
     ax.imshow(w.reshape(1, -1), cmap="Greens", aspect="auto")
     ax.set_xticks(range(len(tokens)))
     ax.set_xticklabels(tokens)
     ax.set_yticks([0])
-    ax.set_yticklabels(["Q=写"])
+    ax.set_yticklabels(["Q=t1"])
     ax.set_title("Self-attention weights")
     plt.tight_layout()
     plt.show()

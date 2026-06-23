@@ -125,7 +125,7 @@ def plot_epsilon_greedy() -> None:
     rates = [epsilon_greedy(e, q)[0] / 10 for e in eps_list]
     fig, ax = plt.subplots()
     ax.bar([str(e) for e in eps_list], rates, color="#0d6b62")
-    ax.set_xlabel("ε")
+    ax.set_xlabel("epsilon")
     ax.set_ylabel("explore (%)")
     ax.set_title("Epsilon-greedy explore rate")
     plt.tight_layout()

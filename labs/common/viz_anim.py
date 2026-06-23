@@ -13,7 +13,16 @@ import numpy as np
 from IPython.display import Image, display
 from matplotlib.animation import FuncAnimation, PillowWriter
 
+from common.mpl_setup import ascii_plot, configure_matplotlib
+
 ContainerKind = Literal["queue", "stack", "priority"]
+
+
+def _chip_label(item: Any, idx: int) -> str:
+    text = str(item)
+    if text.isascii():
+        return ascii_plot(text)
+    return f"T{idx}"
 
 
 def _gif_bytes(anim: FuncAnimation, fps: float) -> bytes:
@@ -55,7 +64,7 @@ def _draw_container(ax, items: list[str], kind: ContainerKind, highlight: str | 
             (x, 0.8), w, 1.0, boxstyle="round,pad=0.05", facecolor=color, edgecolor="white", linewidth=1.5
         )
         ax.add_patch(rect)
-        ax.text(x + w / 2, 1.3, str(item), ha="center", va="center", color="white", fontsize=10, fontweight="bold")
+        ax.text(x + w / 2, 1.3, _chip_label(item, i), ha="center", va="center", color="white", fontsize=10, fontweight="bold")
     if kind == "queue":
         ax.annotate("", xy=(0.3, 1.3), xytext=(0.05, 1.3), arrowprops=dict(arrowstyle="->", lw=2, color="#333"))
         ax.text(0.05, 0.4, "dequeue", fontsize=8)
@@ -71,6 +80,7 @@ def animate_container(
     caption: str = "",
     fps: float = 1.2,
 ) -> None:
+    configure_matplotlib()
     if not snapshots:
         return
     fig, (ax_c, ax_t) = plt.subplots(2, 1, figsize=(9, 4), gridspec_kw={"height_ratios": [2, 1]})
@@ -84,10 +94,10 @@ def animate_container(
         ax_t.axis("off")
         step = snap.get("step", i)
         action = snap.get("action", "")
-        ax_t.text(0.02, 0.6, f"Step {step}: {action}", fontsize=11)
+        ax_t.text(0.02, 0.6, f"Step {step}", fontsize=11)
         extra = snap.get("extra", "")
-        if extra:
-            ax_t.text(0.02, 0.15, extra, fontsize=10, color="#555")
+        if extra and str(extra).isascii():
+            ax_t.text(0.02, 0.15, ascii_plot(str(extra)), fontsize=10, color="#555")
 
     anim = FuncAnimation(fig, _update, frames=len(snapshots), interval=int(1000 / fps), repeat=True)
     _show_gif(anim, fps, caption)
@@ -101,6 +111,7 @@ def animate_items_row(
     fps: float = 1.0,
 ) -> None:
     """通用横向 token / 事实列表动画。"""
+    configure_matplotlib()
     if not snapshots:
         return
     fig, (ax_c, ax_t) = plt.subplots(2, 1, figsize=(9, 3.5), gridspec_kw={"height_ratios": [2, 1]})
@@ -125,13 +136,13 @@ def animate_items_row(
                     (x, 0.6), w, 0.9, boxstyle="round,pad=0.04", facecolor=color, edgecolor="white"
                 )
                 ax_c.add_patch(rect)
-                ax_c.text(x + w / 2, 1.05, str(item), ha="center", va="center", color="white", fontsize=9)
+                ax_c.text(x + w / 2, 1.05, _chip_label(item, j), ha="center", va="center", color="white", fontsize=9)
         ax_t.clear()
         ax_t.axis("off")
-        ax_t.text(0.02, 0.55, f"Step {snap.get('step', i)}: {snap.get('action', '')}", fontsize=11)
+        ax_t.text(0.02, 0.55, f"Step {snap.get('step', i)}", fontsize=11)
         extra = snap.get("extra", "")
-        if extra:
-            ax_t.text(0.02, 0.12, extra, fontsize=10, color="#555")
+        if extra and str(extra).isascii():
+            ax_t.text(0.02, 0.12, ascii_plot(str(extra)), fontsize=10, color="#555")
 
     anim = FuncAnimation(fig, _update, frames=len(snapshots), interval=int(1000 / fps), repeat=True)
     _show_gif(anim, fps)
@@ -146,6 +157,7 @@ def animate_bar_values(
     fps: float = 1.0,
 ) -> None:
     """逐步柱状图（价值迭代、UCT 等）。"""
+    configure_matplotlib()
     if not snapshots:
         return
     all_labels: list[str] = []
@@ -170,10 +182,10 @@ def animate_bar_values(
         ax_c.grid(True, axis="y", alpha=0.3)
         ax_t.clear()
         ax_t.axis("off")
-        ax_t.text(0.02, 0.55, f"Step {snap.get('step', i)}: {snap.get('action', '')}", fontsize=11)
+        ax_t.text(0.02, 0.55, f"Step {snap.get('step', i)}", fontsize=11)
         extra = snap.get("extra", "")
-        if extra:
-            ax_t.text(0.02, 0.12, extra, fontsize=10, color="#555")
+        if extra and str(extra).isascii():
+            ax_t.text(0.02, 0.12, ascii_plot(str(extra)), fontsize=10, color="#555")
 
     anim = FuncAnimation(fig, _update, frames=len(snapshots), interval=int(1000 / fps), repeat=True)
     _show_gif(anim, fps)
@@ -190,6 +202,7 @@ def animate_grid_highlight(
     """卷积窗口滑动：高亮 patch 区域。"""
     import numpy as np
 
+    configure_matplotlib()
     if not snapshots:
         return
     fig, (ax_c, ax_t) = plt.subplots(2, 1, figsize=(4.5, 5), gridspec_kw={"height_ratios": [3, 1]})
@@ -212,7 +225,7 @@ def animate_grid_highlight(
         ax_c.axis("off")
         ax_t.clear()
         ax_t.axis("off")
-        ax_t.text(0.02, 0.55, f"Step {snap.get('step', i)}: {snap.get('action', '')}", fontsize=10)
+        ax_t.text(0.02, 0.55, f"Step {snap.get('step', i)}", fontsize=10)
 
     anim = FuncAnimation(fig, _update, frames=len(snapshots), interval=int(1000 / fps), repeat=True)
     _show_gif(anim, fps)
