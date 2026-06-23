@@ -40,7 +40,7 @@ const CHAPTER_NOTEBOOKS = {
         blurb: "小规则库逐步推导。",
         tier: "A",
         minutes: 12,
-        ready: false,
+        ready: true,
       },
       {
         file: "ch06_graph_reasoning.ipynb",
@@ -48,7 +48,7 @@ const CHAPTER_NOTEBOOKS = {
         blurb: "固定 JSON 三元组上的推理实验。",
         tier: "A",
         minutes: 15,
-        ready: false,
+        ready: true,
       },
     ],
   },
@@ -63,7 +63,7 @@ const CHAPTER_NOTEBOOKS = {
         blurb: "错题诊断案例。",
         tier: "B",
         minutes: 20,
-        ready: false,
+        ready: true,
       },
       {
         file: "ch07_perceptron_gd.ipynb",
@@ -71,7 +71,7 @@ const CHAPTER_NOTEBOOKS = {
         blurb: "loss 曲线与网页对齐。",
         tier: "B",
         minutes: 18,
-        ready: false,
+        ready: true,
       },
     ],
   },
@@ -86,7 +86,7 @@ const CHAPTER_NOTEBOOKS = {
         blurb: "numpy 复现网页同一组数。",
         tier: "B",
         minutes: 25,
-        ready: false,
+        ready: true,
       },
       {
         file: "ch08_transe_attention.ipynb",
@@ -94,7 +94,7 @@ const CHAPTER_NOTEBOOKS = {
         blurb: "玩具三元组 + QKV softmax。",
         tier: "B",
         minutes: 22,
-        ready: false,
+        ready: true,
       },
     ],
   },
@@ -117,7 +117,7 @@ const CHAPTER_NOTEBOOKS = {
         blurb: "10 词 numpy 训练。",
         tier: "B",
         minutes: 15,
-        ready: false,
+        ready: true,
       },
       {
         file: "ch09_attention_lm.ipynb",
@@ -125,7 +125,7 @@ const CHAPTER_NOTEBOOKS = {
         blurb: "注意力矩阵 + 下一字符预测。",
         tier: "B",
         minutes: 20,
-        ready: false,
+        ready: true,
       },
     ],
   },
@@ -229,7 +229,7 @@ function renderChapterPage(chNum) {
   if (mainEl) {
     const cards = ch.items.map(renderNotebookCard).join("");
     mainEl.innerHTML = `
-      <p class="nb-lead">Notebook 已<strong>预渲染为静态 HTML</strong>，国内可直接阅读，无需 Colab。支持目录跳转与「隐藏/显示代码」。</p>
+      <p class="nb-lead">Notebook 由 <strong>Jupyter nbconvert</strong> 真实执行后导出为 Lab 风格静态 HTML，国内可直接阅读，无需 Colab。</p>
       <div class="nb-chapter-head">
         <span class="nb-chapter-num">${chNum}</span>
         <div>
@@ -250,7 +250,7 @@ function renderIndexPage() {
     .map((n) => renderChapterSection(Number(n)))
     .join("");
   mainEl.innerHTML = `
-    <p class="nb-lead">配套《AI思维》第 5–12 章。点击<strong>在线阅读</strong>打开预渲染 Jupyter 教程页（含代码、输出与目录），不依赖 Google Colab。</p>
+    <p class="nb-lead">配套《AI思维》第 5–12 章。点击<strong>在线阅读</strong>打开 Jupyter Lab 预渲染页（真实执行输出），不依赖 Google Colab。</p>
     <ul class="nb-toc">
       ${Object.keys(CHAPTER_NOTEBOOKS)
         .sort((a, b) => Number(a) - Number(b))

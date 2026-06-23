@@ -1,0 +1,6 @@
+nbconvert>=7.0
+nbformat>=5.9
+ipykernel>=6.29
+jupyterlab_pygments>=0.3
+numpy>=1.24
+scikit-learn>=1.3

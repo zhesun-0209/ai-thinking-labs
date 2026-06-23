@@ -3,7 +3,7 @@
 <html lang="en">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>ch09_bpe</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>ch07_decision_tree_kmeans</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7796,17 +7796,17 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <div id="ai-labs-chrome" style="position:sticky;top:0;z-index:9999;background:#0d6b62;color:#fff;font:600 13px system-ui,sans-serif;padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #0a5a52"><a href="../index.html" style="color:#fff;text-decoration:none">Notebook 索引</a><a href="../../hub.html" style="color:#fff;text-decoration:none">章节目录</a><span style="opacity:.85;margin-left:auto">Jupyter 预渲染 · 国内可访问</span></div><body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b6775e9a">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=dba75654">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="BPE-%E5%AD%97%E8%8A%82%E5%AF%B9%E5%90%88%E5%B9%B6">BPE 字节对合并<a class="anchor-link" href="#BPE-%E5%AD%97%E8%8A%82%E5%AF%B9%E5%90%88%E5%B9%B6">¶</a></h1><p>配套 <a href="../ch9.html">ch9.html</a> · 「鲁迅 写 了 狂人 日记」。</p>
+<h1 id="%E5%86%B3%E7%AD%96%E6%A0%91%E4%B8%8E-K-%E5%9D%87%E5%80%BC">决策树与 K-均值<a class="anchor-link" href="#%E5%86%B3%E7%AD%96%E6%A0%91%E4%B8%8E-K-%E5%9D%87%E5%80%BC">¶</a></h1><p>配套 <a href="../ch7.html">ch7.html</a> · 50 道错题案例。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5531aed4">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=808d22bf">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7821,9 +7821,11 @@ a.anchor-link {
     <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span>
 <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">))</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s1">'labs'</span> <span class="o">/</span> <span class="s1">'ch09'</span><span class="p">))</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">bpe</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_steps</span>
-<span class="n">print_steps</span><span class="p">()</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s1">'labs'</span> <span class="o">/</span> <span class="s1">'ch07'</span><span class="p">))</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">learning</span><span class="w"> </span><span class="kn">import</span> <span class="n">decision_tree_demo</span><span class="p">,</span> <span class="n">kmeans_demo</span>
+<span class="n">decision_tree_demo</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="n">kmeans_demo</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -7836,16 +7838,12 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>语料提示：鲁迅 写 了 狂人 日记
+<pre>50 题分布: {'计算错误': 20, '概念混淆': 18, '粗心': 12}
+根熵 H=1.554
+分裂「含分数」→ 左叶 20 纯计算错误; 右子树 概念/粗心 [18, 12]
 
-| 步骤 | 合并对 | 合并后 token 序列 | 与网页一致 |
-|------|--------|-------------------|------------|
-| 0 字符级 | — | 鲁 / 迅 / 写 / 了 / 狂 / 人 / 日 / 记 | ✓ |
-| 1 | 日+记（12 次） | 鲁 / 迅 / 写 / 了 / 狂 / 人 / 日记 | ✓ |
-| 2 | 狂+人（8 次） | 鲁 / 迅 / 写 / 了 / 狂人 / 日记 | ✓ |
-| 3 | 鲁+迅（6 次） | 鲁迅 / 写 / 了 / 狂人 / 日记 | ✓ |
-
-最终子词表：鲁迅 / 写 / 了 / 狂人 / 日记  (✓ 与网页一致)
+14 点 → 簇大小 7 + 7 (网页演示最终 6+8)
+中心: [[38.7, 86.9], [73.0, 65.7]]
 </pre>
 </div>
 </div>

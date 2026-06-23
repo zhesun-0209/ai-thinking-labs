@@ -31,7 +31,9 @@ jobs:
 
       - name: Render notebook HTML
         run: |
-          pip install -r scripts/requirements-render.txt
+          pip install -r scripts/requirements-notebooks.txt
+          python -m ipykernel install --user --name python3
+          python scripts/generate_all_notebooks.py
           python scripts/render_notebooks.py
 
       - name: Upload site

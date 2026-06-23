@@ -3,7 +3,7 @@
 <html lang="en">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>ch09_bpe</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>ch06_graph_reasoning</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7796,17 +7796,17 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <div id="ai-labs-chrome" style="position:sticky;top:0;z-index:9999;background:#0d6b62;color:#fff;font:600 13px system-ui,sans-serif;padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #0a5a52"><a href="../index.html" style="color:#fff;text-decoration:none">Notebook 索引</a><a href="../../hub.html" style="color:#fff;text-decoration:none">章节目录</a><span style="opacity:.85;margin-left:auto">Jupyter 预渲染 · 国内可访问</span></div><body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b6775e9a">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=609c6345">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="BPE-%E5%AD%97%E8%8A%82%E5%AF%B9%E5%90%88%E5%B9%B6">BPE 字节对合并<a class="anchor-link" href="#BPE-%E5%AD%97%E8%8A%82%E5%AF%B9%E5%90%88%E5%B9%B6">¶</a></h1><p>配套 <a href="../ch9.html">ch9.html</a> · 「鲁迅 写 了 狂人 日记」。</p>
+<h1 id="%E5%9B%BE%E8%B0%B1%E5%A4%9A%E8%B7%B3%E4%B8%8E%E8%B7%AF%E5%BE%84%E6%8E%92%E5%BA%8F">图谱多跳与路径排序<a class="anchor-link" href="#%E5%9B%BE%E8%B0%B1%E5%A4%9A%E8%B7%B3%E4%B8%8E%E8%B7%AF%E5%BE%84%E6%8E%92%E5%BA%8F">¶</a></h1><p>鲁迅/莫言知识图谱，与 ch6 实验室一致。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5531aed4">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=06c7685d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7821,9 +7821,10 @@ a.anchor-link {
     <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span>
 <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">))</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s1">'labs'</span> <span class="o">/</span> <span class="s1">'ch09'</span><span class="p">))</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">bpe</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_steps</span>
-<span class="n">print_steps</span><span class="p">()</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s1">'labs'</span> <span class="o">/</span> <span class="s1">'ch06'</span><span class="p">))</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">reasoning</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_multihop</span>
+<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">graph_multihop</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7836,16 +7837,44 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>语料提示：鲁迅 写 了 狂人 日记
+<pre>鲁迅创作: 狂人日记, 呐喊
+狂人日记 发表于: 文学周报社
+呐喊 发表于: 文学周报社
+共同发表于 文学周报社: ✓
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0e246394">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">reasoning</span><span class="w"> </span><span class="kn">import</span> <span class="n">path_ranking</span>
+<span class="n">path_ranking</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>| 路径 | 得分 |
+|------|------|
+| 蛙→茅盾文学奖 | 3 |
+| 红高粱→典藏 | 2 |
+| 红高粱→电影→金熊奖 | 3 |
 
-| 步骤 | 合并对 | 合并后 token 序列 | 与网页一致 |
-|------|--------|-------------------|------------|
-| 0 字符级 | — | 鲁 / 迅 / 写 / 了 / 狂 / 人 / 日 / 记 | ✓ |
-| 1 | 日+记（12 次） | 鲁 / 迅 / 写 / 了 / 狂 / 人 / 日记 | ✓ |
-| 2 | 狂+人（8 次） | 鲁 / 迅 / 写 / 了 / 狂人 / 日记 | ✓ |
-| 3 | 鲁+迅（6 次） | 鲁迅 / 写 / 了 / 狂人 / 日记 | ✓ |
-
-最终子词表：鲁迅 / 写 / 了 / 狂人 / 日记  (✓ 与网页一致)
+最高分路径: 蛙→茅盾文学奖
 </pre>
 </div>
 </div>
