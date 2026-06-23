@@ -37,11 +37,14 @@ LAYOUT = {
 ALGO_META = {
     "bfs": {
         "label": "BFS",
+        "name": "广度优先搜索",
         "container": "queue",
         "container_name": "Queue / 队列",
         "pop_code": "frontier.popleft()",
         "push_code": "append(right)",
         "sort_note": "保持入队顺序，左端先出",
+        "selection_rule": "选最早加入的候选节点",
+        "focus": "看层数：先把距离起点 1 条边的节点都试完，再试 2 条边。",
         "sort_fn": None,
         "pop_end": False,
         "reverse_neighbors": False,
@@ -50,11 +53,14 @@ ALGO_META = {
     },
     "dfs": {
         "label": "DFS",
+        "name": "深度优先搜索",
         "container": "stack",
         "container_name": "Stack / 栈",
         "pop_code": "stack.pop()",
         "push_code": "append(top)",
         "sort_note": "后进先出，栈顶先出",
+        "selection_rule": "选最后加入的候选节点",
+        "focus": "看探索顺序：一条路先尽量走深，走不通再回到别的候选。",
         "sort_fn": None,
         "pop_end": True,
         "reverse_neighbors": True,
@@ -63,11 +69,14 @@ ALGO_META = {
     },
     "ucs": {
         "label": "UCS",
+        "name": "一致代价搜索",
         "container": "priority",
         "container_name": "Priority queue / 优先队列",
         "pop_code": "pop_min(g)",
         "push_code": "push by g",
         "sort_note": "按累计代价 g 从小到大取出",
+        "selection_rule": "选当前累计代价 g 最小的节点",
+        "focus": "看总路程：每一步都优先确认当前已知最便宜的路线。",
         "sort_fn": lambda e: (e["g"], e["id"]),
         "pop_end": False,
         "reverse_neighbors": False,
@@ -76,11 +85,14 @@ ALGO_META = {
     },
     "greedy": {
         "label": "Greedy",
+        "name": "贪心最佳优先搜索",
         "container": "priority",
         "container_name": "Priority queue / 优先队列",
         "pop_code": "pop_min(h)",
         "push_code": "push by h",
         "sort_note": "按启发式 h 从小到大取出",
+        "selection_rule": "选估计离目标最近 h 最小的节点",
+        "focus": "看直觉距离：它只相信当前位置到目标的估计，不关心已经走了多远。",
         "sort_fn": lambda e: (e["h"], e["id"]),
         "pop_end": False,
         "reverse_neighbors": False,
@@ -89,11 +101,14 @@ ALGO_META = {
     },
     "astar": {
         "label": "A*",
+        "name": "A* 搜索",
         "container": "priority",
         "container_name": "Priority queue / 优先队列",
         "pop_code": "pop_min(f)",
         "push_code": "push by f=g+h",
         "sort_note": "按 f=g+h 从小到大取出",
+        "selection_rule": "选 f=g+h 最小的节点",
+        "focus": "看综合判断：同时考虑已经走过的代价 g 和到目标的估计 h。",
         "sort_fn": lambda e: (e["f"], e["h"], e["g"], e["id"]),
         "pop_end": False,
         "reverse_neighbors": False,
@@ -187,6 +202,26 @@ def container_cheatsheet() -> pd.DataFrame:
                 "取出动作": meta["pop_code"],
                 "加入动作": meta["push_code"],
                 "下一步选择规则": meta["sort_note"],
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def algorithm_overview(graph: dict | None = None) -> pd.DataFrame:
+    """Reader-facing comparison: what each algorithm optimizes in this example."""
+    graph = graph or load_graph()
+    results = run_all(graph)
+    rows = []
+    for key in ["bfs", "dfs", "ucs", "greedy", "astar"]:
+        meta = ALGO_META[key]
+        result = results[key]
+        rows.append(
+            {
+                "算法": f"{meta['label']} · {meta['name']}",
+                "下一步选择规则": meta["selection_rule"],
+                "本例路径": " → ".join(result["path"]),
+                "总代价": result["cost"],
+                "读者要观察的点": meta["focus"],
             }
         )
     return pd.DataFrame(rows)
@@ -322,6 +357,145 @@ def operation_trace(algo: str, graph: dict | None = None, max_steps: int = 12) -
     return pd.DataFrame(rows)
 
 
+def _candidate_label(nid: str, next_g: int, h_value: int, algo: str, parent: str) -> str:
+    if algo == "bfs" or algo == "dfs":
+        return f"{nid} ← {parent}"
+    if algo == "ucs":
+        return f"{nid}(g={next_g}) ← {parent}"
+    if algo == "greedy":
+        return f"{nid}(h={h_value}) ← {parent}"
+    return f"{nid}(g={next_g}, h={h_value}, f={next_g + h_value}) ← {parent}"
+
+
+def _decision_reason(chosen: dict, algo: str) -> str:
+    meta = ALGO_META[algo]
+    nid = chosen["id"]
+    if algo == "bfs":
+        return f"{nid} 最早进入候选节点列表"
+    if algo == "dfs":
+        return f"{nid} 是最后加入的候选节点"
+    if algo == "ucs":
+        return f"{nid} 的累计代价 g={chosen['g']} 最小"
+    if algo == "greedy":
+        return f"{nid} 的启发式 h={chosen['h']} 最小"
+    if algo == "astar":
+        return f"{nid} 的 f=g+h={chosen['f']} 最小"
+    return meta["selection_rule"]
+
+
+def algorithm_steps(algo: str, graph: dict | None = None, max_steps: int = 12) -> pd.DataFrame:
+    """Reader-facing algorithm steps: choose, expand, and update candidates."""
+    graph = graph or load_graph()
+    start, goal = graph["start"], graph["goal"]
+    h = {k: v["h"] for k, v in graph["nodes"].items()}
+    adj = build_adjacency(graph["edges"])
+    meta = ALGO_META[algo]
+
+    frontier: list[dict] = [{"id": start, "g": 0, "h": h[start], "f": h[start]}]
+    in_frontier = {start}
+    visited: set[str] = set()
+    visited_order: list[str] = []
+    parent: dict[str, str] = {}
+    g_scores: dict[str, int] = {start: 0}
+    rows = []
+
+    for step in range(1, max_steps + 1):
+        if not frontier:
+            break
+        if meta["sort_fn"]:
+            frontier.sort(key=meta["sort_fn"])
+        before = [dict(entry) for entry in frontier]
+        current = frontier.pop() if meta["pop_end"] else frontier.pop(0)
+        cid = current["id"]
+        in_frontier.discard(cid)
+
+        if cid in visited:
+            rows.append(
+                {
+                    "步骤": step,
+                    "选择节点": cid,
+                    "为什么选它": "该节点已经访问过，本轮跳过",
+                    "扩展出的新候选": "—",
+                    "下一轮待探索": _frontier_text(frontier, algo),
+                    "已访问顺序": " → ".join(visited_order) or "∅",
+                    "状态": "跳过",
+                }
+            )
+            continue
+
+        visited.add(cid)
+        visited_order.append(cid)
+        reached = cid == goal
+        discovered: list[str] = []
+
+        if not reached:
+            neighbors = adj[cid]
+            ordered = list(reversed(neighbors)) if meta["reverse_neighbors"] else neighbors
+            for nbr, edge_cost in ordered:
+                if nbr in visited:
+                    continue
+                next_g = g_scores[cid] + edge_cost
+                if meta["mode"] == "cost":
+                    if next_g >= g_scores.get(nbr, 10**9):
+                        continue
+                    g_scores[nbr] = next_g
+                    parent[nbr] = cid
+                    if nbr in in_frontier:
+                        frontier[:] = [e for e in frontier if e["id"] != nbr]
+                        in_frontier.discard(nbr)
+                    frontier.append({"id": nbr, "g": next_g, "h": h[nbr], "f": next_g + h[nbr]})
+                    in_frontier.add(nbr)
+                    discovered.append(_candidate_label(nbr, next_g, h[nbr], algo, cid))
+                    continue
+                if nbr in in_frontier:
+                    if meta["reverse_neighbors"]:
+                        parent[nbr] = cid
+                    continue
+                parent[nbr] = cid
+                g_scores[nbr] = next_g
+                frontier.append({"id": nbr, "g": next_g, "h": h[nbr], "f": next_g + h[nbr]})
+                in_frontier.add(nbr)
+                discovered.append(_candidate_label(nbr, next_g, h[nbr], algo, cid))
+
+        _apply_frontier_scores(frontier, h, g_scores)
+        if meta["sort_fn"]:
+            frontier.sort(key=meta["sort_fn"])
+        rows.append(
+            {
+                "步骤": step,
+                "选择节点": cid,
+                "为什么选它": _decision_reason(current, algo),
+                "扩展出的新候选": "；".join(discovered) if discovered else "—",
+                "下一轮待探索": _frontier_text(frontier, algo),
+                "已访问顺序": " → ".join(visited_order),
+                "状态": "到达目标" if reached else "继续",
+            }
+        )
+        if reached:
+            break
+
+    return pd.DataFrame(rows)
+
+
+def algorithm_result(algo: str, graph: dict | None = None) -> pd.DataFrame:
+    """One-row result table for the algorithm currently being studied."""
+    graph = graph or load_graph()
+    adj = build_adjacency(graph["edges"])
+    result = run_all(graph)[algo]
+    path = result["path"]
+    return pd.DataFrame(
+        [
+            {
+                "算法": f"{ALGO_META[algo]['label']} · {ALGO_META[algo]['name']}",
+                "路径": " → ".join(path),
+                "边数": max(len(path) - 1, 0),
+                "总代价": path_cost(path, adj) if path else 0,
+                "结论": ALGO_META[algo]["focus"],
+            }
+        ]
+    )
+
+
 def _expand_neighbors(
     current: str,
     g: int,
@@ -449,15 +623,15 @@ def _draw_campus_map(
     active_edges = _path_edges(path)
     start, goal = graph["start"], graph["goal"]
 
-    ax.set_facecolor("#f7faf8")
+    ax.set_facecolor("#fbfcfd")
     ax.add_patch(
         mpatches.FancyBboxPatch(
-            (-0.05, 0.34),
-            5.05,
-            2.35,
-            boxstyle="round,pad=0.04,rounding_size=0.16",
-            facecolor="#eef8f1",
-            edgecolor="#d6eadc",
+            (-0.08, 0.28),
+            5.16,
+            2.44,
+            boxstyle="round,pad=0.04,rounding_size=0.08",
+            facecolor="#ffffff",
+            edgecolor="#e5e7eb",
             linewidth=1.2,
             zorder=0,
         )
@@ -466,10 +640,10 @@ def _draw_campus_map(
         mpatches.Rectangle(
             (-0.15, 1.42),
             5.35,
-            0.24,
-            facecolor="#e7eef5",
+            0.18,
+            facecolor="#eef2f7",
             edgecolor="none",
-            alpha=0.75,
+            alpha=0.8,
             zorder=0,
         )
     )
@@ -484,18 +658,18 @@ def _draw_campus_map(
             x1, y1 = LAYOUT[a]
             x2, y2 = LAYOUT[b]
             is_path = key in active_edges
-            color = "#d04b36" if is_path else "#9aa9b7"
-            width = 4.4 if is_path else 2.2
+            color = "#2563eb" if is_path else "#cbd5e1"
+            width = 3.4 if is_path else 1.8
             (line,) = ax.plot(
                 [x1, x2],
                 [y1, y2],
                 color=color,
                 linewidth=width,
                 solid_capstyle="round",
-                alpha=0.95 if is_path else 0.78,
+                alpha=0.95 if is_path else 0.86,
                 zorder=2 if is_path else 1,
             )
-            line.set_path_effects([pe.Stroke(linewidth=width + 2.2, foreground="#ffffff", alpha=0.9), pe.Normal()])
+            line.set_path_effects([pe.Stroke(linewidth=width + 2.0, foreground="#ffffff", alpha=0.95), pe.Normal()])
             dx, dy = _label_offset(a, b)
             ax.text(
                 (x1 + x2) / 2 + dx,
@@ -504,13 +678,13 @@ def _draw_campus_map(
                 ha="center",
                 va="center",
                 fontsize=8 if compact else 9,
-                color="#7c2d12" if is_path else "#475569",
+                color="#1d4ed8" if is_path else "#64748b",
                 bbox=dict(
-                    boxstyle="round,pad=0.22,rounding_size=0.12",
-                    facecolor="#fff7ed" if is_path else "#ffffff",
-                    edgecolor="#fed7aa" if is_path else "#dbe4ef",
+                    boxstyle="round,pad=0.18,rounding_size=0.08",
+                    facecolor="#eff6ff" if is_path else "#ffffff",
+                    edgecolor="#bfdbfe" if is_path else "#e2e8f0",
                     linewidth=0.9,
-                    alpha=0.96,
+                    alpha=0.98,
                 ),
                 zorder=5,
             )
@@ -519,46 +693,62 @@ def _draw_campus_map(
         name = graph["nodes"][nid]["name"]
         h = graph["nodes"][nid]["h"]
         face = "#ffffff"
-        edge = "#8aa1b2"
+        edge = "#94a3b8"
         text_color = "#0f172a"
         if nid in active_nodes:
-            face = "#dc4d37"
-            edge = "#ffffff"
-            text_color = "#ffffff"
+            face = "#eff6ff"
+            edge = "#2563eb"
+            text_color = "#1e3a8a"
         if nid == start:
-            face = "#0f766e" if nid not in active_nodes else "#0f766e"
-            edge = "#ffffff"
-            text_color = "#ffffff"
+            face = "#ecfdf5"
+            edge = "#059669"
+            text_color = "#065f46"
+        if nid == start and nid in active_nodes:
+            face = "#d1fae5"
+            edge = "#059669"
+            text_color = "#065f46"
         if nid == goal:
-            face = "#b45309" if nid not in active_nodes else "#b45309"
-            edge = "#ffffff"
-            text_color = "#ffffff"
-        w, h_box = (0.62, 0.36) if compact else (0.82, 0.54)
+            face = "#fff7ed"
+            edge = "#f97316"
+            text_color = "#9a3412"
+        if nid == goal and nid in active_nodes:
+            face = "#ffedd5"
+            edge = "#f97316"
+            text_color = "#9a3412"
+        radius = 0.17 if compact else 0.23
         ax.add_patch(
-            mpatches.FancyBboxPatch(
-                (px - w / 2, py - h_box / 2),
-                w,
-                h_box,
-                boxstyle="round,pad=0.03,rounding_size=0.12",
+            mpatches.Circle(
+                (px, py),
+                radius,
                 facecolor=face,
                 edgecolor=edge,
                 linewidth=1.8,
                 zorder=6,
             )
         )
-        label = nid if compact else f"{nid}\n{name}\nh={h}"
         ax.text(
             px,
             py,
-            label,
+            nid,
             ha="center",
             va="center",
             fontsize=8 if compact else 9,
             color=text_color,
             zorder=7,
             fontweight="bold",
-            linespacing=1.15,
         )
+        if not compact:
+            ax.text(
+                px,
+                py - 0.43,
+                f"{name}  h={h}",
+                ha="center",
+                va="top",
+                fontsize=8,
+                color="#475569",
+                zorder=7,
+                bbox=dict(boxstyle="round,pad=0.14,rounding_size=0.06", facecolor="#ffffff", edgecolor="none", alpha=0.82),
+            )
 
     if path:
         path_text = " -> ".join(path)
@@ -572,7 +762,7 @@ def _draw_campus_map(
             va="bottom",
             fontsize=8 if compact else 10,
             color="#334155",
-            bbox=dict(boxstyle="round,pad=0.35,rounding_size=0.12", facecolor="#ffffff", edgecolor="#dbe4ef"),
+            bbox=dict(boxstyle="round,pad=0.28,rounding_size=0.08", facecolor="#ffffff", edgecolor="#e2e8f0"),
             zorder=8,
         )
 

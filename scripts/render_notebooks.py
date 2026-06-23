@@ -31,13 +31,13 @@ READER_SCRIPT = """<script id="ai-labs-reader-script">
 </script>"""
 RENDER_STYLE = """<style id="ai-labs-render-style">
 :root {
-  --ai-labs-accent: #0d6b62;
-  --ai-labs-accent-dark: #09524b;
+  --ai-labs-accent: #2563eb;
+  --ai-labs-accent-dark: #1e3a8a;
   --ai-labs-blue: #2563eb;
-  --ai-labs-amber: #b45309;
-  --ai-labs-line: #dbe4ef;
+  --ai-labs-amber: #c2410c;
+  --ai-labs-line: #e2e8f0;
   --ai-labs-surface: #ffffff;
-  --ai-labs-soft: #f6f8fb;
+  --ai-labs-soft: #f8fafc;
   --ai-labs-gutter: clamp(18px, 6vw, 96px);
   --ai-labs-read-progress: 0%;
 }
@@ -49,9 +49,7 @@ html[lang="zh-CN"] {
 body.jp-Notebook {
   margin: 0;
   padding: 0 var(--ai-labs-gutter) 56px;
-  background:
-    linear-gradient(180deg, #eef8f4 0, #f8fafc 260px, #ffffff 760px),
-    #ffffff;
+  background: #fbfcfd;
   color: #111827;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
@@ -68,10 +66,10 @@ body.jp-Notebook {
   flex-wrap: wrap;
   gap: 10px 18px;
   align-items: center;
-  background: #102a43;
-  color: #fff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.96);
+  color: #0f172a;
+  border-bottom: 1px solid var(--ai-labs-line);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
   font: 700 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -82,11 +80,11 @@ body.jp-Notebook {
   right: 0;
   bottom: -1px;
   height: 3px;
-  background: linear-gradient(90deg, #f59e0b var(--ai-labs-read-progress), transparent 0);
+  background: linear-gradient(90deg, var(--ai-labs-accent) var(--ai-labs-read-progress), transparent 0);
 }
 
 #ai-labs-chrome a {
-  color: #fff;
+  color: #0f172a;
   min-height: 32px;
   padding: 0 2px;
   display: inline-flex;
@@ -95,7 +93,7 @@ body.jp-Notebook {
 }
 
 #ai-labs-chrome a:focus-visible {
-  outline: 3px solid rgba(255, 255, 255, 0.55);
+  outline: 3px solid rgba(37, 99, 235, 0.22);
   outline-offset: 2px;
 }
 
@@ -136,12 +134,12 @@ body.jp-Notebook {
 }
 
 .jp-Notebook .jp-MarkdownCell:first-of-type {
-  padding: 22px 24px;
-  border: 1px solid rgba(13, 107, 98, 0.18);
+  padding: 18px 20px;
+  border: 1px solid var(--ai-labs-line);
   border-left: 5px solid var(--ai-labs-accent);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  box-shadow: none;
 }
 
 .jp-RenderedHTMLCommon,
@@ -175,7 +173,7 @@ body.jp-Notebook {
 }
 
 .jp-RenderedHTMLCommon h3 {
-  color: var(--ai-labs-accent-dark);
+  color: #334155;
 }
 
 .jp-RenderedHTMLCommon a.anchor-link {
@@ -195,12 +193,12 @@ body.jp-Notebook {
 }
 
 .jp-RenderedHTMLCommon a.anchor-link:focus-visible {
-  outline: 2px solid rgba(13, 107, 98, 0.35);
+  outline: 2px solid rgba(37, 99, 235, 0.24);
   outline-offset: 2px;
 }
 
 .jp-RenderedHTMLCommon a {
-  color: #075985;
+  color: var(--ai-labs-accent-dark);
   font-weight: 700;
 }
 
@@ -215,9 +213,9 @@ body.jp-Notebook {
   max-width: 840px;
   margin: 12px 0;
   padding: 12px 14px;
-  border: 1px solid #d6e5ef;
+  border: 1px solid var(--ai-labs-line);
   border-radius: 8px;
-  background: #f8fbff;
+  background: #ffffff;
 }
 
 .jp-RenderedHTMLCommon summary {
@@ -229,8 +227,8 @@ body.jp-Notebook {
 .jp-RenderedHTMLCommon details.ai-self-check {
   padding: 0;
   overflow: hidden;
-  border-color: #fed7aa;
-  background: #fffaf2;
+  border-color: #facc15;
+  background: #fefce8;
 }
 
 .jp-RenderedHTMLCommon details.ai-self-check summary {
@@ -240,7 +238,7 @@ body.jp-Notebook {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  color: #7c2d12;
+  color: #713f12;
   list-style: none;
 }
 
@@ -253,8 +251,8 @@ body.jp-Notebook {
   flex: 0 0 auto;
   padding: 4px 9px;
   border-radius: 999px;
-  background: #ffedd5;
-  color: #9a3412;
+  background: #fef3c7;
+  color: #854d0e;
   font-size: 12px;
 }
 
@@ -266,7 +264,7 @@ body.jp-Notebook {
   max-width: none;
   margin: 0;
   padding: 12px 14px 14px;
-  border-top: 1px solid #fed7aa;
+  border-top: 1px solid #fde68a;
   background: #fff;
   color: #334155;
 }
@@ -283,14 +281,14 @@ body.jp-Notebook {
   border: 1px solid var(--ai-labs-line);
   border-radius: 8px;
   background: var(--ai-labs-surface);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  box-shadow: none;
 }
 
 .jp-RenderedHTMLCommon thead th {
-  background: #e6f4ef;
-  color: #0f3f3b;
+  background: #f1f5f9;
+  color: #0f172a;
   font-weight: 800;
-  border-bottom: 1px solid #cfe7dc;
+  border-bottom: 1px solid var(--ai-labs-line);
 }
 
 .jp-RenderedHTMLCommon th,
@@ -349,7 +347,7 @@ body.jp-Notebook {
   border-radius: 8px;
   background: #ffffff;
   border: 1px solid var(--ai-labs-line);
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  box-shadow: none;
 }
 
 @media (max-width: 640px) {
