@@ -3,8 +3,8 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>第 9 章 · Self-Attention 与字符 LM 代码实验 · AI思维 Notebook</title>
-<meta name="description" content="第 9 章 · Self-Attention 与字符 LM 代码实验，AI思维配套 Jupyter 预渲染代码实验。"/>
+<title>第 9 章 · Causal Attention 与词 Bigram LM 代码实验 · AI思维 Notebook</title>
+<meta name="description" content="第 9 章 · Causal Attention 与词 Bigram LM 代码实验，AI思维配套 Jupyter 预渲染代码实验。"/>
 <link rel="icon" href="../../favicon.svg" type="image/svg+xml"/><style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7608,23 +7608,23 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=9">Python 代码实验</a><a href="../../ch9.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch09_attention_lm.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9c6270bc">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=27e50b47">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E7%AC%AC-9-%E7%AB%A0-%C2%B7-Self-Attention-%E4%B8%8E%E5%AD%97%E7%AC%A6-LM-%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">第 9 章 · Self-Attention 与字符 LM 代码实验<a class="anchor-link" href="#%E7%AC%AC-9-%E7%AB%A0-%C2%B7-Self-Attention-%E4%B8%8E%E5%AD%97%E7%AC%A6-LM-%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">¶</a></h1><p><a href="../../ch9.html">章节网页</a></p>
+<h1 id="%E7%AC%AC-9-%E7%AB%A0-%C2%B7-Causal-Attention-%E4%B8%8E%E8%AF%8D-Bigram-LM-%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">第 9 章 · Causal Attention 与词 Bigram LM 代码实验<a class="anchor-link" href="#%E7%AC%AC-9-%E7%AB%A0-%C2%B7-Causal-Attention-%E4%B8%8E%E8%AF%8D-Bigram-LM-%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">¶</a></h1><p><a href="../../ch9.html">章节网页</a></p>
 <h2 id="%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">运行内容<a class="anchor-link" href="#%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">¶</a></h2><ul>
 <li>计算 causal attention</li>
-<li>统计字符 bigram</li>
+<li>统计词 bigram</li>
 <li>绘制 attention 热力图</li>
 </ul>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3f6574bf">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6810934f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7634,7 +7634,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8eebf0bd">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=84bf5ff5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7707,7 +7707,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=082f4699">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b66d919a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7833,17 +7833,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2378580d">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e075c4a8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-%E5%AD%97%E7%AC%A6%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B">1. 字符语言模型<a class="anchor-link" href="#1.-%E5%AD%97%E7%AC%A6%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B">¶</a></h2>
+<h2 id="1.-%E8%AF%8D-Bigram-LM">1. 词 Bigram LM<a class="anchor-link" href="#1.-%E8%AF%8D-Bigram-LM">¶</a></h2>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7f378ea0">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2870cf34">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7969,7 +7969,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8e4322cb">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=52c36282">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

@@ -1335,14 +1335,14 @@ def _ch09() -> dict[str, list]:
         ]),
         "ch09_attention_lm.ipynb": flatten([
             rs.chapter_link(
-                "第 9 章 · Self-Attention 与字符 LM 代码实验",
-                ["计算 causal attention", "统计字符 bigram", "绘制 attention 热力图"],
+                "第 9 章 · Causal Attention 与词 Bigram LM 代码实验",
+                ["计算 causal attention", "统计词 bigram", "绘制 attention 热力图"],
                 "../ch9.html",
             ),
             rs.section("0", "环境与数据"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(SELF_ATTENTION_CELL),
-            rs.section("1", "字符语言模型"),
+            rs.section("1", "词 Bigram LM"),
             rs.code(CHAR_LM_CELL),
             rs.code(SELF_ATTENTION_PLOT_CELL),
         ]),
