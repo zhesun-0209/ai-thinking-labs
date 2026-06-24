@@ -7608,7 +7608,7 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=11">Python 代码实验</a><a href="../../ch11.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch11_epsilon_greedy.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7b0a5eac">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=72b71118">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7625,7 +7625,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ce0863f7">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2989f5d5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7635,7 +7635,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=70b848cf">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4e848447">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7670,7 +7670,7 @@ body.jp-Notebook {
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">inspect_cliff_start_actions</span><span class="p">():</span>
-    <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s2">"CliffWalking-v0"</span><span class="p">)</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s2">"CliffWalking"</span><span class="p">)</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">action</span><span class="p">,</span> <span class="n">action_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cliff_action_labels</span><span class="p">):</span>
         <span class="n">state</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -7820,7 +7820,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=49161553">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1f2cef16">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7830,7 +7830,7 @@ body.jp-Notebook {
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 悬崖行走：在经典网格任务里比较不同探索率的 Q-learning。</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">train_cliff_q_learning</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">episodes</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.50</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s2">"CliffWalking-v0"</span><span class="p">)</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s2">"CliffWalking"</span><span class="p">)</span>
     <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
     <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
     <span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">n</span><span class="p">))</span>
@@ -8011,7 +8011,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=69611707">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5e7622f4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8021,7 +8021,7 @@ body.jp-Notebook {
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 用训练后的 Q 表走一条贪心路线，查看智能体会如何从 S 走向 G。</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_cliff_greedy_path</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">max_steps</span><span class="o">=</span><span class="mi">40</span><span class="p">):</span>
-    <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s2">"CliffWalking-v0"</span><span class="p">)</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s2">"CliffWalking"</span><span class="p">)</span>
     <span class="n">state</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">path_coords</span> <span class="o">=</span> <span class="p">[</span><span class="nb">divmod</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="mi">12</span><span class="p">)]</span>
@@ -8275,7 +8275,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b9a8594a">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d790ef34">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

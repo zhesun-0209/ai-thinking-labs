@@ -1418,7 +1418,7 @@ plt.tight_layout()
 plt.show()
 
 def inspect_cliff_start_actions():
-    env = gym.make("CliffWalking-v0")
+    env = gym.make("CliffWalking")
     rows = []
     for action, action_name in enumerate(cliff_action_labels):
         state, _ = env.reset(seed=0)
@@ -1447,7 +1447,7 @@ display(pd.DataFrame({
 BANDIT_CELL = """
 # 悬崖行走：在经典网格任务里比较不同探索率的 Q-learning。
 def train_cliff_q_learning(epsilon, episodes=2000, alpha=0.50, gamma=1.0, seed=0):
-    env = gym.make("CliffWalking-v0")
+    env = gym.make("CliffWalking")
     env.action_space.seed(seed)
     rng = np.random.default_rng(seed)
     Q = np.zeros((env.observation_space.n, env.action_space.n))
@@ -1506,7 +1506,7 @@ display(cliff_trace.tail(12).rename(columns={
 CLIFF_PATH_CELL = """
 # 用训练后的 Q 表走一条贪心路线，查看智能体会如何从 S 走向 G。
 def run_cliff_greedy_path(Q, max_steps=40):
-    env = gym.make("CliffWalking-v0")
+    env = gym.make("CliffWalking")
     state, _ = env.reset(seed=5)
     rows = []
     path_coords = [divmod(state, 12)]
