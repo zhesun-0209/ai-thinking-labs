@@ -35,11 +35,12 @@ import matplotlib.font_manager as fm
 from PIL import Image
 from IPython.display import display
 from scipy.signal import correlate2d
-from sklearn.datasets import load_breast_cancer, load_iris, load_sample_image, make_moons
+from sklearn.datasets import load_breast_cancer, load_digits, load_iris, load_sample_image, make_moons
 from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics import accuracy_score, confusion_matrix, log_loss, mean_squared_error
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler, normalize
@@ -199,57 +200,105 @@ plt.show()
 
 
 TRANSE_CELL = """
-# TransE：用国家-首都关系比较正确三元组和替换实体后的距离。
-entity_vec = {
-    "France": np.array([0.10, 0.82]),
-    "Paris": np.array([0.72, 0.60]),
-    "Germany": np.array([0.05, 0.22]),
-    "Berlin": np.array([0.68, 0.01]),
-    "Italy": np.array([0.18, 0.48]),
-    "Rome": np.array([0.80, 0.28]),
-}
-relation_vec = {"capital_of": np.array([0.62, -0.22])}
-
-triples = [
-    ("France", "capital_of", "Paris", "正例"),
-    ("Germany", "capital_of", "Berlin", "正例"),
-    ("Italy", "capital_of", "Rome", "正例"),
-    ("France", "capital_of", "Berlin", "替换尾实体"),
-    ("Germany", "capital_of", "Paris", "替换尾实体"),
+# TransE 训练：让正确三元组距离变小，让替换尾实体后的三元组距离变大。
+entities = ["France", "Germany", "Italy", "Spain", "Portugal", "Paris", "Berlin", "Rome", "Madrid", "Lisbon"]
+capitals = ["Paris", "Berlin", "Rome", "Madrid", "Lisbon"]
+entity_to_id = {name: idx for idx, name in enumerate(entities)}
+positive_triples = [
+    ("France", "capital_of", "Paris"),
+    ("Germany", "capital_of", "Berlin"),
+    ("Italy", "capital_of", "Rome"),
+    ("Spain", "capital_of", "Madrid"),
+    ("Portugal", "capital_of", "Lisbon"),
 ]
 
-rows = []
-for head, relation, tail, kind in triples:
-    score_vec = entity_vec[head] + relation_vec[relation] - entity_vec[tail]
-    rows.append({
-        "样本": kind,
-        "三元组": f"({head}, {relation}, {tail})",
-        "距离": round(float(np.linalg.norm(score_vec)), 3),
-    })
+rng = np.random.default_rng(8)
+entity_vec = rng.normal(0, 0.18, size=(len(entities), 2))
+relation_vec = rng.normal(0, 0.18, size=2)
+margin = 0.45
+lr = 0.035
+loss_rows = []
 
-transe_df = pd.DataFrame(rows).sort_values("距离")
-display(transe_df)
+def triple_distance(head, tail):
+    h = entity_vec[entity_to_id[head]]
+    t = entity_vec[entity_to_id[tail]]
+    return float(np.linalg.norm(h + relation_vec - t))
+
+for epoch in range(1, 501):
+    total_loss = 0.0
+    rng.shuffle(positive_triples)
+    for head, _, true_tail in positive_triples:
+        negative_tail = rng.choice([tail for tail in capitals if tail != true_tail])
+        h_id = entity_to_id[head]
+        t_id = entity_to_id[true_tail]
+        n_id = entity_to_id[negative_tail]
+
+        pos_vec = entity_vec[h_id] + relation_vec - entity_vec[t_id]
+        neg_vec = entity_vec[h_id] + relation_vec - entity_vec[n_id]
+        pos_score = float(np.dot(pos_vec, pos_vec))
+        neg_score = float(np.dot(neg_vec, neg_vec))
+        loss = max(0.0, margin + pos_score - neg_score)
+        total_loss += loss
+        if loss == 0:
+            continue
+
+        grad_pos = 2 * pos_vec
+        grad_neg = 2 * neg_vec
+        entity_vec[h_id] -= lr * (grad_pos - grad_neg)
+        relation_vec -= lr * (grad_pos - grad_neg)
+        entity_vec[t_id] += lr * grad_pos
+        entity_vec[n_id] -= lr * grad_neg
+
+    if epoch in {1, 20, 50, 100, 200, 500}:
+        pos_mean = np.mean([triple_distance(h, t) for h, _, t in positive_triples])
+        neg_examples = [(h, rng.choice([tail for tail in capitals if tail != t])) for h, _, t in positive_triples]
+        neg_mean = np.mean([triple_distance(h, t) for h, t in neg_examples])
+        loss_rows.append({"训练轮次": epoch, "平均损失": total_loss / len(positive_triples), "正例平均距离": pos_mean, "负例平均距离": neg_mean})
+
+transe_loss_df = pd.DataFrame(loss_rows)
+eval_rows = []
+for head, relation, true_tail in positive_triples:
+    candidates = sorted(
+        [{"头实体": head, "候选尾实体": tail, "距离": triple_distance(head, tail), "是否正确": tail == true_tail} for tail in capitals],
+        key=lambda row: row["距离"],
+    )
+    eval_rows.extend(candidates[:3])
+
+transe_df = pd.DataFrame(eval_rows)
+display(transe_loss_df.round(3))
+display(transe_df.round(3))
 """
 
 
 TRANSE_PLOT_CELL = """
-# 绘制 h + r 与候选 t 的几何距离。
-fig, ax = plt.subplots(figsize=(7.2, 5.0))
-h = entity_vec["France"]
-r = relation_vec["capital_of"]
-target_point = h + r
+# 绘制训练后的实体位置、关系平移和损失变化。
+fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.8))
+ax = axes[0]
+for name in entities:
+    vec = entity_vec[entity_to_id[name]]
+    is_capital = name in capitals
+    ax.scatter(vec[0], vec[1], s=150, color="#fff7ed" if is_capital else "#eff6ff", edgecolor="#f97316" if is_capital else "#2563eb", linewidth=1.5)
+    ax.text(vec[0] + 0.015, vec[1] + 0.015, name, color="#0f172a")
 
-for name, vec in entity_vec.items():
-    ax.scatter(vec[0], vec[1], s=170, color="#ffffff", edgecolor="#2563eb", linewidth=1.7)
-    ax.text(vec[0] + 0.02, vec[1] + 0.02, name, color="#0f172a")
+for head, _, tail in positive_triples[:3]:
+    h = entity_vec[entity_to_id[head]]
+    t = entity_vec[entity_to_id[tail]]
+    predicted = h + relation_vec
+    ax.arrow(h[0], h[1], relation_vec[0], relation_vec[1], width=0.004, head_width=0.035, color="#2563eb", alpha=0.55, length_includes_head=True)
+    ax.plot([predicted[0], t[0]], [predicted[1], t[1]], color="#f97316", linewidth=1.2, linestyle="--")
 
-ax.arrow(h[0], h[1], r[0], r[1], width=0.006, head_width=0.035, color="#f97316", length_includes_head=True)
-ax.scatter(target_point[0], target_point[1], s=210, marker="X", color="#f97316", edgecolor="#0f172a", linewidth=1.0)
-ax.text(target_point[0] + 0.02, target_point[1] - 0.05, "France + capital_of", color="#c2410c")
-ax.set_title("TransE 距离示意", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
+ax.set_title("训练后：h + r 靠近正确首都", loc="left", fontweight="bold", color="#0f172a")
 ax.set_xlabel("维度1")
 ax.set_ylabel("维度2")
 ax.grid(True, color="#e2e8f0", linewidth=0.8)
+
+axes[1].plot(transe_loss_df["训练轮次"], transe_loss_df["正例平均距离"], marker="o", color="#2563eb", linewidth=2.0, label="正例距离")
+axes[1].plot(transe_loss_df["训练轮次"], transe_loss_df["负例平均距离"], marker="o", color="#f97316", linewidth=2.0, label="负例距离")
+axes[1].set_title("训练过程", loc="left", fontweight="bold", color="#0f172a")
+axes[1].set_xlabel("训练轮次")
+axes[1].set_ylabel("平均距离")
+axes[1].grid(True, color="#e2e8f0", linewidth=0.8)
+axes[1].legend()
 plt.tight_layout()
 plt.show()
 """
@@ -496,64 +545,124 @@ plt.show()
 
 
 SKIPGRAM_DATA_CELL = """
-# Word2Vec 经典类比：king - man + woman 应接近 queen。
-analogy_words = ["king", "queen", "man", "woman", "prince", "princess", "apple", "orange"]
-word_vectors = pd.DataFrame(
-    {
-        "royalty": [0.92, 0.90, 0.10, 0.10, 0.82, 0.80, 0.05, 0.04],
-        "gender": [0.88, -0.88, 0.85, -0.85, 0.72, -0.72, 0.02, -0.02],
-        "fruit": [0.02, 0.02, 0.00, 0.00, 0.02, 0.02, 0.92, 0.90],
-    },
-    index=analogy_words,
-)
-display(word_vectors)
+# Skip-gram 训练数据：中心词预测窗口内的上下文词。
+sentences = [
+    "king queen royal palace crown".split(),
+    "king prince royal palace crown".split(),
+    "queen princess royal palace crown".split(),
+    "man king prince royal leader".split(),
+    "woman queen princess royal leader".split(),
+    "man woman family adult person".split(),
+    "boy girl family young person".split(),
+    "apple orange banana fruit market".split(),
+    "orange banana fruit market sweet".split(),
+]
+training_sentences = sentences * 20
+vocab_words = sorted({word for sent in training_sentences for word in sent})
+word_to_id = {word: idx for idx, word in enumerate(vocab_words)}
+
+window = 2
+skipgram_pairs = []
+for sent in training_sentences:
+    ids = [word_to_id[word] for word in sent]
+    for center_pos, center_id in enumerate(ids):
+        left = max(0, center_pos - window)
+        right = min(len(ids), center_pos + window + 1)
+        for context_pos in range(left, right):
+            if context_pos != center_pos:
+                skipgram_pairs.append((center_id, ids[context_pos]))
+
+display(pd.DataFrame({
+    "句子数": [len(training_sentences)],
+    "词表大小": [len(vocab_words)],
+    "窗口大小": [window],
+    "训练样本对": [len(skipgram_pairs)],
+}))
+display(pd.DataFrame(skipgram_pairs[:12], columns=["中心词编号", "上下文词编号"]).assign(
+    中心词=lambda df: df["中心词编号"].map(lambda idx: vocab_words[idx]),
+    上下文词=lambda df: df["上下文词编号"].map(lambda idx: vocab_words[idx]),
+)[["中心词", "上下文词"]])
 """
 
 
 SKIPGRAM_EMBED_CELL = """
-# 计算最近邻和类比向量。
-emb = normalize(word_vectors.to_numpy())
-vocab_words = word_vectors.index.to_list()
-word_to_id = {word: i for i, word in enumerate(vocab_words)}
-sim = cosine_similarity(emb)
+# 用完整 softmax 训练小型 Skip-gram，并记录损失。
+rng = np.random.default_rng(9)
+vocab_size = len(vocab_words)
+embed_dim = 8
+W_in = rng.normal(0, 0.05, size=(vocab_size, embed_dim))
+W_out = rng.normal(0, 0.05, size=(vocab_size, embed_dim))
+lr = 0.04
+loss_rows = []
 
-analogy_vec = (
-    word_vectors.loc["king"].to_numpy()
-    - word_vectors.loc["man"].to_numpy()
-    + word_vectors.loc["woman"].to_numpy()
-)
+def stable_softmax(scores):
+    scores = scores - scores.max()
+    probs = np.exp(scores)
+    return probs / probs.sum()
+
+for epoch in range(1, 501):
+    rng.shuffle(skipgram_pairs)
+    total_loss = 0.0
+    for center_id, context_id in skipgram_pairs:
+        center_vec = W_in[center_id].copy()
+        probs = stable_softmax(center_vec @ W_out.T)
+        total_loss += -np.log(probs[context_id] + 1e-12)
+        grad = probs
+        grad[context_id] -= 1
+        W_in[center_id] -= lr * (grad @ W_out)
+        W_out -= lr * np.outer(grad, center_vec)
+    if epoch in {1, 20, 50, 100, 200, 500}:
+        loss_rows.append({"训练轮次": epoch, "平均负对数似然": total_loss / len(skipgram_pairs)})
+
+word_embedding = normalize((W_in + W_out) / 2)
+sim = cosine_similarity(word_embedding)
+loss_df = pd.DataFrame(loss_rows)
+
+nearest_rows = []
+for word in ["king", "queen", "man", "woman", "apple", "fruit"]:
+    idx = word_to_id[word]
+    order = np.argsort(sim[idx])[::-1]
+    neighbors = [vocab_words[j] for j in order if j != idx][:4]
+    nearest_rows.append({"词": word, "最近邻": " / ".join(neighbors), "最高相似度": sim[idx, order[1]]})
+
+analogy_vec = word_embedding[word_to_id["king"]] - word_embedding[word_to_id["man"]] + word_embedding[word_to_id["woman"]]
 analogy_vec = normalize(analogy_vec.reshape(1, -1))
-analogy_scores = cosine_similarity(analogy_vec, emb)[0]
+analogy_scores = cosine_similarity(analogy_vec, word_embedding)[0]
+for source_word in ["king", "man", "woman"]:
+    analogy_scores[word_to_id[source_word]] = -999
+analogy_df = pd.DataFrame({
+    "候选词": vocab_words,
+    "king - man + woman 相似度": np.round(analogy_scores, 3),
+}).sort_values("king - man + woman 相似度", ascending=False).head(8)
 
-nearest = pd.DataFrame(
-    [
-        {"词": word, "最近邻": vocab_words[np.argsort(sim[i])[-2]], "相似度": round(np.sort(sim[i])[-2], 3)}
-        for word, i in word_to_id.items()
-    ]
-)
-analogy_df = pd.DataFrame(
-    {"候选词": vocab_words, "king - man + woman 相似度": np.round(analogy_scores, 3)}
-).sort_values("king - man + woman 相似度", ascending=False)
-
-display(nearest)
+display(loss_df.round(3))
+display(pd.DataFrame(nearest_rows).round(3))
 display(analogy_df)
 """
 
 
 SKIPGRAM_PLOT_CELL = """
-# 绘制词向量位置。
-fig, ax = plt.subplots(figsize=(7.4, 5.2))
-emb_2d = word_vectors[["royalty", "gender"]].to_numpy()
-ax.scatter(emb_2d[:, 0], emb_2d[:, 1], s=130, color="#eff6ff", edgecolor="#2563eb", linewidth=1.6)
-for word, i in word_to_id.items():
-    ax.text(emb_2d[i, 0] + 0.02, emb_2d[i, 1] + 0.02, word, color="#0f172a")
-ax.annotate("", xy=emb_2d[word_to_id["queen"]], xytext=emb_2d[word_to_id["king"]], arrowprops={"arrowstyle": "->", "color": "#f97316", "lw": 2})
-ax.annotate("", xy=emb_2d[word_to_id["woman"]], xytext=emb_2d[word_to_id["man"]], arrowprops={"arrowstyle": "->", "color": "#f97316", "lw": 2})
-ax.axhline(0, color="#e2e8f0", linewidth=1)
-ax.axvline(0, color="#e2e8f0", linewidth=1)
-ax.set_title("Word2Vec 类比空间", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
-ax.set_xlabel("王室方向")
-ax.set_ylabel("性别方向")
+# 用二维投影查看训练后的语义空间。
+svd = TruncatedSVD(n_components=2, random_state=0)
+emb_2d = svd.fit_transform(word_embedding)
+important_words = ["king", "queen", "man", "woman", "prince", "princess", "apple", "orange", "fruit"]
+
+fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.8))
+axes[0].plot(loss_df["训练轮次"], loss_df["平均负对数似然"], marker="o", color="#2563eb", linewidth=2.2)
+axes[0].set_title("Skip-gram 训练损失", loc="left", fontweight="bold")
+axes[0].set_xlabel("训练轮次")
+axes[0].set_ylabel("平均负对数似然")
+axes[0].grid(True, color="#e2e8f0", linewidth=0.8)
+
+for word in important_words:
+    idx = word_to_id[word]
+    color = "#f97316" if word in {"king", "queen", "man", "woman"} else "#2563eb"
+    axes[1].scatter(emb_2d[idx, 0], emb_2d[idx, 1], s=130, color="#ffffff", edgecolor=color, linewidth=1.7)
+    axes[1].text(emb_2d[idx, 0] + 0.015, emb_2d[idx, 1] + 0.015, word, color="#0f172a")
+axes[1].annotate("", xy=emb_2d[word_to_id["queen"]], xytext=emb_2d[word_to_id["king"]], arrowprops={"arrowstyle": "->", "color": "#f97316", "lw": 2})
+axes[1].annotate("", xy=emb_2d[word_to_id["woman"]], xytext=emb_2d[word_to_id["man"]], arrowprops={"arrowstyle": "->", "color": "#f97316", "lw": 2})
+axes[1].set_title("训练后词向量投影", loc="left", fontweight="bold")
+axes[1].grid(True, color="#e2e8f0", linewidth=0.8)
 plt.tight_layout()
 plt.show()
 """
@@ -561,28 +670,54 @@ plt.show()
 
 SELF_ATTENTION_CELL = """
 # 加入因果遮罩后，每个位置只能看见自己和左侧词元。
-lm_tokens = "to be or not to be".split()
-X_lm = np.array([
-    [0.7, 0.1, 0.1],
-    [0.2, 0.8, 0.2],
-    [0.4, 0.3, 0.6],
-    [0.3, 0.7, 0.3],
-    [0.7, 0.1, 0.1],
-    [0.2, 0.8, 0.2],
-])
-scores_lm = X_lm @ X_lm.T / math.sqrt(X_lm.shape[1])
+lm_tokens = "the cat chased the mouse because the cat was hungry".split()
+feature_names = ["article", "cat", "mouse", "action", "reason", "state"]
+key_features = {
+    "the": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "cat": [0.0, 2.0, 0.0, 0.0, 0.0, 0.2],
+    "chased": [0.0, 0.8, 0.8, 2.0, 0.0, 0.0],
+    "mouse": [0.0, 0.0, 2.0, 0.0, 0.0, 0.0],
+    "because": [0.0, 0.0, 0.0, 0.0, 2.0, 0.0],
+    "was": [0.0, 0.4, 0.0, 0.0, 0.4, 1.2],
+    "hungry": [0.0, 0.4, 0.0, 0.0, 0.2, 1.2],
+}
+query_features = {
+    "the": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "cat": [0.0, 2.0, 0.0, 0.0, 0.0, 0.2],
+    "chased": [0.0, 1.1, 1.1, 2.0, 0.0, 0.0],
+    "mouse": [0.0, 0.0, 2.0, 0.2, 0.0, 0.0],
+    "because": [0.0, 0.4, 0.6, 0.0, 1.5, 0.0],
+    "was": [0.0, 1.4, 0.0, 0.0, 0.7, 0.8],
+    "hungry": [0.0, 1.8, 0.0, 0.0, 1.0, 0.6],
+}
+K_lm = np.array([key_features[token] for token in lm_tokens], dtype=float)
+Q_lm = np.array([query_features[token] for token in lm_tokens], dtype=float)
+scores_lm = (Q_lm @ K_lm.T / math.sqrt(K_lm.shape[1])) / 0.45
 mask = np.triu(np.ones_like(scores_lm), k=1).astype(bool)
 scores_lm = np.where(mask, -1e9, scores_lm)
 weights_lm = np.exp(scores_lm - scores_lm.max(axis=1, keepdims=True))
 weights_lm = weights_lm / weights_lm.sum(axis=1, keepdims=True)
 
-display(pd.DataFrame(np.round(weights_lm, 3), index=lm_tokens, columns=lm_tokens))
+focus_lm_rows = []
+for i, token in enumerate(lm_tokens):
+    visible_ids = list(range(i + 1))
+    sorted_ids = sorted(visible_ids, key=lambda j: weights_lm[i, j], reverse=True)[:3]
+    focus_lm_rows.append({
+        "位置": i,
+        "当前词": token,
+        "可见上下文": " ".join(lm_tokens[: i + 1]),
+        "最强关注": f"{lm_tokens[sorted_ids[0]]}({weights_lm[i, sorted_ids[0]]:.2f})",
+        "前三关注": " / ".join(f"{lm_tokens[j]}({weights_lm[i, j]:.2f})" for j in sorted_ids),
+    })
+
+display(pd.DataFrame(focus_lm_rows))
+display(pd.DataFrame(np.round(weights_lm, 3), index=[f"{i}:{t}" for i, t in enumerate(lm_tokens)], columns=[f"{i}:{t}" for i, t in enumerate(lm_tokens)]))
 """
 
 
 CHAR_LM_CELL = """
 # 词二元统计：根据当前词统计下一个词分布。
-text = "to be or not to be that is the question to be".split()
+text = "the cat chased the mouse because the cat was hungry and the mouse ran because the cat chased it".split()
 bigram = defaultdict(Counter)
 for a, b in zip(text, text[1:]):
     bigram[a][b] += 1
@@ -603,16 +738,49 @@ display(pd.DataFrame(lm_rows))
 
 
 SELF_ATTENTION_PLOT_CELL = """
-# 绘制因果注意力热力图。
-fig, ax = plt.subplots(figsize=(5.8, 4.8))
+# 绘制因果注意力热力图，并单独列出每一行的最高关注。
+fig, (ax, link_ax) = plt.subplots(
+    1,
+    2,
+    figsize=(11.4, 6.0),
+    gridspec_kw={"width_ratios": [1.35, 0.78]},
+)
 im = ax.imshow(weights_lm, cmap="Blues", vmin=0, vmax=weights_lm.max())
-ax.set_xticks(range(len(lm_tokens)), lm_tokens)
-ax.set_yticks(range(len(lm_tokens)), lm_tokens)
+tick_labels = [f"{i}:{token}" for i, token in enumerate(lm_tokens)]
+ax.set_xticks(range(len(lm_tokens)), tick_labels, rotation=45, ha="right")
+ax.set_yticks(range(len(lm_tokens)), tick_labels)
 for i in range(len(lm_tokens)):
+    top_j = int(np.argmax(weights_lm[i]))
     for j in range(len(lm_tokens)):
-        ax.text(j, i, f"{weights_lm[i, j]:.2f}", ha="center", va="center", color="#0f172a")
+        value = weights_lm[i, j]
+        if value >= 0.10 or j == top_j:
+            color = "#ffffff" if value > 0.38 else "#0f172a"
+            weight = "bold" if j == top_j else "normal"
+            ax.text(j, i, f"{value:.2f}", ha="center", va="center", color=color, fontsize=8, fontweight=weight)
+        if j == top_j:
+            ax.add_patch(plt.Rectangle((j - 0.5, i - 0.5), 1, 1, fill=False, edgecolor="#0f172a", linewidth=2.0))
 ax.set_title("因果自注意力", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+link_ax.set_xlim(0, 1)
+link_ax.set_ylim(-0.7, len(lm_tokens) - 0.1)
+link_ax.axis("off")
+link_ax.text(0.02, len(lm_tokens) - 0.2, "每行最高关注", fontsize=13, fontweight="bold", color="#0f172a")
+link_ax.text(0.05, len(lm_tokens) - 0.65, "当前词", color="#64748b", fontweight="bold")
+link_ax.text(0.66, len(lm_tokens) - 0.65, "关注词", color="#64748b", fontweight="bold")
+for i, token in enumerate(lm_tokens):
+    y = len(lm_tokens) - 1 - i
+    top_j = int(np.argmax(weights_lm[i]))
+    top_token = lm_tokens[top_j]
+    color = "#2563eb" if top_j != i else "#64748b"
+    link_ax.text(0.05, y, f"{i}:{token}", va="center", color="#0f172a")
+    link_ax.annotate(
+        "",
+        xy=(0.58, y),
+        xytext=(0.35, y),
+        arrowprops={"arrowstyle": "->", "lw": 1.7, "color": color},
+    )
+    link_ax.text(0.66, y, f"{top_j}:{top_token}  {weights_lm[i, top_j]:.2f}", va="center", color=color, fontweight="bold")
 plt.tight_layout()
 plt.show()
 """
@@ -744,50 +912,72 @@ plt.tight_layout()
 plt.show()
 """
 
-
 MAE_CELL = """
-# MAE 遮挡：在同一张真实图片上随机遮住 75% 图块，只保留可见图块。
+# MAE 核心目标：随机遮挡大部分图块，再根据可见图块重建遮挡区域。
 rng = np.random.default_rng(4)
+mae_image = vit_image.astype(float)
+mae_patch = patch_size
+mae_grid = patch_grid
 num_patches = len(patch_tokens)
 mask_ratio = 0.75
 visible_ids = np.sort(rng.choice(num_patches, size=int(num_patches * (1 - mask_ratio)), replace=False))
-masked_ids = np.array([idx for idx in range(num_patches) if idx not in set(visible_ids)])
+mae_mask = np.ones(num_patches, dtype=bool)
+mae_mask[visible_ids] = False
+masked_ids = np.flatnonzero(mae_mask)
+mae_mask_map = mae_mask.reshape(mae_grid, mae_grid)
 
-mae_df = pd.DataFrame({
-    "指标": ["总图块数", "可见图块数", "遮挡图块数", "遮挡比例"],
-    "值": [num_patches, len(visible_ids), len(masked_ids), mask_ratio],
+patch_vectors = patches.reshape(num_patches, mae_patch * mae_patch * 3)
+coords = np.array([divmod(idx, mae_grid) for idx in range(num_patches)], dtype=float)
+coords[:, 0] = coords[:, 0] / (mae_grid - 1)
+coords[:, 1] = coords[:, 1] / (mae_grid - 1)
+
+reconstructor = KNeighborsRegressor(n_neighbors=4, weights="distance")
+reconstructor.fit(coords[visible_ids], patch_vectors[visible_ids])
+pred_vectors = np.clip(reconstructor.predict(coords), 0, 1)
+pred_image = pred_vectors.reshape(mae_grid, mae_grid, mae_patch, mae_patch, 3).swapaxes(1, 2).reshape(224, 224, 3)
+
+mae_masked_image = mae_image.copy()
+mae_reconstruction = mae_image.copy()
+for patch_id in masked_ids:
+    row, col = divmod(patch_id, mae_grid)
+    r0, r1 = row * mae_patch, (row + 1) * mae_patch
+    c0, c1 = col * mae_patch, (col + 1) * mae_patch
+    mae_masked_image[r0:r1, c0:c1] = 0.72
+    mae_reconstruction[r0:r1, c0:c1] = pred_image[r0:r1, c0:c1]
+
+masked_positions = [{"图块编号": idx, "行": idx // mae_grid, "列": idx % mae_grid} for idx in masked_ids]
+mae_summary = pd.DataFrame({
+    "指标": ["总图块数", "可见图块数", "遮挡图块数", "遮挡比例", "遮挡区域均方误差"],
+    "值": [
+        num_patches,
+        len(visible_ids),
+        len(masked_ids),
+        round(float(mae_mask.mean()), 3),
+        round(float(mean_squared_error(mae_image[mae_masked_image == 0.72], mae_reconstruction[mae_masked_image == 0.72])), 4),
+    ],
 })
-display(mae_df)
+display(mae_summary)
+display(pd.DataFrame(masked_positions).head(12))
 """
 
 
 MAE_PLOT_CELL = """
-# 绘制遮挡图像和一个简单的均值重建基线。
-masked_image = vit_image.astype(float).copy()
-recon_image = vit_image.astype(float).copy()
-mask_map = np.zeros((patch_grid, patch_grid))
-visible_patch_mean = patches.reshape(-1, patch_size, patch_size, 3)[visible_ids].mean(axis=0)
-
-for patch_id in masked_ids:
-    row, col = divmod(patch_id, patch_grid)
-    mask_map[row, col] = 1
-    r0, r1 = row * patch_size, (row + 1) * patch_size
-    c0, c1 = col * patch_size, (col + 1) * patch_size
-    masked_image[r0:r1, c0:c1] = 0.72
-    recon_image[r0:r1, c0:c1] = visible_patch_mean
-
-fig, axes = plt.subplots(2, 2, figsize=(8.4, 7.0))
-for ax, data, title in zip(
-    axes.ravel(),
-    [vit_image, mask_map, masked_image, recon_image],
-    ["原图", "遮挡图", "可见图块", "均值重建基线"],
-):
-    cmap = "Greys" if title == "遮挡图" else None
-    ax.imshow(data, cmap=cmap, vmin=0, vmax=1)
+# 绘制可见输入、预测图块和重建图像。
+fig, axes = plt.subplots(2, 3, figsize=(10.8, 7.0))
+plot_items = [
+    (mae_image, "原图", None),
+    (mae_mask_map, "遮挡位置", "Greys"),
+    (mae_masked_image, "可见输入", None),
+    (pred_image, "根据可见图块预测", None),
+    (mae_reconstruction, "遮挡处填回预测", None),
+    (np.abs(mae_image - mae_reconstruction) * 3, "重建误差 x3", None),
+]
+for ax, (data, title, cmap) in zip(axes.ravel(), plot_items):
+    ax.imshow(np.clip(data, 0, 1), cmap=cmap, vmin=0, vmax=1)
     ax.set_title(title, fontweight="bold")
     ax.set_xticks([])
     ax.set_yticks([])
-fig.suptitle("MAE 遮挡：同一张真实图片的图块遮挡", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+fig.suptitle("MAE 核心目标：只看可见图块，重建被遮挡区域", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
@@ -1144,6 +1334,40 @@ display(taxi_trace.tail(8).rename(columns={
 """
 
 
+TD_ROLLOUT_CELL = """
+# 训练后执行一条路线：每一步都按当前 Q 表选择价值最高的动作。
+rollout_state, _ = taxi_env.reset(seed=42)
+rollout_rows = []
+rollout_reward = 0
+for step in range(1, 31):
+    row, col, passenger_idx, dest_idx = taxi_env.unwrapped.decode(rollout_state)
+    q_values = Q_taxi[rollout_state]
+    action = int(np.argmax(q_values))
+    next_state, reward, terminated, truncated, _ = taxi_env.step(action)
+    next_row, next_col, next_passenger_idx, next_dest_idx = taxi_env.unwrapped.decode(next_state)
+    rollout_rows.append({
+        "步数": step,
+        "出租车位置": f"({row},{col})",
+        "乘客": "在车上" if passenger_idx == 4 else location_names[passenger_idx],
+        "目的地": location_names[dest_idx],
+        "选择动作": action_labels[action],
+        "动作价值": q_values[action],
+        "下一位置": f"({next_row},{next_col})",
+        "下一乘客状态": "在车上" if next_passenger_idx == 4 else location_names[next_passenger_idx],
+        "奖励": reward,
+    })
+    rollout_reward += reward
+    rollout_state = next_state
+    if terminated or truncated:
+        break
+
+taxi_rollout_df = pd.DataFrame(rollout_rows)
+display(taxi_rollout_df.round(3))
+print("路线总奖励:", rollout_reward)
+print("是否完成:", bool(terminated))
+"""
+
+
 TD_PLOT_CELL = """
 # 绘制训练曲线和一个起始状态的动作价值。
 start_state, _ = taxi_env.reset(seed=42)
@@ -1167,7 +1391,7 @@ taxi_env.close()
 
 
 CLIFF_INTRO_CELL = """
-# 悬崖行走：起点在左下角，终点在右下角，中间一排是悬崖。
+# 悬崖行走：先看地图，再看起点四个动作的一步结果。
 cliff_action_labels = ["向上", "向右", "向下", "向左"]
 cliff_action_arrows = {0: "↑", 1: "→", 2: "↓", 3: "←"}
 
@@ -1193,6 +1417,25 @@ ax.grid(True, color="#e2e8f0", linewidth=0.7)
 plt.tight_layout()
 plt.show()
 
+def inspect_cliff_start_actions():
+    env = gym.make("CliffWalking-v0")
+    rows = []
+    for action, action_name in enumerate(cliff_action_labels):
+        state, _ = env.reset(seed=0)
+        next_state, reward, terminated, truncated, _ = env.step(action)
+        row, col = divmod(state, 12)
+        next_row, next_col = divmod(next_state, 12)
+        rows.append({
+            "当前位置": f"({row},{col}) 起点",
+            "尝试动作": action_name,
+            "一步后位置": f"({next_row},{next_col})",
+            "即时奖励": reward,
+            "含义": "踩到悬崖，回到起点" if reward <= -100 else "安全移动或撞墙停留",
+        })
+    env.close()
+    return pd.DataFrame(rows)
+
+display(inspect_cliff_start_actions())
 display(pd.DataFrame({
     "策略": ["选择当前 Q 最大动作", "以探索率随机尝试"],
     "读法": ["走已经学到的最好方向", "故意试试看其他方向"],
@@ -1202,34 +1445,42 @@ display(pd.DataFrame({
 
 
 BANDIT_CELL = """
-# 悬崖行走：在经典网格任务里比较不同探索率的 SARSA。
-def train_cliff_sarsa(epsilon, episodes=700, alpha=0.45, gamma=0.99, seed=0):
-    env = gym.make("CliffWalking")
+# 悬崖行走：在经典网格任务里比较不同探索率的 Q-learning。
+def train_cliff_q_learning(epsilon, episodes=2000, alpha=0.50, gamma=1.0, seed=0):
+    env = gym.make("CliffWalking-v0")
     env.action_space.seed(seed)
     rng = np.random.default_rng(seed)
     Q = np.zeros((env.observation_space.n, env.action_space.n))
     rows = []
 
+    def best_action(state):
+        values = Q[state]
+        best_actions = np.flatnonzero(np.isclose(values, values.max()))
+        # 并列时先离开悬崖边，再向右推进，避免未学习状态反复撞墙。
+        for action in [0, 1, 2, 3]:
+            if action in best_actions:
+                return int(action)
+        return int(best_actions[0])
+
     def choose_action(state):
         if rng.random() < epsilon:
             return env.action_space.sample()
-        return int(np.argmax(Q[state]))
+        return best_action(state)
 
     for episode in range(1, episodes + 1):
         state, _ = env.reset(seed=seed + episode)
-        action = choose_action(state)
         total_reward = 0
         steps = 0
         terminated = truncated = False
         while not (terminated or truncated) and steps < 200:
+            action = choose_action(state)
             next_state, reward, terminated, truncated, _ = env.step(action)
-            next_action = choose_action(next_state)
-            target = reward + gamma * Q[next_state, next_action] * (not (terminated or truncated))
+            target = reward + gamma * np.max(Q[next_state]) * (not (terminated or truncated))
             Q[state, action] += alpha * (target - Q[state, action])
-            state, action = next_state, next_action
+            state = next_state
             total_reward += reward
             steps += 1
-        if episode % 50 == 0:
+        if episode % 100 == 0:
             rows.append({"epsilon": epsilon, "episode": episode, "reward": total_reward, "steps": steps})
     env.close()
     return pd.DataFrame(rows), Q
@@ -1238,7 +1489,7 @@ def train_cliff_sarsa(epsilon, episodes=700, alpha=0.45, gamma=0.99, seed=0):
 cliff_runs = []
 cliff_tables = {}
 for eps in [0.05, 0.10, 0.30]:
-    trace, Q = train_cliff_sarsa(eps, seed=21)
+    trace, Q = train_cliff_q_learning(eps, seed=21)
     cliff_runs.append(trace)
     cliff_tables[eps] = Q
 
@@ -1255,13 +1506,22 @@ display(cliff_trace.tail(12).rename(columns={
 CLIFF_PATH_CELL = """
 # 用训练后的 Q 表走一条贪心路线，查看智能体会如何从 S 走向 G。
 def run_cliff_greedy_path(Q, max_steps=40):
-    env = gym.make("CliffWalking")
+    env = gym.make("CliffWalking-v0")
     state, _ = env.reset(seed=5)
     rows = []
     path_coords = [divmod(state, 12)]
     total_reward = 0
+    finished = False
     for step in range(1, max_steps + 1):
-        action = int(np.argmax(Q[state]))
+        values = Q[state]
+        best_actions = np.flatnonzero(np.isclose(values, values.max()))
+        # 并列时优先向右推进，其次向上离开悬崖边。
+        for candidate in [1, 0, 2, 3]:
+            if candidate in best_actions:
+                action = int(candidate)
+                break
+        else:
+            action = int(best_actions[0])
         next_state, reward, terminated, truncated, _ = env.step(action)
         row, col = divmod(state, 12)
         next_row, next_col = divmod(next_state, 12)
@@ -1276,14 +1536,19 @@ def run_cliff_greedy_path(Q, max_steps=40):
         total_reward += reward
         state = next_state
         if terminated or truncated:
+            finished = terminated
             break
     env.close()
-    return pd.DataFrame(rows), path_coords, total_reward
+    return pd.DataFrame(rows), path_coords, total_reward, finished
 
 
-cliff_path_df, cliff_path_coords, cliff_path_reward = run_cliff_greedy_path(cliff_tables[0.10])
-display(cliff_path_df.head(18))
-print("总奖励:", cliff_path_reward)
+cliff_path_df, cliff_path_coords, cliff_path_reward, cliff_finished = run_cliff_greedy_path(cliff_tables[0.10])
+display(cliff_path_df)
+display(pd.DataFrame([{
+    "是否到达终点": cliff_finished,
+    "路线步数": len(cliff_path_df),
+    "总奖励": cliff_path_reward,
+}]))
 
 fig, ax = plt.subplots(figsize=(8.6, 5.0))
 for r in range(4):
@@ -1294,7 +1559,7 @@ for r in range(4):
 ys = [r for r, _ in cliff_path_coords]
 xs = [c for _, c in cliff_path_coords]
 ax.plot(xs, ys, color="#2563eb", linewidth=2.4, marker="o")
-ax.set_title("探索率 0.10 训练后的一条贪心路线", loc="left", fontweight="bold")
+ax.set_title("探索率 0.10 训练后的完成路线", loc="left", fontweight="bold")
 ax.set_xlim(-0.5, 11.5)
 ax.set_ylim(3.5, -0.5)
 ax.set_xticks(range(12))
@@ -1310,7 +1575,7 @@ BANDIT_PLOT_CELL = """
 fig, axes = plt.subplots(1, 2, figsize=(10.2, 4.6))
 for epsilon, part in cliff_trace.groupby("epsilon"):
     axes[0].plot(part["episode"], part["reward"], marker="o", linewidth=2.0, label=f"探索率={epsilon}")
-axes[0].set_title("悬崖行走 SARSA 回报", loc="left", fontweight="bold")
+axes[0].set_title("悬崖行走 Q-learning 回报", loc="left", fontweight="bold")
 axes[0].set_xlabel("训练回合")
 axes[0].set_ylabel("回合奖励")
 axes[0].grid(True, color="#e2e8f0", linewidth=0.8)
@@ -1345,21 +1610,14 @@ plt.show()
 
 
 ANNEALING_CELL = """
-# 参数搜索：在鸢尾花分类任务中比较多组候选参数。
+# 参数搜索：先粗略扫一遍，再围绕当前最好区域加密搜索。
 iris = load_iris(as_frame=True)
 X_iris = iris.data
 y_iris = iris.target
 search_rows = []
 
-candidate_params = [
-    {"C": float(C), "gamma": float(gamma)}
-    for C in np.logspace(-1, 2, 7)
-    for gamma in np.logspace(-3, 0, 7)
-]
-rng = np.random.default_rng(12)
-rng.shuffle(candidate_params)
-
-for trial, params in enumerate(candidate_params[:36], start=1):
+def evaluate_candidate(trial, phase, log10_C, log10_gamma):
+    params = {"C": 10 ** log10_C, "gamma": 10 ** log10_gamma}
     model = make_pipeline(
         StandardScaler(),
         SVC(C=params["C"], gamma=params["gamma"], kernel="rbf"),
@@ -1368,6 +1626,7 @@ for trial, params in enumerate(candidate_params[:36], start=1):
     accuracy = float(scores.mean())
     search_rows.append({
         "trial": trial,
+        "phase": phase,
         "log10_C": np.log10(params["C"]),
         "log10_gamma": np.log10(params["gamma"]),
         "C": params["C"],
@@ -1375,6 +1634,26 @@ for trial, params in enumerate(candidate_params[:36], start=1):
         "cv_accuracy": accuracy,
         "error": 1 - accuracy,
     })
+
+trial = 0
+coarse_points = [(c, g) for c in np.linspace(-1.5, 2.0, 6) for g in np.linspace(-3.0, 0.0, 6)]
+for log10_C, log10_gamma in coarse_points:
+    trial += 1
+    evaluate_candidate(trial, "粗搜索", log10_C, log10_gamma)
+
+coarse_df = pd.DataFrame(search_rows)
+coarse_best = coarse_df.loc[coarse_df["cv_accuracy"].idxmax()]
+refined_C = np.linspace(coarse_best["log10_C"] - 0.45, coarse_best["log10_C"] + 0.45, 5)
+refined_gamma = np.linspace(coarse_best["log10_gamma"] - 0.45, coarse_best["log10_gamma"] + 0.45, 5)
+seen = {(round(row["log10_C"], 4), round(row["log10_gamma"], 4)) for row in search_rows}
+for log10_C in refined_C:
+    for log10_gamma in refined_gamma:
+        key = (round(float(log10_C), 4), round(float(log10_gamma), 4))
+        if key in seen:
+            continue
+        trial += 1
+        evaluate_candidate(trial, "局部加密", float(log10_C), float(log10_gamma))
+        seen.add(key)
 
 search_df = pd.DataFrame(search_rows)
 search_df["best_accuracy"] = search_df["cv_accuracy"].cummax()
@@ -1385,15 +1664,22 @@ best_params = pd.DataFrame([{
     "验证准确率": best_row["cv_accuracy"],
     "尝试次数": len(search_df),
 }])
+phase_summary = search_df.groupby("phase", as_index=False).agg(
+    尝试次数=("trial", "count"),
+    最好准确率=("cv_accuracy", "max"),
+    平均准确率=("cv_accuracy", "mean"),
+)
 
 display(pd.DataFrame({
     "样本数": [len(X_iris)],
     "特征数": [X_iris.shape[1]],
     "类别": [", ".join(iris.target_names)],
 }))
+display(phase_summary.round(4))
 display(best_params.round(4))
 display(search_df.tail(10).rename(columns={
     "trial": "尝试",
+    "phase": "阶段",
     "log10_C": "log10(C)",
     "log10_gamma": "log10(gamma)",
     "cv_accuracy": "验证准确率",
@@ -1407,6 +1693,9 @@ ANNEALING_PLOT_CELL = """
 fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.7))
 axes[0].plot(search_df["trial"], search_df["cv_accuracy"], color="#94a3b8", linewidth=1.4, label="本次尝试")
 axes[0].plot(search_df["trial"], search_df["best_accuracy"], color="#2563eb", linewidth=2.5, label="当前最好")
+for phase, color in [("粗搜索", "#64748b"), ("局部加密", "#f97316")]:
+    part = search_df[search_df["phase"] == phase]
+    axes[0].scatter(part["trial"], part["cv_accuracy"], s=28, color=color, label=phase)
 axes[0].set_title("参数搜索过程", loc="left", fontweight="bold")
 axes[0].set_xlabel("尝试次数")
 axes[0].set_ylabel("验证准确率")
@@ -1863,18 +2152,30 @@ display(photo_forward_df.round(4))
 
 
 PHOTO_REVERSE_CELL = """
-# 用图块去噪器学习从噪声图块还原干净图块。
+# 用带噪声强度条件的图块去噪器，学习不同时间步下的修复方向。
 train_rng = np.random.default_rng(12)
-noisy_train = np.clip(clean_patches + train_rng.normal(0, 0.28, clean_patches.shape), 0, 1)
-photo_denoiser = MLPRegressor(hidden_layer_sizes=(128,), max_iter=140, random_state=12)
-photo_denoiser.fit(noisy_train, clean_patches)
+condition_levels = [0.12, 0.28, 0.48, 0.68]
+train_inputs = []
+train_targets = []
+for level in condition_levels:
+    noisy = np.clip(np.sqrt(1 - level) * clean_patches + np.sqrt(level) * train_rng.normal(size=clean_patches.shape), 0, 1)
+    level_column = np.full((len(noisy), 1), level)
+    train_inputs.append(np.hstack([noisy, level_column]))
+    train_targets.append(clean_patches)
+train_inputs = np.vstack(train_inputs)
+train_targets = np.vstack(train_targets)
 
+photo_denoiser = MLPRegressor(hidden_layer_sizes=(160,), max_iter=160, random_state=12)
+photo_denoiser.fit(train_inputs, train_targets)
+
+test_level = noise_levels[-1]
 noisy_photo = photo_forward[-1]
 noisy_patches = []
 for row, col in patch_positions:
     noisy_patches.append(noisy_photo[row:row + patch_size, col:col + patch_size].reshape(-1))
 noisy_patches = np.array(noisy_patches)
-predicted_patches = np.clip(photo_denoiser.predict(noisy_patches), 0, 1)
+test_level_column = np.full((len(noisy_patches), 1), test_level)
+predicted_patches = np.clip(photo_denoiser.predict(np.hstack([noisy_patches, test_level_column])), 0, 1)
 
 denoised_photo = np.zeros_like(photo_clean)
 weight = np.zeros(photo_clean.shape[:2] + (1,), dtype=float)
@@ -1885,10 +2186,15 @@ denoised_photo = denoised_photo / np.maximum(weight, 1)
 
 photo_denoise_summary = pd.DataFrame(
     [
-        {"图像": "噪声输入", "相对原图均方误差": mean_squared_error(photo_clean.reshape(-1), noisy_photo.reshape(-1))},
-        {"图像": "去噪输出", "相对原图均方误差": mean_squared_error(photo_clean.reshape(-1), denoised_photo.reshape(-1))},
+        {"图像": "高噪声输入", "噪声强度": test_level, "相对原图均方误差": mean_squared_error(photo_clean.reshape(-1), noisy_photo.reshape(-1))},
+        {"图像": "条件去噪输出", "噪声强度": test_level, "相对原图均方误差": mean_squared_error(photo_clean.reshape(-1), denoised_photo.reshape(-1))},
     ]
 )
+condition_summary = pd.DataFrame({
+    "训练噪声强度": condition_levels,
+    "每档图块数": [len(clean_patches)] * len(condition_levels),
+})
+display(condition_summary)
 display(photo_denoise_summary.round(4))
 """
 
@@ -1917,7 +2223,7 @@ for idx, (img, title) in enumerate([
     ax.set_xticks([])
     ax.set_yticks([])
 
-fig.suptitle("真实图片扩散直觉：加噪破坏结构，去噪学习局部修复", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+fig.suptitle("真实图片扩散去噪：噪声强度作为条件，指导模型修复图块", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
@@ -1936,45 +2242,41 @@ from torch import nn
 
 
 GAN_CELL = """
-# 真实图片图块 GAN：用花朵照片中的图块训练生成器和判别器。
+# 经典手写数字 GAN：只学习数字 8，让生成结果更容易判断。
 torch.manual_seed(7)
-gan_photo = np.asarray(Image.fromarray(load_sample_image("flower.jpg")).resize((128, 128))).astype("float32") / 255.0
-gan_patch_size = 16
-gan_stride = 8
-real_patch_list = []
-for row in range(0, gan_photo.shape[0] - gan_patch_size + 1, gan_stride):
-    for col in range(0, gan_photo.shape[1] - gan_patch_size + 1, gan_stride):
-        real_patch_list.append(gan_photo[row:row + gan_patch_size, col:col + gan_patch_size])
-real_patches_np = np.array(real_patch_list)
-real_patches = torch.tensor(real_patches_np.reshape(len(real_patches_np), -1) * 2 - 1, dtype=torch.float32)
+torch.set_num_threads(1)
+digits = load_digits()
+target_digit = 8
+real_digit_np = digits.images[digits.target == target_digit].astype("float32") / 16.0
+real_digits = torch.tensor(real_digit_np.reshape(len(real_digit_np), -1) * 2 - 1, dtype=torch.float32)
 
-latent_dim = 24
-patch_dim = real_patches.shape[1]
-batch_size = 96
+latent_dim = 16
+image_dim = real_digits.shape[1]
+batch_size = 64
 
 generator = nn.Sequential(
-    nn.Linear(latent_dim, 128),
-    nn.ReLU(),
-    nn.Linear(128, 256),
-    nn.ReLU(),
-    nn.Linear(256, patch_dim),
+    nn.Linear(latent_dim, 64),
+    nn.LeakyReLU(0.2),
+    nn.Linear(64, 128),
+    nn.LeakyReLU(0.2),
+    nn.Linear(128, image_dim),
     nn.Tanh(),
 )
 discriminator = nn.Sequential(
-    nn.Linear(patch_dim, 256),
+    nn.Linear(image_dim, 128),
     nn.LeakyReLU(0.2),
-    nn.Linear(256, 128),
+    nn.Linear(128, 64),
     nn.LeakyReLU(0.2),
-    nn.Linear(128, 1),
+    nn.Linear(64, 1),
 )
 loss_fn = nn.BCEWithLogitsLoss()
-opt_g = torch.optim.Adam(generator.parameters(), lr=0.0015, betas=(0.5, 0.999))
-opt_d = torch.optim.Adam(discriminator.parameters(), lr=0.0015, betas=(0.5, 0.999))
+opt_g = torch.optim.Adam(generator.parameters(), lr=0.0012, betas=(0.5, 0.999))
+opt_d = torch.optim.Adam(discriminator.parameters(), lr=0.0012, betas=(0.5, 0.999))
 gan_rows = []
 
-for step in range(1, 401):
-    idx = torch.randint(0, len(real_patches), (batch_size,))
-    real_batch = real_patches[idx]
+for step in range(1, 1201):
+    idx = torch.randint(0, len(real_digits), (batch_size,))
+    real_batch = real_digits[idx]
     z = torch.randn(batch_size, latent_dim)
     fake_batch = generator(z).detach()
 
@@ -1993,7 +2295,7 @@ for step in range(1, 401):
     g_loss.backward()
     opt_g.step()
 
-    if step % 50 == 0:
+    if step % 150 == 0:
         with torch.no_grad():
             gan_rows.append({
                 "训练步": step,
@@ -2004,20 +2306,22 @@ for step in range(1, 401):
             })
 
 with torch.no_grad():
-    gan_samples = generator(torch.randn(16, latent_dim)).reshape(16, gan_patch_size, gan_patch_size, 3).numpy()
+    z_fixed = torch.randn(16, latent_dim)
+    gan_samples = generator(z_fixed).reshape(16, 8, 8).numpy()
 gan_trace = pd.DataFrame(gan_rows)
 display(pd.DataFrame({
-    "真实图片": ["flower.jpg"],
-    "图块数": [len(real_patches)],
-    "图块尺寸": [f"{gan_patch_size}x{gan_patch_size}"],
-    "生成向量维度": [patch_dim],
+    "数据集": ["sklearn digits"],
+    "目标数字": [target_digit],
+    "真实样本数": [len(real_digits)],
+    "图像尺寸": ["8x8"],
+    "生成向量维度": [image_dim],
 }))
 display(gan_trace.round(3))
 """
 
 
 GAN_PLOT_CELL = """
-# 绘制训练曲线、真实图块和生成图块。
+# 绘制训练曲线、真实数字和生成数字。
 fig = plt.figure(figsize=(10.8, 7.2))
 gs = fig.add_gridspec(2, 4, height_ratios=[1.0, 1.6], hspace=0.38, wspace=0.18)
 ax_loss = fig.add_subplot(gs[0, :2])
@@ -2034,26 +2338,25 @@ ax_score.set_title("判别器输出", loc="left", fontweight="bold")
 ax_score.grid(True, color="#e2e8f0", linewidth=0.8)
 ax_score.legend()
 
-def patch_tile(images, grid=4):
+def digit_tile(images, grid=4):
     rows = [
         np.concatenate([images[i * grid + j] for j in range(grid)], axis=1)
         for i in range(grid)
     ]
     return np.concatenate(rows, axis=0)
 
-
-real_tile = patch_tile(real_patches_np[:16])
-fake_tile = patch_tile(((gan_samples[:16] + 1) / 2).clip(0, 1))
+real_tile = digit_tile(real_digit_np[:16])
+fake_tile = digit_tile(((gan_samples[:16] + 1) / 2).clip(0, 1))
 ax_real = fig.add_subplot(gs[1, :2])
 ax_fake = fig.add_subplot(gs[1, 2:])
-ax_real.imshow(real_tile)
-ax_real.set_title("真实图片图块", loc="left", fontweight="bold")
-ax_fake.imshow(fake_tile)
-ax_fake.set_title("生成图块", loc="left", fontweight="bold")
+ax_real.imshow(real_tile, cmap="gray_r", interpolation="nearest")
+ax_real.set_title("真实数字 8", loc="left", fontweight="bold")
+ax_fake.imshow(fake_tile, cmap="gray_r", interpolation="nearest")
+ax_fake.set_title("生成数字 8", loc="left", fontweight="bold")
 for ax in (ax_real, ax_fake):
     ax.set_xticks([])
     ax.set_yticks([])
-fig.suptitle("真实图片图块 GAN：从花朵局部纹理中学习生成分布", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+fig.suptitle("GAN：生成器试图让判别器把生成数字当成真实数字", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
@@ -2153,6 +2456,10 @@ positions = np.arange(len(sequence))
 sequence_gap = np.abs(positions[:, None] - positions[None, :])
 locality_prior = np.exp(-sequence_gap / 7.0)
 pair_repr = 0.70 * np.outer(conservation, conservation) + 0.30 * locality_prior
+contact_prior = np.exp(-((sequence_gap - 7) ** 2) / 18.0)
+contact_score = pair_repr * contact_prior
+contact_score[sequence_gap < 3] = 0.0
+np.fill_diagonal(contact_score, 0.0)
 
 pair_rows = []
 for i in range(len(sequence)):
@@ -2163,27 +2470,30 @@ for i in range(len(sequence)):
             "序列间隔": j - i,
             "保守性乘积": conservation[i] * conservation[j],
             "位置对值": pair_repr[i, j],
+            "候选接触分数": contact_score[i, j],
         })
 pair_examples = pd.DataFrame(pair_rows).sort_values("位置对值", ascending=False).head(8).reset_index(drop=True)
+contact_examples = pd.DataFrame(pair_rows).sort_values("候选接触分数", ascending=False).head(8).reset_index(drop=True)
 
 pipeline_df = pd.DataFrame(
     [
         {"阶段": "MSA", "输出": f"{len(msa)} 条同源序列"},
         {"阶段": "保守性", "输出": "每个位置的最大频率"},
         {"阶段": "候选位置对", "输出": "保守性与序列间隔共同形成候选分数"},
-        {"阶段": "位置对表征", "输出": f"{pair_repr.shape[0]}x{pair_repr.shape[1]} 矩阵"},
+        {"阶段": "候选接触", "输出": "从位置对表征中挑出最可能互相作用的位置"},
     ]
 )
 display(pipeline_df)
 display(msa_df)
 display(pd.DataFrame({"位置": range(1, len(sequence) + 1), "氨基酸": list(sequence), "保守性": conservation}).round(2))
 display(pair_examples.round(3))
+display(contact_examples[["位置对", "氨基酸对", "序列间隔", "候选接触分数"]].round(3))
 """
 
 
 ALPHAFOLD_PLOT_CELL = """
-# 绘制位置保守性和位置对表征热力图。
-fig, axes = plt.subplots(1, 3, figsize=(13.8, 4.8), gridspec_kw={"width_ratios": [0.95, 1.05, 1.15]})
+# 绘制位置保守性、候选位置对和候选接触图。
+fig, axes = plt.subplots(1, 4, figsize=(16.2, 4.8), gridspec_kw={"width_ratios": [0.9, 1.0, 1.1, 1.1]})
 axes[0].bar(range(1, len(sequence) + 1), conservation, color="#2563eb")
 axes[0].set_title("位置保守性", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
 axes[0].set_xlabel("序列位置")
@@ -2202,6 +2512,15 @@ axes[2].set_xticks(range(len(sequence)), list(sequence))
 axes[2].set_yticks(range(len(sequence)), list(sequence))
 axes[2].set_title("位置对表征热力图", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
 fig.colorbar(im, ax=axes[2], fraction=0.046, pad=0.04)
+
+im2 = axes[3].imshow(contact_score, cmap="YlOrRd", vmin=0, vmax=max(0.01, contact_score.max()))
+axes[3].set_xticks(range(len(sequence)), list(sequence))
+axes[3].set_yticks(range(len(sequence)), list(sequence))
+axes[3].set_title("候选接触图", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
+for _, row in contact_examples.head(5).iterrows():
+    i, j = [int(x) - 1 for x in row["位置对"].split("-")]
+    axes[3].scatter([j, i], [i, j], s=28, color="#0f172a")
+fig.colorbar(im2, ax=axes[3], fraction=0.046, pad=0.04)
 plt.tight_layout()
 plt.show()
 """
@@ -2237,13 +2556,13 @@ def _ch08() -> dict[str, list]:
         "ch08_transe_attention.ipynb": flatten([
             rs.chapter_link(
                 "第 8 章 · TransE 与注意力代码实验",
-                "本页把“关系”和“注意力”都变成可计算表格。TransE 部分看向量平移是否把国家指向首都；Attention 部分看一个词主要关注句子里的哪些词。",
-                ["计算国家-首都 TransE 距离", "计算 Transformer 注意力权重", "绘制几何图和热力图"],
+                "本页把“关系”和“注意力”都变成可计算过程。TransE 部分先训练国家到首都的关系向量；Attention 部分看一个词主要关注句子里的哪些词。",
+                ["训练国家-首都 TransE", "计算 Transformer 注意力权重", "绘制训练过程和热力图"],
                 "../ch8.html",
             ),
             rs.section("0", "环境与数据", "先载入表格、向量和画图工具。后续两部分彼此独立，可以分开运行和阅读。"),
             rs.code(DEPENDENCIES_CELL),
-            rs.section("1", "关系向量", "正确三元组的距离应该更小，替换实体后的距离应该变大。几何图帮助读者看到 h + r 是否靠近 t。"),
+            rs.section("1", "关系向量训练", "训练目标很直接：正确三元组的距离变小，替换尾实体后的距离变大。训练结束后再看 h + r 是否靠近正确首都。"),
             rs.code(TRANSE_CELL),
             rs.code(TRANSE_PLOT_CELL),
             rs.section("2", "注意力权重", "热力图的每一行代表一个正在读的词，每一列代表它可以关注的词。颜色越深、数值越大，说明关注越强。"),
@@ -2272,14 +2591,14 @@ def _ch09() -> dict[str, list]:
         "ch09_word2vec_analogy.ipynb": flatten([
             rs.chapter_link(
                 "第 9 章 · Skip-gram 代码实验",
-                "本页用词向量类比帮助读者理解“向量空间里的语义方向”。重点看最近邻和 king - man + woman 的结果。",
-                ["运行 Word2Vec 类比", "计算最近邻", "绘制词向量位置"],
+                "本页从上下文窗口训练一个小型 Skip-gram。读者先看中心词-上下文样本，再看训练后的最近邻和 king - man + woman 类比。",
+                ["生成中心词-上下文样本", "训练 Skip-gram", "计算最近邻和类比"],
                 "../ch9.html",
             ),
-            rs.section("0", "词向量表", "这里使用一组可解释的二维/三维向量，目的是看清类比关系，而不是训练大模型。"),
+            rs.section("0", "上下文样本", "Skip-gram 的训练样本来自同一句话附近的词。中心词负责预测窗口内的上下文词。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(SKIPGRAM_DATA_CELL),
-            rs.section("1", "类比与最近邻", "最近邻展示相似词，类比向量展示方向差。图里的箭头说明 gender 方向如何在词之间迁移。"),
+            rs.section("1", "训练与类比", "训练后，相似上下文会让词向量靠近；类比向量展示一种方向差能否从 king 迁移到 queen。"),
             rs.code(SKIPGRAM_EMBED_CELL),
             rs.code(SKIPGRAM_PLOT_CELL),
         ]),
@@ -2290,7 +2609,7 @@ def _ch09() -> dict[str, list]:
                 ["计算因果注意力", "统计二元词频", "绘制注意力热力图"],
                 "../ch9.html",
             ),
-            rs.section("0", "因果注意力", "因果遮罩会遮住当前位置右侧的词。热力图中右上角为 0，说明模型不能偷看未来。"),
+            rs.section("0", "因果注意力", "因果遮罩会遮住当前位置右侧的词。表格先列出每个位置能看到的上下文，再看它把注意力分给哪些历史词。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(SELF_ATTENTION_CELL),
             rs.section("1", "下一词统计", "二元词模型只根据当前词预测下一个词。它很简单，但能帮助读者理解语言模型的条件概率视角。"),
@@ -2331,14 +2650,14 @@ def _ch10() -> dict[str, list]:
         "ch10_mae_masking.ipynb": flatten([
             rs.chapter_link(
                 "第 10 章 · MAE 遮挡重建代码实验",
-                "本页继续使用同一张真实照片，遮住大部分图块，只把少量可见图块交给模型。读者要观察的是：MAE 学习的不是分类，而是从缺失上下文中重建图像。",
-                ["加载同一张真实照片", "随机遮住 75% 图块", "绘制可见图和重建基线"],
+                "本页继续使用同一张真实照片，复现 MAE 的核心训练目标：遮住大部分图块，再根据可见图块重建被遮挡区域。",
+                ["查看图块遮挡", "根据可见图块重建", "绘制预测图块和重建结果"],
                 "../ch10.html",
             ),
-            rs.section("0", "同一张照片", "先复用上一页的图块切分方式，保证读者看到的是同一个图像案例。"),
+            rs.section("0", "遮挡重建目标", "先复用上一页的图块切分方式，再随机遮住图块。重建器只能利用可见图块的位置和内容去补全遮挡区域。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(PATCHIFY_CELL),
-            rs.section("1", "遮挡与重建", "遮挡图说明哪些图块被隐藏。可见图显示模型能看到的输入，重建基线用于理解“补全缺失区域”的任务形态。"),
+            rs.section("1", "遮挡与重建", "遮挡图说明哪些图块被隐藏。重建图把模型预测填回遮挡位置，帮助读者对比原图、可见输入和预测输出。"),
             rs.code(MAE_CELL),
             rs.code(MAE_PLOT_CELL),
         ]),
@@ -2381,23 +2700,24 @@ def _ch11() -> dict[str, list]:
             rs.chapter_link(
                 "第 11 章 · 出租车调度 Q-learning 代码实验",
                 "本页让智能体学习接乘客、送乘客。每一步都会产生奖励或惩罚，Q-learning 用这些反馈更新“在某个状态做某个动作”的价值。",
-                ["查看初始出租车状态", "记录 TD 目标和 TD 误差", "绘制回报与 Q 表"],
+                ["查看初始出租车状态", "记录 TD 目标和 TD 误差", "执行训练后路线"],
                 "../ch11.html",
             ),
-            rs.section("0", "出租车任务", "先渲染一个初始状态，确认出租车、乘客和目的地分别在哪里；再看动作含义和一次次 TD 更新。"),
+            rs.section("0", "出租车任务", "先渲染一个初始状态，确认出租车、乘客和目的地分别在哪里；再看动作含义、TD 更新和训练后路线。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(GYM_SETUP_CELL),
             rs.code(TD_CELL),
+            rs.code(TD_ROLLOUT_CELL),
             rs.code(TD_PLOT_CELL),
         ]),
         "ch11_epsilon_greedy.ipynb": flatten([
             rs.chapter_link(
                 "第 11 章 · 悬崖行走探索策略代码实验",
-                "本页比较不同探索强度下的路径学习。悬崖边路线更短但风险更高，探索率越大，智能体越可能尝试随机动作。",
-                ["加载悬崖行走任务", "比较不同探索率", "绘制回报与策略"],
+                "本页从起点动作开始拆解悬崖行走：先看哪一步会掉下悬崖，再比较不同探索强度下的路径学习。",
+                ["查看起点候选动作", "比较不同探索率", "绘制完成路线与策略"],
                 "../ch11.html",
             ),
-            rs.section("0", "悬崖行走任务", "训练曲线展示不同探索强度的回报，策略图展示最终学到的动作方向。把两张图合起来看，才能理解探索的代价。"),
+            rs.section("0", "悬崖行走任务", "先看起点四个动作的一步结果，再看训练曲线和最终策略。这样读者能把探索风险、即时奖励和路线选择连起来。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(GYM_SETUP_CELL),
             rs.code(CLIFF_INTRO_CELL),
@@ -2413,11 +2733,11 @@ def _ch12() -> dict[str, list]:
         "ch12_iris_parameter_search.ipynb": flatten([
             rs.chapter_link(
                 "第 12 章 · 鸢尾花分类参数搜索代码实验",
-                "本页把“创造”中的搜索思想放到一个真实分类任务里：尝试多组参数，记录验证表现，观察搜索如何逐步找到更好的组合。",
-                ["加载鸢尾花数据", "尝试多组模型参数", "绘制搜索轨迹"],
+                "本页把“创造”中的搜索思想放到一个真实分类任务里：先粗略扫描参数空间，再围绕当前最好区域加密搜索。",
+                ["加载鸢尾花数据", "粗搜后局部加密", "绘制搜索轨迹"],
                 "../ch12.html",
             ),
-            rs.section("0", "分类任务与参数搜索", "先看数据规模和类别，再看每次尝试的验证准确率。散点图中的每个点都是一组参数，颜色越深代表表现越好。"),
+            rs.section("0", "分类任务与参数搜索", "先看数据规模和类别，再看粗搜索与局部加密两个阶段。散点图中的每个点都是一组参数，颜色越深代表表现越好。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(ANNEALING_CELL),
             rs.code(ANNEALING_PLOT_CELL),
@@ -2453,26 +2773,26 @@ def _ch12() -> dict[str, list]:
         "ch12_image_denoising_diffusion.ipynb": flatten([
             rs.chapter_link(
                 "第 12 章 · 真实图片扩散去噪代码实验",
-                "本页用真实花朵照片看扩散任务的直觉：前向过程把图像逐渐变成噪声，去噪器学习把局部图块修复回来。",
-                ["加载真实图片图块", "绘制前向加噪", "展示去噪对比"],
+                "本页用真实花朵照片看扩散任务的直觉：前向过程把图像逐渐变成噪声，去噪器接收噪声强度条件后学习修复图块。",
+                ["加载真实图片图块", "绘制前向加噪", "训练条件去噪器"],
                 "../ch12.html",
             ),
             rs.section("0", "真实图片图块", "先把一张照片切成可训练的局部图块。干净图像用于对照，后面的噪声图像和去噪图像都要和它比较。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(PHOTO_DENOISE_DATA_CELL),
-            rs.section("1", "加噪与去噪", "第一行展示噪声增强后图像结构如何被破坏；第二行比较原图、高噪声输入、去噪输出和误差。"),
+            rs.section("1", "加噪与条件去噪", "第一行展示噪声增强后图像结构如何被破坏；第二行比较原图、高噪声输入、条件去噪输出和误差。"),
             rs.code(PHOTO_FORWARD_CELL),
             rs.code(PHOTO_REVERSE_CELL),
             rs.code(PHOTO_DENOISE_PLOT_CELL),
         ]),
         "ch12_image_patch_gan.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · 真实图片图块 GAN 代码实验",
-                "本页用真实花朵照片中的局部图块训练一个小型生成对抗网络。读者同时看损失曲线、真实图块和生成图块。",
-                ["加载真实图片图块", "训练生成器和判别器", "绘制生成图块"],
+                "第 12 章 · 经典手写数字 GAN 代码实验",
+                "本页用经典手写数字数据训练一个小型生成对抗网络。读者同时看真实数字、生成数字、判别器分数和损失曲线。",
+                ["加载经典手写数字", "训练生成器和判别器", "绘制生成数字"],
                 "../ch12.html",
             ),
-            rs.section("0", "生成图片图块", "判别器学习区分真实图块和生成图块，生成器学习骗过判别器。生成样本不追求完美，但应该呈现接近照片局部的颜色和纹理。"),
+            rs.section("0", "数字生成", "判别器学习区分真实数字和生成数字，生成器学习骗过判别器。这里固定生成数字 8，让读者更容易判断生成质量。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(GAN_SETUP_CELL),
             rs.code(GAN_CELL),
@@ -2485,7 +2805,7 @@ def _ch12() -> dict[str, list]:
                 ["加载真实图片图块", "训练去噪模型", "比较噪声输入和去噪输出"],
                 "../ch12.html",
             ),
-            rs.section("0", "去噪重建", "这个实验不是完整扩散模型，而是用真实图片做去噪子任务。它帮助读者理解反向扩散每一步要学习的修复方向。"),
+            rs.section("0", "去噪重建", "把去噪任务单独拿出来看，可以帮助读者理解反向扩散中每一步都在学习的局部修复方向。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(IMAGE_DENOISING_CELL),
             rs.code(IMAGE_DENOISING_PLOT_CELL),

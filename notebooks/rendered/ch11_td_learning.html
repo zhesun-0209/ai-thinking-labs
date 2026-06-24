@@ -7608,7 +7608,7 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=11">Python 代码实验</a><a href="../../ch11.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch11_td_learning.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=abcafa86">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=75b9ad25">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7619,23 +7619,23 @@ body.jp-Notebook {
 <h2 id="%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">运行内容<a class="anchor-link" href="#%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">¶</a></h2><ul>
 <li>查看初始出租车状态</li>
 <li>记录 TD 目标和 TD 误差</li>
-<li>绘制回报与 Q 表</li>
+<li>执行训练后路线</li>
 </ul>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=199fa5b5">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9aadd3fa">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="0.-%E5%87%BA%E7%A7%9F%E8%BD%A6%E4%BB%BB%E5%8A%A1">0. 出租车任务<a class="anchor-link" href="#0.-%E5%87%BA%E7%A7%9F%E8%BD%A6%E4%BB%BB%E5%8A%A1">¶</a></h2><p>先渲染一个初始状态，确认出租车、乘客和目的地分别在哪里；再看动作含义和一次次 TD 更新。</p>
+<h2 id="0.-%E5%87%BA%E7%A7%9F%E8%BD%A6%E4%BB%BB%E5%8A%A1">0. 出租车任务<a class="anchor-link" href="#0.-%E5%87%BA%E7%A7%9F%E8%BD%A6%E4%BB%BB%E5%8A%A1">¶</a></h2><p>先渲染一个初始状态，确认出租车、乘客和目的地分别在哪里；再看动作含义、TD 更新和训练后路线。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b0a745cd">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=027e76fd">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8127,12 +8127,263 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ed7c1292">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=553e6502">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 训练后执行一条路线：每一步都按当前 Q 表选择价值最高的动作。</span>
+<span class="n">rollout_state</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">taxi_env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">rollout_rows</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">rollout_reward</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">31</span><span class="p">):</span>
+    <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">passenger_idx</span><span class="p">,</span> <span class="n">dest_idx</span> <span class="o">=</span> <span class="n">taxi_env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">rollout_state</span><span class="p">)</span>
+    <span class="n">q_values</span> <span class="o">=</span> <span class="n">Q_taxi</span><span class="p">[</span><span class="n">rollout_state</span><span class="p">]</span>
+    <span class="n">action</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">q_values</span><span class="p">))</span>
+    <span class="n">next_state</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">taxi_env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+    <span class="n">next_row</span><span class="p">,</span> <span class="n">next_col</span><span class="p">,</span> <span class="n">next_passenger_idx</span><span class="p">,</span> <span class="n">next_dest_idx</span> <span class="o">=</span> <span class="n">taxi_env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">next_state</span><span class="p">)</span>
+    <span class="n">rollout_rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+        <span class="s2">"步数"</span><span class="p">:</span> <span class="n">step</span><span class="p">,</span>
+        <span class="s2">"出租车位置"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">row</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+        <span class="s2">"乘客"</span><span class="p">:</span> <span class="s2">"在车上"</span> <span class="k">if</span> <span class="n">passenger_idx</span> <span class="o">==</span> <span class="mi">4</span> <span class="k">else</span> <span class="n">location_names</span><span class="p">[</span><span class="n">passenger_idx</span><span class="p">],</span>
+        <span class="s2">"目的地"</span><span class="p">:</span> <span class="n">location_names</span><span class="p">[</span><span class="n">dest_idx</span><span class="p">],</span>
+        <span class="s2">"选择动作"</span><span class="p">:</span> <span class="n">action_labels</span><span class="p">[</span><span class="n">action</span><span class="p">],</span>
+        <span class="s2">"动作价值"</span><span class="p">:</span> <span class="n">q_values</span><span class="p">[</span><span class="n">action</span><span class="p">],</span>
+        <span class="s2">"下一位置"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">next_row</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">next_col</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+        <span class="s2">"下一乘客状态"</span><span class="p">:</span> <span class="s2">"在车上"</span> <span class="k">if</span> <span class="n">next_passenger_idx</span> <span class="o">==</span> <span class="mi">4</span> <span class="k">else</span> <span class="n">location_names</span><span class="p">[</span><span class="n">next_passenger_idx</span><span class="p">],</span>
+        <span class="s2">"奖励"</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>
+    <span class="p">})</span>
+    <span class="n">rollout_reward</span> <span class="o">+=</span> <span class="n">reward</span>
+    <span class="n">rollout_state</span> <span class="o">=</span> <span class="n">next_state</span>
+    <span class="k">if</span> <span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">:</span>
+        <span class="k">break</span>
+
+<span class="n">taxi_rollout_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rollout_rows</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">taxi_rollout_df</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"路线总奖励:"</span><span class="p">,</span> <span class="n">rollout_reward</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"是否完成:"</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">terminated</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>步数</th>
+<th>出租车位置</th>
+<th>乘客</th>
+<th>目的地</th>
+<th>选择动作</th>
+<th>动作价值</th>
+<th>下一位置</th>
+<th>下一乘客状态</th>
+<th>奖励</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>1</td>
+<td>(3,4)</td>
+<td>绿色站点</td>
+<td>黄色站点</td>
+<td>向北</td>
+<td>-0.023</td>
+<td>(2,4)</td>
+<td>绿色站点</td>
+<td>-1</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2</td>
+<td>(2,4)</td>
+<td>绿色站点</td>
+<td>黄色站点</td>
+<td>向北</td>
+<td>2.366</td>
+<td>(1,4)</td>
+<td>绿色站点</td>
+<td>-1</td>
+</tr>
+<tr>
+<th>2</th>
+<td>3</td>
+<td>(1,4)</td>
+<td>绿色站点</td>
+<td>黄色站点</td>
+<td>向北</td>
+<td>3.948</td>
+<td>(0,4)</td>
+<td>绿色站点</td>
+<td>-1</td>
+</tr>
+<tr>
+<th>3</th>
+<td>4</td>
+<td>(0,4)</td>
+<td>绿色站点</td>
+<td>黄色站点</td>
+<td>接乘客</td>
+<td>5.210</td>
+<td>(0,4)</td>
+<td>在车上</td>
+<td>-1</td>
+</tr>
+<tr>
+<th>4</th>
+<td>5</td>
+<td>(0,4)</td>
+<td>在车上</td>
+<td>黄色站点</td>
+<td>向西</td>
+<td>6.537</td>
+<td>(0,3)</td>
+<td>在车上</td>
+<td>-1</td>
+</tr>
+<tr>
+<th>5</th>
+<td>6</td>
+<td>(0,3)</td>
+<td>在车上</td>
+<td>黄色站点</td>
+<td>向南</td>
+<td>7.933</td>
+<td>(1,3)</td>
+<td>在车上</td>
+<td>-1</td>
+</tr>
+<tr>
+<th>6</th>
+<td>7</td>
+<td>(1,3)</td>
+<td>在车上</td>
+<td>黄色站点</td>
+<td>向南</td>
+<td>9.404</td>
+<td>(2,3)</td>
+<td>在车上</td>
+<td>-1</td>
+</tr>
+<tr>
+<th>7</th>
+<td>8</td>
+<td>(2,3)</td>
+<td>在车上</td>
+<td>黄色站点</td>
+<td>向西</td>
+<td>10.951</td>
+<td>(2,2)</td>
+<td>在车上</td>
+<td>-1</td>
+</tr>
+<tr>
+<th>8</th>
+<td>9</td>
+<td>(2,2)</td>
+<td>在车上</td>
+<td>黄色站点</td>
+<td>向西</td>
+<td>12.580</td>
+<td>(2,1)</td>
+<td>在车上</td>
+<td>-1</td>
+</tr>
+<tr>
+<th>9</th>
+<td>10</td>
+<td>(2,1)</td>
+<td>在车上</td>
+<td>黄色站点</td>
+<td>向西</td>
+<td>14.295</td>
+<td>(2,0)</td>
+<td>在车上</td>
+<td>-1</td>
+</tr>
+<tr>
+<th>10</th>
+<td>11</td>
+<td>(2,0)</td>
+<td>在车上</td>
+<td>黄色站点</td>
+<td>向南</td>
+<td>16.100</td>
+<td>(3,0)</td>
+<td>在车上</td>
+<td>-1</td>
+</tr>
+<tr>
+<th>11</th>
+<td>12</td>
+<td>(3,0)</td>
+<td>在车上</td>
+<td>黄色站点</td>
+<td>向南</td>
+<td>18.000</td>
+<td>(4,0)</td>
+<td>在车上</td>
+<td>-1</td>
+</tr>
+<tr>
+<th>12</th>
+<td>13</td>
+<td>(4,0)</td>
+<td>在车上</td>
+<td>黄色站点</td>
+<td>放下乘客</td>
+<td>20.000</td>
+<td>(4,0)</td>
+<td>黄色站点</td>
+<td>20</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>路线总奖励: 8
+是否完成: True
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9c527ecd">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 绘制训练曲线和一个起始状态的动作价值。</span>
