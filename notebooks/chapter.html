@@ -18,14 +18,19 @@
             <h1 id="nbPageTitle">Python 代码实验</h1>
           </div>
         </div>
-        <a class="nb-hub-link" href="../hub.html">← 返回章节目录</a>
+        <a class="nb-hub-link" href="../hub.html">← 返回全部章节</a>
       </div>
     </header>
     <main id="nbMain" class="nb-main" aria-live="polite"></main>
-    <script src="../js/notebooks-catalog.js?v=15"></script>
+    <script src="../js/notebooks-catalog.js?v=17"></script>
     <script>
-      const ch = Number(new URLSearchParams(location.search).get("ch") || "5");
-      window.NOTEBOOKS_CATALOG.renderChapterPage(ch);
+      const chParam = new URLSearchParams(location.search).get("ch") || "5";
+      const rangeMatch = chParam.match(/^(\d+)\s*-\s*(\d+)$/);
+      if (rangeMatch) {
+        window.NOTEBOOKS_CATALOG.renderChapterRangePage(Number(rangeMatch[1]), Number(rangeMatch[2]));
+      } else {
+        window.NOTEBOOKS_CATALOG.renderChapterPage(Number(chParam), chParam);
+      }
     </script>
   </body>
 </html>

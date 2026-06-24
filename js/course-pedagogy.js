@@ -274,10 +274,10 @@ const notebooks = {
   },
   "ch10-cnn": {
     wish: "CNN 利用局部性：相邻像素相关，同一模式可出现在不同位置。",
-    mentalModel: "用小模板（kernel）在图上滑动扫描，参数共享。",
-    mustSee: ["kernel 高亮框如何移动", "特征图尺寸为何变小", "池化保留什么（max）"],
+    mentalModel: "用小模板（卷积核）在图上滑动扫描，参数共享。",
+    mustSee: ["卷积核高亮框如何移动", "特征图尺寸为何变小", "池化保留什么（max）"],
     misconception: "误区：卷积「理解」物体——它只是提取局部模式，深层才组合成语义。",
-    selfCheck: "stride=1、3×3 kernel 时 4×4 输入输出几×几？",
+    selfCheck: "步幅为 1、3×3 卷积核时，4×4 输入会输出几×几？",
     whenToUse: "图像、语音等局部结构明显的信号。",
   },
   "ch10-vit": {
@@ -299,7 +299,7 @@ const notebooks = {
   "ch10-clip": {
     wish: "CLIP = 图文双塔对比学习，对齐图像与文本 embedding。",
     mentalModel: "相亲配对：配对的图文靠近，不配对的推远。",
-    mustSee: ["Image/Text Encoder 各输出向量", "batch 内正负样本", "cos 相似度如何训练"],
+    mustSee: ["Image/Text Encoder 各输出向量", "同一批样本内正负样本", "cos 相似度如何训练"],
     misconception: "误区：CLIP 生成图像——它学联合 embedding，生成需另接扩散等模型。",
     selfCheck: "零样本分类如何用「a photo of a {class}」文本提示？",
     whenToUse: "图文检索、零样本分类、多模态对齐。",

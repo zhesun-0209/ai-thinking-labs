@@ -100,7 +100,7 @@ const ch7Config = {
         {
           prompt: "**学习 = 压缩数据**。决策树用一串问题把 50 道错题分成更纯的子集；信息增益选「问哪个最划算」。",
           architectureKey: "decision-tree",
-          vibeTip: "二十 Questions：每个问题把人群分成更纯的两堆。",
+          vibeTip: "二十问游戏：每个问题把样本分成更纯的两组。",
           copyPrompt: C.treeConcept,
         },
         {

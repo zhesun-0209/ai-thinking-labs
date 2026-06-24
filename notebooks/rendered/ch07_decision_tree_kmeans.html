@@ -7537,6 +7537,7 @@ body.jp-Notebook {
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-color: #94a3b8 #f1f5f9;
 }
 
 .jp-InputArea-editor {
@@ -7548,6 +7549,13 @@ body.jp-Notebook {
 
 .jp-OutputArea-output {
   border-radius: 8px;
+}
+
+.jp-RenderedHTMLCommon:has(table),
+.jp-OutputArea-output:has(table) {
+  position: relative;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .jp-RenderedText pre {
@@ -7569,18 +7577,44 @@ body.jp-Notebook {
 }
 
 @media (max-width: 640px) {
+  html[lang="zh-CN"] {
+    scroll-padding-top: 64px;
+  }
+
   body.jp-Notebook {
     padding-bottom: 40px;
   }
 
   #ai-labs-chrome {
-    min-height: 56px;
-    margin-bottom: 18px;
+    min-height: 48px;
+    margin-bottom: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    flex-wrap: nowrap;
+    gap: 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  #ai-labs-chrome::-webkit-scrollbar {
+    display: none;
+  }
+
+  #ai-labs-chrome a {
+    flex: 0 0 auto;
   }
 
   #ai-labs-chrome span {
-    flex-basis: 100%;
+    flex: 0 0 auto;
     margin-left: 0;
+    font-size: 0;
+  }
+
+  #ai-labs-chrome span::before {
+    content: "进度";
+    font-size: 12px;
   }
 
   #ai-labs-top {
@@ -7601,6 +7635,45 @@ body.jp-Notebook {
   .jp-Notebook .jp-MarkdownCell:first-of-type {
     padding: 14px;
   }
+
+  .jp-CodeCell .jp-InputArea-editor {
+    max-height: min(58vh, 520px);
+    overflow: auto;
+  }
+
+  .jp-CodeCell .jp-InputArea {
+    position: relative;
+  }
+
+  .jp-CodeCell .jp-InputArea::after {
+    content: "代码可上下或横向滚动";
+    display: block;
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .jp-RenderedHTMLCommon table,
+  .jp-RenderedHTMLCommon table.dataframe {
+    max-width: none;
+    min-width: 640px;
+  }
+
+  .jp-RenderedHTMLCommon th,
+  .jp-RenderedHTMLCommon td {
+    min-width: 78px;
+    white-space: normal;
+  }
+
+  .jp-RenderedHTMLCommon:has(table)::after {
+    content: "横向滑动查看完整表格";
+    display: block;
+    margin: -8px 0 12px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+  }
 }
 </style>
 </head>
@@ -7608,7 +7681,7 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=7">Python 代码实验</a><a href="../../ch7.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch07_decision_tree_kmeans.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=67d913fd">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d10a574a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7625,7 +7698,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e3dec14e">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6307ce3e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7635,7 +7708,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0cac263d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b17da6eb">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7952,7 +8025,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e9f08ec8">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=eedba640">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7962,7 +8035,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a86d08ac">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9c95fd21">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8325,7 +8398,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fe1c861a">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=884c0935">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8524,7 +8597,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f42357a8">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7888c5b7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8579,7 +8652,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=944363f6">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4e87fca5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8589,7 +8662,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=abd8eef6">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cd505633">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8786,7 +8859,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=88158ea1">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=59ef30f2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8813,6 +8886,12 @@ body.jp-Notebook {
     <span class="p">})</span>
 
 <span class="n">k_metrics</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">metric_rows</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">k_metrics_display</span> <span class="o">=</span> <span class="n">k_metrics</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"轮廓系数"</span><span class="p">,</span> <span class="s2">"ARI(对照真实品种)"</span><span class="p">]:</span>
+    <span class="n">k_metrics_display</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">k_metrics_display</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">value</span><span class="p">:</span> <span class="s2">"未定义"</span> <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
+<span class="n">k_metrics_display</span><span class="p">[</span><span class="s2">"簇内平方和"</span><span class="p">]</span> <span class="o">=</span> <span class="n">k_metrics_display</span><span class="p">[</span><span class="s2">"簇内平方和"</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">value</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">chosen_k</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">kmeans</span> <span class="o">=</span> <span class="n">kmeans_by_k</span><span class="p">[</span><span class="n">chosen_k</span><span class="p">]</span>
 <span class="n">final_labels</span> <span class="o">=</span> <span class="n">labels_by_k</span><span class="p">[</span><span class="n">chosen_k</span><span class="p">]</span>
@@ -8822,7 +8901,7 @@ body.jp-Notebook {
 <span class="n">cluster_profile</span> <span class="o">=</span> <span class="n">clustered_iris</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"簇"</span><span class="p">)[</span><span class="n">iris_feature_names</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">iris_feature_cn_map</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">cluster_mix</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">clustered_iris</span><span class="p">[</span><span class="s2">"簇"</span><span class="p">],</span> <span class="n">clustered_iris</span><span class="p">[</span><span class="s2">"品种"</span><span class="p">])</span>
 
-<span class="n">display</span><span class="p">(</span><span class="n">k_metrics</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">k_metrics_display</span><span class="p">)</span>
 <span class="n">display</span><span class="p">(</span><span class="n">cluster_profile</span><span class="p">)</span>
 <span class="n">display</span><span class="p">(</span><span class="n">cluster_mix</span><span class="p">)</span>
 </pre></div>
@@ -8866,8 +8945,8 @@ body.jp-Notebook {
 <th>0</th>
 <td>1</td>
 <td>600.000</td>
-<td>NaN</td>
-<td>NaN</td>
+<td>未定义</td>
+<td>未定义</td>
 </tr>
 <tr>
 <th>1</th>
@@ -9035,7 +9114,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b1a6191a">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1dd5c2e8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

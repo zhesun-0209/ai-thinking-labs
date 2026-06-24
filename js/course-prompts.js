@@ -339,7 +339,7 @@ const MENTOR_CASE = {
   "ch10-cnn": "4×4 输入→3×3 卷积→2×2 特征图→2×2 max-pool→1×1。",
   "ch10-vit": "4×4 图→4 个 2×2 patch→展平→加位置编码→Encoder。",
   "ch10-mae": "4 patch 遮 3 个，Encoder 只看 1 个，Decoder 重构全部。",
-  "ch10-clip": "匹配图文对 cosine↑，batch 内非匹配 cosine↓。",
+  "ch10-clip": "匹配图文对 cosine↑，同一批样本内非匹配 cosine↓。",
   "ch11-mdp": "订机票：待搜索→已比价(+1)→已下单(+2)→已确认(+10)，γ=0.9。",
   "ch11-actor": "状态待搜索，π(搜索)=0.7，V(s)=4.2，一步后 A=1.8>0。",
   "ch11-td": "V(s)=2.0，r=1，V(s′)=4.0，α=0.1 → TD 目标 4.6，V 新 2.52。",

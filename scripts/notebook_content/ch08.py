@@ -1847,6 +1847,12 @@ draw_mcts_lake(ax, "冰湖规划起点", highlight_state=root_state)
 plt.tight_layout()
 plt.show()
 
+display(pd.DataFrame([
+    {"得分来源": "每走一步", "作用": "鼓励更短路线", "数值": "-0.02"},
+    {"得分来源": "靠近终点", "作用": "让中间状态也能比较好坏", "数值": "+0.10 × 距离缩短"},
+    {"得分来源": "到达终点", "作用": "明确最终目标", "数值": "+1.20"},
+    {"得分来源": "掉入洞中", "作用": "惩罚危险路线", "数值": "-0.35"},
+]))
 display(action_candidate_table(root_state).round(3))
 display(transition_detail_table(root_state).round(3))
 """
@@ -2565,7 +2571,7 @@ def _ch08() -> dict[str, list]:
             rs.section("1", "关系向量训练", "训练目标很直接：正确三元组的距离变小，替换尾实体后的距离变大。训练结束后再看 h + r 是否靠近正确首都。"),
             rs.code(TRANSE_CELL),
             rs.code(TRANSE_PLOT_CELL),
-            rs.section("2", "注意力权重", "热力图的每一行代表一个正在读的词，每一列代表它可以关注的词。颜色越深、数值越大，说明关注越强。"),
+            rs.section("2", "注意力权重", "热力图的每一行代表一个正在读的词，每一列代表它可以关注的词。这里手工设置可解释的查询/键特征，目的是看清注意力如何计算；它不是训练好的 Transformer 权重。"),
             rs.code(ATTENTION_CELL),
             rs.code(ATTENTION_PLOT_CELL),
         ]),
@@ -2609,7 +2615,7 @@ def _ch09() -> dict[str, list]:
                 ["计算因果注意力", "统计二元词频", "绘制注意力热力图"],
                 "../ch9.html",
             ),
-            rs.section("0", "因果注意力", "因果遮罩会遮住当前位置右侧的词。表格先列出每个位置能看到的上下文，再看它把注意力分给哪些历史词。"),
+            rs.section("0", "因果注意力", "因果遮罩会遮住当前位置右侧的词。这里用可解释的查询/键特征观察注意力计算，再用二元词统计连接下一词预测。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(SELF_ATTENTION_CELL),
             rs.section("1", "下一词统计", "二元词模型只根据当前词预测下一个词。它很简单，但能帮助读者理解语言模型的条件概率视角。"),
@@ -2749,7 +2755,7 @@ def _ch12() -> dict[str, list]:
                 ["查看起点候选动作", "反复模拟候选路线", "展开下一状态候选", "绘制访问价值"],
                 "../ch12.html",
             ),
-            rs.section("0", "从起点规划动作", "先看起点的候选动作、滑动概率和一步期望得分。得分由步进代价、靠近终点的进度、掉洞惩罚和到达奖励共同决定。"),
+            rs.section("0", "从起点规划动作", "先看起点的候选动作、滑动概率和一步期望得分。得分由步进代价、靠近终点的进度、掉洞惩罚和到达奖励共同决定，用来让中间状态也能比较好坏。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(MCTS_INTRO_CELL),
             rs.section("1", "模拟与展开", "MCTS 会反复抽样未来路线。根节点表格展示动作访问次数和平均回报，下一状态表格展示推荐动作落到新格子之后如何继续选择。"),
@@ -2780,7 +2786,7 @@ def _ch12() -> dict[str, list]:
             rs.section("0", "真实图片图块", "先把一张照片切成可训练的局部图块。干净图像用于对照，后面的噪声图像和去噪图像都要和它比较。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(PHOTO_DENOISE_DATA_CELL),
-            rs.section("1", "加噪与条件去噪", "第一行展示噪声增强后图像结构如何被破坏；第二行比较原图、高噪声输入、条件去噪输出和误差。"),
+            rs.section("1", "加噪与条件去噪", "第一行展示噪声增强后图像结构如何被破坏；第二行比较原图、高噪声输入、条件去噪输出和误差。这个实验聚焦局部去噪目标，帮助理解反向扩散每一步要学习什么。"),
             rs.code(PHOTO_FORWARD_CELL),
             rs.code(PHOTO_REVERSE_CELL),
             rs.code(PHOTO_DENOISE_PLOT_CELL),
@@ -2792,7 +2798,7 @@ def _ch12() -> dict[str, list]:
                 ["加载经典手写数字", "训练生成器和判别器", "绘制生成数字"],
                 "../ch12.html",
             ),
-            rs.section("0", "数字生成", "判别器学习区分真实数字和生成数字，生成器学习骗过判别器。这里固定生成数字 8，让读者更容易判断生成质量。"),
+            rs.section("0", "数字生成", "判别器学习区分真实数字和生成数字，生成器学习骗过判别器。这里固定生成数字 8，让读者更容易判断生成质量；完整 GAN 可以扩展到多个类别。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(GAN_SETUP_CELL),
             rs.code(GAN_CELL),
@@ -2817,7 +2823,7 @@ def _ch12() -> dict[str, list]:
                 ["查看多序列对齐", "计算位置保守性", "绘制位置对表征"],
                 "../ch12.html",
             ),
-            rs.section("0", "序列对齐与位置对表征", "先看多条同源序列怎样对齐，再看每一列的保守性。位置对表征把两个位置的保守性组合起来，作为结构预测中“位置对关系”的简化入口。"),
+            rs.section("0", "序列对齐与位置对表征", "先看多条同源序列怎样对齐，再看每一列的保守性。位置对表征把两个位置的保守性组合起来，作为结构预测中“位置对关系”的简化入口；本页不预测三维结构。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(ALPHAFOLD_CELL),
             rs.code(ALPHAFOLD_PLOT_CELL),

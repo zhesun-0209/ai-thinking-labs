@@ -207,6 +207,15 @@ a {
     border-left-color 0.22s;
 }
 
+.hub-card::after {
+  content: "进入章节 →";
+  margin-top: auto;
+  padding-top: 6px;
+  color: var(--accent-strong);
+  font-size: var(--text-sm);
+  font-weight: 750;
+}
+
 .hub-card:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-3px);

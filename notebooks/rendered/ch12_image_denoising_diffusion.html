@@ -7537,6 +7537,7 @@ body.jp-Notebook {
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-color: #94a3b8 #f1f5f9;
 }
 
 .jp-InputArea-editor {
@@ -7548,6 +7549,13 @@ body.jp-Notebook {
 
 .jp-OutputArea-output {
   border-radius: 8px;
+}
+
+.jp-RenderedHTMLCommon:has(table),
+.jp-OutputArea-output:has(table) {
+  position: relative;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .jp-RenderedText pre {
@@ -7569,18 +7577,44 @@ body.jp-Notebook {
 }
 
 @media (max-width: 640px) {
+  html[lang="zh-CN"] {
+    scroll-padding-top: 64px;
+  }
+
   body.jp-Notebook {
     padding-bottom: 40px;
   }
 
   #ai-labs-chrome {
-    min-height: 56px;
-    margin-bottom: 18px;
+    min-height: 48px;
+    margin-bottom: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    flex-wrap: nowrap;
+    gap: 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  #ai-labs-chrome::-webkit-scrollbar {
+    display: none;
+  }
+
+  #ai-labs-chrome a {
+    flex: 0 0 auto;
   }
 
   #ai-labs-chrome span {
-    flex-basis: 100%;
+    flex: 0 0 auto;
     margin-left: 0;
+    font-size: 0;
+  }
+
+  #ai-labs-chrome span::before {
+    content: "进度";
+    font-size: 12px;
   }
 
   #ai-labs-top {
@@ -7601,6 +7635,45 @@ body.jp-Notebook {
   .jp-Notebook .jp-MarkdownCell:first-of-type {
     padding: 14px;
   }
+
+  .jp-CodeCell .jp-InputArea-editor {
+    max-height: min(58vh, 520px);
+    overflow: auto;
+  }
+
+  .jp-CodeCell .jp-InputArea {
+    position: relative;
+  }
+
+  .jp-CodeCell .jp-InputArea::after {
+    content: "代码可上下或横向滚动";
+    display: block;
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .jp-RenderedHTMLCommon table,
+  .jp-RenderedHTMLCommon table.dataframe {
+    max-width: none;
+    min-width: 640px;
+  }
+
+  .jp-RenderedHTMLCommon th,
+  .jp-RenderedHTMLCommon td {
+    min-width: 78px;
+    white-space: normal;
+  }
+
+  .jp-RenderedHTMLCommon:has(table)::after {
+    content: "横向滑动查看完整表格";
+    display: block;
+    margin: -8px 0 12px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+  }
 }
 </style>
 </head>
@@ -7608,7 +7681,7 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=12">Python 代码实验</a><a href="../../ch12.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch12_image_denoising_diffusion.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=53cbcd39">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=439e2216">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7625,7 +7698,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7ac38e42">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e73b45ee">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7635,7 +7708,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a7846835">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=538b9a5b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7714,17 +7787,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cb35a7c3">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2975cc6b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-%E5%8A%A0%E5%99%AA%E4%B8%8E%E6%9D%A1%E4%BB%B6%E5%8E%BB%E5%99%AA">1. 加噪与条件去噪<a class="anchor-link" href="#1.-%E5%8A%A0%E5%99%AA%E4%B8%8E%E6%9D%A1%E4%BB%B6%E5%8E%BB%E5%99%AA">¶</a></h2><p>第一行展示噪声增强后图像结构如何被破坏；第二行比较原图、高噪声输入、条件去噪输出和误差。</p>
+<h2 id="1.-%E5%8A%A0%E5%99%AA%E4%B8%8E%E6%9D%A1%E4%BB%B6%E5%8E%BB%E5%99%AA">1. 加噪与条件去噪<a class="anchor-link" href="#1.-%E5%8A%A0%E5%99%AA%E4%B8%8E%E6%9D%A1%E4%BB%B6%E5%8E%BB%E5%99%AA">¶</a></h2><p>第一行展示噪声增强后图像结构如何被破坏；第二行比较原图、高噪声输入、条件去噪输出和误差。这个实验聚焦局部去噪目标，帮助理解反向扩散每一步要学习什么。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5bc47c2f">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=bdb63ee7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7814,7 +7887,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c935d3ba">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a8727428">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7972,7 +8045,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=573622c3">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=095e25f8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

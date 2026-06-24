@@ -170,9 +170,13 @@ function renderSectionNav(sections) {
   const nav = document.getElementById("sectionNav");
   if (!nav) return;
   ensureSectionNavWrap(nav);
-  nav.innerHTML = sections
+  const sectionLinks = sections
     .map((s) => `<a class="section-link" href="#${s.id}" data-section="${s.id}">${escapeHtml(s.label)}</a>`)
     .join("");
+  const pythonLink = currentChapterNum
+    ? `<a class="section-link section-link--notebook" href="notebooks/chapter.html?ch=${currentChapterNum}" target="_blank" rel="noopener noreferrer">Python</a>`
+    : "";
+  nav.innerHTML = `${sectionLinks}${pythonLink}`;
   nav.addEventListener("click", (e) => {
     const link = e.target.closest(".section-link[data-section]");
     if (!link) return;
@@ -354,7 +358,7 @@ function buildCellPair(cell, instanceId, index, notebookArchKey) {
     </div>
     ${tip ? `<p class="vibe-tip"><span class="vibe-tip-label">学习提示</span>${escapeHtml(tip)}</p>` : ""}
     <div class="prompt-actions">
-      ${copyText ? `<div class="copy-teach"><span>向 AI 提问练习</span><button type="button" class="primary-button copy-prompt-btn" data-copy="${escapeAttr(copyText)}" aria-label="复制${escapeAttr(cell.outputLabel || promptLabel)}学习 Prompt">复制学习 Prompt</button></div>` : ""}
+      ${copyText ? `<div class="copy-teach"><span>向 AI 提问练习</span><button type="button" class="primary-button copy-prompt-btn" data-copy="${escapeAttr(copyText)}" aria-label="复制${escapeAttr(cell.outputLabel || promptLabel)}提问模板">复制提问模板</button></div>` : ""}
       ${cell.labTarget || cell.labAlgo ? `<button type="button" class="ghost-button" data-jump-lab="${cell.labTarget || cell.labAlgo}">在实验室打开</button>` : ""}
     </div>`;
 

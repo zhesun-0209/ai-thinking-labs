@@ -1344,7 +1344,8 @@ function renderSectionNav() {
   ];
   dom.sectionNav.innerHTML = sections
     .map((s) => `<a href="#${s.id}" class="section-link" data-section="${s.id}">${s.label}</a>`)
-    .join("");
+    .join("") +
+    `<a href="notebooks/chapter.html?ch=5" class="section-link section-link--notebook" target="_blank" rel="noopener noreferrer">Python</a>`;
   dom.sectionNav.addEventListener("click", (e) => {
     const link = e.target.closest(".section-link[data-section]");
     if (!link) return;
@@ -1608,7 +1609,7 @@ function buildVibeCellPair(cell, instanceId, index, notebookKey = "") {
     </div>
       ${cell.vibeTip ? `<p class="vibe-tip"><span class="vibe-tip-label">学习提示</span>${escapeHtml(cell.vibeTip)}</p>` : ""}
     <div class="prompt-actions">
-      ${copyText ? `<div class="copy-teach"><span>向 AI 提问练习</span><button type="button" class="primary-button copy-prompt-btn" data-copy="${escapeAttr(copyText)}" aria-label="复制${escapeAttr(promptLabel)}学习 Prompt">复制学习 Prompt</button></div>` : `<button type="button" class="primary-button copy-prompt-btn">复制学习 Prompt</button>`}
+      ${copyText ? `<div class="copy-teach"><span>向 AI 提问练习</span><button type="button" class="primary-button copy-prompt-btn" data-copy="${escapeAttr(copyText)}" aria-label="复制${escapeAttr(promptLabel)}提问模板">复制提问模板</button></div>` : `<button type="button" class="primary-button copy-prompt-btn">复制提问模板</button>`}
       ${cell.labAlgo ? `<button type="button" class="ghost-button" data-jump-algo="${cell.labAlgo}">在实验室打开</button>` : ""}
     </div>`;
 

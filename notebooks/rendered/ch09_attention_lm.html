@@ -7537,6 +7537,7 @@ body.jp-Notebook {
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-color: #94a3b8 #f1f5f9;
 }
 
 .jp-InputArea-editor {
@@ -7548,6 +7549,13 @@ body.jp-Notebook {
 
 .jp-OutputArea-output {
   border-radius: 8px;
+}
+
+.jp-RenderedHTMLCommon:has(table),
+.jp-OutputArea-output:has(table) {
+  position: relative;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .jp-RenderedText pre {
@@ -7569,18 +7577,44 @@ body.jp-Notebook {
 }
 
 @media (max-width: 640px) {
+  html[lang="zh-CN"] {
+    scroll-padding-top: 64px;
+  }
+
   body.jp-Notebook {
     padding-bottom: 40px;
   }
 
   #ai-labs-chrome {
-    min-height: 56px;
-    margin-bottom: 18px;
+    min-height: 48px;
+    margin-bottom: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    flex-wrap: nowrap;
+    gap: 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  #ai-labs-chrome::-webkit-scrollbar {
+    display: none;
+  }
+
+  #ai-labs-chrome a {
+    flex: 0 0 auto;
   }
 
   #ai-labs-chrome span {
-    flex-basis: 100%;
+    flex: 0 0 auto;
     margin-left: 0;
+    font-size: 0;
+  }
+
+  #ai-labs-chrome span::before {
+    content: "进度";
+    font-size: 12px;
   }
 
   #ai-labs-top {
@@ -7601,6 +7635,45 @@ body.jp-Notebook {
   .jp-Notebook .jp-MarkdownCell:first-of-type {
     padding: 14px;
   }
+
+  .jp-CodeCell .jp-InputArea-editor {
+    max-height: min(58vh, 520px);
+    overflow: auto;
+  }
+
+  .jp-CodeCell .jp-InputArea {
+    position: relative;
+  }
+
+  .jp-CodeCell .jp-InputArea::after {
+    content: "代码可上下或横向滚动";
+    display: block;
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .jp-RenderedHTMLCommon table,
+  .jp-RenderedHTMLCommon table.dataframe {
+    max-width: none;
+    min-width: 640px;
+  }
+
+  .jp-RenderedHTMLCommon th,
+  .jp-RenderedHTMLCommon td {
+    min-width: 78px;
+    white-space: normal;
+  }
+
+  .jp-RenderedHTMLCommon:has(table)::after {
+    content: "横向滑动查看完整表格";
+    display: block;
+    margin: -8px 0 12px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+  }
 }
 </style>
 </head>
@@ -7608,7 +7681,7 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=9">Python 代码实验</a><a href="../../ch9.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch09_attention_lm.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c8ed8271">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=090543b7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7625,17 +7698,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c4786d45">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=bd477a27">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="0.-%E5%9B%A0%E6%9E%9C%E6%B3%A8%E6%84%8F%E5%8A%9B">0. 因果注意力<a class="anchor-link" href="#0.-%E5%9B%A0%E6%9E%9C%E6%B3%A8%E6%84%8F%E5%8A%9B">¶</a></h2><p>因果遮罩会遮住当前位置右侧的词。表格先列出每个位置能看到的上下文，再看它把注意力分给哪些历史词。</p>
+<h2 id="0.-%E5%9B%A0%E6%9E%9C%E6%B3%A8%E6%84%8F%E5%8A%9B">0. 因果注意力<a class="anchor-link" href="#0.-%E5%9B%A0%E6%9E%9C%E6%B3%A8%E6%84%8F%E5%8A%9B">¶</a></h2><p>因果遮罩会遮住当前位置右侧的词。这里用可解释的查询/键特征观察注意力计算，再用二元词统计连接下一词预测。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=18cd3631">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cc71ec32">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7981,7 +8054,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7a0ea76b">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=14b45f49">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7991,7 +8064,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=796e5387">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=89100edb">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8124,7 +8197,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1252f0e4">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cf149533">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

@@ -12,7 +12,7 @@
             <span class="math-frac-den">Σ<sub>j</sub> exp(s<sub>j</sub>)</span>
           </span>
         </div>
-        <p class="math-note">正例分数在分子，batch 内全部图文对在分母</p>
+        <p class="math-note">正例分数在分子，同一批样本内全部图文对在分母</p>
       </div>`,
 
     clip_cosine: `

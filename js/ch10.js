@@ -11,7 +11,7 @@ const ch10Config = {
       cells: [{
         prompt: "感知智能从像素到语义。本章用 4×4 灰度小图演示卷积→池化流水线，四条主线对应四种架构——请先浏览下方 **CNN 流水线图**，建立整体印象。",
         architectureKey: "cnn",
-        vibeTip: "CNN 的 inductive bias：局部连接 + 权值共享。",
+        vibeTip: "CNN 的归纳偏置：局部连接 + 权值共享。",
         copyPrompt: C.intro,
       }],
     },
@@ -32,7 +32,7 @@ const ch10Config = {
       title: "视觉模型 · 卷积到 Transformer", subtitle: "局部特征提取",
       cells: [
         {
-          prompt: "CNN 的 inductive bias：**局部连接 + 权值共享**。同一 kernel 扫全图，提取可复用的局部模式。",
+          prompt: "CNN 的归纳偏置：**局部连接 + 权值共享**。同一卷积核扫全图，提取可复用的局部模式。",
           architectureKey: "cnn",
           architectureStep: { highlight: "conv" },
           vibeTip: "用小模板在图上滑动扫描。",
@@ -92,7 +92,7 @@ const ch10Config = {
         {
           prompt: "CLIP 用 **两个 Encoder** 分别编码图像和文本，对比损失拉近匹配对、推远非匹配。",
           architectureKey: "clip",
-          vibeTip: "batch 内 N 对正样本，N²−N 负样本。",
+          vibeTip: "一批样本内 N 对正样本，N²−N 个负样本。",
           copyPrompt: C.clipConcept,
         },
         { prompt: "步进：双塔编码 → 正例拉近 → 负例推远 → InfoNCE 损失。", demoKey: "clip", labTarget: "clip", interactive: true, copyPrompt: C.clipDemo },
@@ -109,10 +109,10 @@ const ch10Config = {
       stepLabels: ["输入", "卷积①", "卷积②", "卷积③", "卷积④", "池化"],
       trace: [
         { phase: "in", kPos: null, title: "4×4 输入", summary: "每个格子是一块局部像素强度。", reason: "卷积不先看整图，而是从小窗口开始找局部模式。", architectureStep: { highlight: "in" } },
-        { phase: "conv", kPos: [0, 0], title: "kernel 扫 (0,0)", summary: "3×3 窗口覆盖左上角，计算第 1 个特征值。", reason: "权值共享：同一 kernel 将在 4 个位置各算一次。", fields: [{ label: "进度", value: "1/4" }], architectureStep: { highlight: "conv" } },
-        { phase: "conv", kPos: [0, 1], title: "kernel 扫 (0,1)", summary: "窗口右移一列，填充特征图第 2 格。", reason: "从左到右扫描完第一行。", fields: [{ label: "进度", value: "2/4" }], architectureStep: { highlight: "conv" } },
-        { phase: "conv", kPos: [1, 0], title: "kernel 扫 (1,0)", summary: "换到第二行左侧，第 3 格写入特征图。", reason: "自上而下、从左到右 — 与教材图示一致。", fields: [{ label: "进度", value: "3/4" }], architectureStep: { highlight: "conv" } },
-        { phase: "conv", kPos: [1, 1], title: "kernel 扫 (1,1)", summary: "最后一个窗口 → 2×2 特征图填满。", reason: "4 个窗口各产生 1 个数，stride=1。", fields: [{ label: "输出", value: "2×2" }], architectureStep: { highlight: "feat" } },
+        { phase: "conv", kPos: [0, 0], title: "卷积核扫 (0,0)", summary: "3×3 窗口覆盖左上角，计算第 1 个特征值。", reason: "权值共享：同一卷积核将在 4 个位置各算一次。", fields: [{ label: "进度", value: "1/4" }], architectureStep: { highlight: "conv" } },
+        { phase: "conv", kPos: [0, 1], title: "卷积核扫 (0,1)", summary: "窗口右移一列，填充特征图第 2 格。", reason: "从左到右扫描完第一行。", fields: [{ label: "进度", value: "2/4" }], architectureStep: { highlight: "conv" } },
+        { phase: "conv", kPos: [1, 0], title: "卷积核扫 (1,0)", summary: "换到第二行左侧，第 3 格写入特征图。", reason: "自上而下、从左到右 — 与教材图示一致。", fields: [{ label: "进度", value: "3/4" }], architectureStep: { highlight: "conv" } },
+        { phase: "conv", kPos: [1, 1], title: "卷积核扫 (1,1)", summary: "最后一个窗口 → 2×2 特征图填满。", reason: "4 个窗口各产生 1 个数，步幅为 1。", fields: [{ label: "输出", value: "2×2" }], architectureStep: { highlight: "feat" } },
         { phase: "pool", kPos: null, title: "Max Pool", summary: "取 2×2 特征图中的最大响应，压成 1×1。", reason: "池化保留最强证据，同时降低位置敏感性。", fields: [{ label: "保留", value: "max" }], architectureStep: { highlight: "pool" } },
       ],
       render(v, s) {
@@ -154,8 +154,8 @@ const ch10Config = {
       trace: [
         { clipPhase: 0, sim: null, title: "双塔编码", summary: "图像和文本分别进不同 Encoder，得到 v_I、v_T。", reason: "CLIP 先把两种模态投到同一个向量空间。", fields: [{ label: "图像", value: "v_I" }, { label: "文本", value: "v_T" }], architectureStep: { phase: "both" } },
         { clipPhase: 1, sim: 0.91, pos: true, title: "正例拉近", summary: "同一语义的图文向量夹角变小，cos=0.91。", reason: "匹配图文应该在共享空间里靠近。", fields: [{ label: "正例", value: "猫图 ↔ 猫文本" }, { label: "目标", value: "cos ↑" }] },
-        { clipPhase: 2, sim: 0.08, pos: false, title: "负例推远", summary: "猫图配车辆文本是负例，cos=0.08。", reason: "batch 内其它文本都是干扰项，模型要把它们推远。", fields: [{ label: "负例", value: "猫图 ↔ 车文本" }, { label: "目标", value: "cos ↓" }] },
-        { clipPhase: 3, title: "InfoNCE", summary: "正例分数进分子，batch 内所有负例进分母。", reason: "损失降低时，正例相似度上升，负例下降。", fields: [{ label: "损失", value: "InfoNCE" }], sim: 0.91, pos: true, loss: true },
+        { clipPhase: 2, sim: 0.08, pos: false, title: "负例推远", summary: "猫图配车辆文本是负例，cos=0.08。", reason: "同一批样本里的其它文本都是干扰项，模型要把它们推远。", fields: [{ label: "负例", value: "猫图 ↔ 车文本" }, { label: "目标", value: "cos ↓" }] },
+        { clipPhase: 3, title: "InfoNCE", summary: "正例分数进分子，同一批样本内所有负例进分母。", reason: "损失降低时，正例相似度上升，负例下降。", fields: [{ label: "损失", value: "InfoNCE" }], sim: 0.91, pos: true, loss: true },
       ],
       render(v, s) { window.courseViz.renderCLIPPair(v, s); },
     },

@@ -215,13 +215,13 @@ const ch12Config = {
     { key: "mcts", label: "MCTS", demo: "mcts", desc: "四步循环与 Q/N 回传。" },
     { key: "gan", label: "GAN", demo: "gan", desc: "对照 GAN 架构图看 D(x̂) 变化。" },
     { key: "diffusion", label: "扩散", demo: "diffusion", desc: "对照架构图：前向加噪与 U-Net 反向去噪。" },
-    { key: "alphafold", label: "AlphaFold案例", demo: "alphafold", desc: "案例补充：序列→MSA→Evoformer→3D 结构与 pLDDT。" },
+    { key: "alphafold", label: "AlphaFold 案例", demo: "alphafold", desc: "案例补充：序列→MSA→Evoformer→3D 结构与 pLDDT。" },
   ],
 };
 
 courseShared.bootstrapChapter(
   {
     chapterNum: 12,
-    pageTitle: "创造算法 · 分步理解", eyebrow: "《AI思维》第12章 · 创造智能", title: "创造智能 · 搜索、生成与结构设计", readingMeta: "约 32 分钟 · 4 类方法 + AlphaFold案例", sections: [{ id: "hero", label: "开篇" }, { id: "m0", label: "概览" }, { id: "m1", label: "搜索" }, { id: "m2", label: "MCTS" }, { id: "m3", label: "生成" }, { id: "m4", label: "对比" }, { id: "lab", label: "实验室" }] },
+    pageTitle: "创造算法 · 分步理解", eyebrow: "《AI思维》第12章 · 创造智能", title: "创造智能 · 搜索、生成与结构设计", readingMeta: "约 32 分钟 · 4 类方法 + AlphaFold 案例", sections: [{ id: "hero", label: "开篇" }, { id: "m0", label: "概览" }, { id: "m1", label: "搜索" }, { id: "m2", label: "MCTS" }, { id: "m3", label: "生成" }, { id: "m4", label: "对比" }, { id: "lab", label: "实验室" }] },
   ch12Config,
 );

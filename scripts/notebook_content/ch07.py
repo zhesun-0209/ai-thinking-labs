@@ -220,6 +220,12 @@ for k in k_values:
     })
 
 k_metrics = pd.DataFrame(metric_rows).round(3)
+k_metrics_display = k_metrics.copy()
+for col in ["轮廓系数", "ARI(对照真实品种)"]:
+    k_metrics_display[col] = k_metrics_display[col].apply(
+        lambda value: "未定义" if pd.isna(value) else f"{value:.3f}"
+    )
+k_metrics_display["簇内平方和"] = k_metrics_display["簇内平方和"].map(lambda value: f"{value:.3f}")
 chosen_k = 3
 kmeans = kmeans_by_k[chosen_k]
 final_labels = labels_by_k[chosen_k]
@@ -229,7 +235,7 @@ clustered_iris["簇"] = final_labels
 cluster_profile = clustered_iris.groupby("簇")[iris_feature_names].mean().rename(columns=iris_feature_cn_map).round(2)
 cluster_mix = pd.crosstab(clustered_iris["簇"], clustered_iris["品种"])
 
-display(k_metrics)
+display(k_metrics_display)
 display(cluster_profile)
 display(cluster_mix)
 """

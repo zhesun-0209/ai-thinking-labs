@@ -2708,3 +2708,66 @@ body {
 .alphafold-detail-svg { width: 100%; height: auto; display: block; margin: 12px 0; border-radius: var(--radius-md); border: 1px solid var(--line); }
 
 .gan-formula-slot { margin: 8px 0; }
+
+/* Final product QA overrides */
+.section-nav-sticky .section-link--notebook {
+  border-color: rgba(37, 99, 235, 0.24);
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 750;
+}
+
+@media (max-width: 680px) {
+  .hero-section,
+  .chapter-section,
+  .lab-section {
+    scroll-margin-top: 190px;
+  }
+
+  .section-link,
+  .bellman-tab {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .lab-section .playback {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    margin-top: 10px !important;
+    padding: 8px !important;
+  }
+
+  .lab-section .playback .range-label {
+    grid-column: 1 / -1 !important;
+    min-height: 44px !important;
+    align-items: center !important;
+  }
+
+  .lab-section .playback input[type="range"],
+  .worked-range,
+  .demo-range {
+    min-height: 40px;
+  }
+
+  .lab-section .playback .primary-button,
+  .lab-section .playback .ghost-button,
+  .lab-section .playback .icon-button {
+    min-height: 42px !important;
+    padding: 6px 8px !important;
+    white-space: nowrap !important;
+  }
+
+  .lab-section .playback .icon-button {
+    font-size: 22px !important;
+  }
+
+  .arch-anno,
+  .vit-caption,
+  .mae-caption,
+  .clip-phase-hint,
+  .repr-temp-bar em {
+    font-size: 12px;
+  }
+}

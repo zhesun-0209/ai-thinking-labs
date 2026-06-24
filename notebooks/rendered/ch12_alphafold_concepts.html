@@ -7537,6 +7537,7 @@ body.jp-Notebook {
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-color: #94a3b8 #f1f5f9;
 }
 
 .jp-InputArea-editor {
@@ -7548,6 +7549,13 @@ body.jp-Notebook {
 
 .jp-OutputArea-output {
   border-radius: 8px;
+}
+
+.jp-RenderedHTMLCommon:has(table),
+.jp-OutputArea-output:has(table) {
+  position: relative;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .jp-RenderedText pre {
@@ -7569,18 +7577,44 @@ body.jp-Notebook {
 }
 
 @media (max-width: 640px) {
+  html[lang="zh-CN"] {
+    scroll-padding-top: 64px;
+  }
+
   body.jp-Notebook {
     padding-bottom: 40px;
   }
 
   #ai-labs-chrome {
-    min-height: 56px;
-    margin-bottom: 18px;
+    min-height: 48px;
+    margin-bottom: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    flex-wrap: nowrap;
+    gap: 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  #ai-labs-chrome::-webkit-scrollbar {
+    display: none;
+  }
+
+  #ai-labs-chrome a {
+    flex: 0 0 auto;
   }
 
   #ai-labs-chrome span {
-    flex-basis: 100%;
+    flex: 0 0 auto;
     margin-left: 0;
+    font-size: 0;
+  }
+
+  #ai-labs-chrome span::before {
+    content: "进度";
+    font-size: 12px;
   }
 
   #ai-labs-top {
@@ -7601,6 +7635,45 @@ body.jp-Notebook {
   .jp-Notebook .jp-MarkdownCell:first-of-type {
     padding: 14px;
   }
+
+  .jp-CodeCell .jp-InputArea-editor {
+    max-height: min(58vh, 520px);
+    overflow: auto;
+  }
+
+  .jp-CodeCell .jp-InputArea {
+    position: relative;
+  }
+
+  .jp-CodeCell .jp-InputArea::after {
+    content: "代码可上下或横向滚动";
+    display: block;
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .jp-RenderedHTMLCommon table,
+  .jp-RenderedHTMLCommon table.dataframe {
+    max-width: none;
+    min-width: 640px;
+  }
+
+  .jp-RenderedHTMLCommon th,
+  .jp-RenderedHTMLCommon td {
+    min-width: 78px;
+    white-space: normal;
+  }
+
+  .jp-RenderedHTMLCommon:has(table)::after {
+    content: "横向滑动查看完整表格";
+    display: block;
+    margin: -8px 0 12px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+  }
 }
 </style>
 </head>
@@ -7608,7 +7681,7 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=12">Python 代码实验</a><a href="../../ch12.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch12_alphafold_concepts.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2f82a72c">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6482c81c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7625,17 +7698,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=eeb2affe">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ec140639">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="0.-%E5%BA%8F%E5%88%97%E5%AF%B9%E9%BD%90%E4%B8%8E%E4%BD%8D%E7%BD%AE%E5%AF%B9%E8%A1%A8%E5%BE%81">0. 序列对齐与位置对表征<a class="anchor-link" href="#0.-%E5%BA%8F%E5%88%97%E5%AF%B9%E9%BD%90%E4%B8%8E%E4%BD%8D%E7%BD%AE%E5%AF%B9%E8%A1%A8%E5%BE%81">¶</a></h2><p>先看多条同源序列怎样对齐，再看每一列的保守性。位置对表征把两个位置的保守性组合起来，作为结构预测中“位置对关系”的简化入口。</p>
+<h2 id="0.-%E5%BA%8F%E5%88%97%E5%AF%B9%E9%BD%90%E4%B8%8E%E4%BD%8D%E7%BD%AE%E5%AF%B9%E8%A1%A8%E5%BE%81">0. 序列对齐与位置对表征<a class="anchor-link" href="#0.-%E5%BA%8F%E5%88%97%E5%AF%B9%E9%BD%90%E4%B8%8E%E4%BD%8D%E7%BD%AE%E5%AF%B9%E8%A1%A8%E5%BE%81">¶</a></h2><p>先看多条同源序列怎样对齐，再看每一列的保守性。位置对表征把两个位置的保守性组合起来，作为结构预测中“位置对关系”的简化入口；本页不预测三维结构。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5a8fee0f">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=de087a68">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8361,7 +8434,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d30e07e5">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=66d2c237">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

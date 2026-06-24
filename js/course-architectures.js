@@ -134,7 +134,7 @@ function renderCLIP(container) {
     <text x="${cx}" y="${cy + 12}" text-anchor="middle" class="arch-anno">L2 归一化 · ℝᵈ</text>
     ${arrow(cx + 72, cy, 408, cy, "is-accent")}
     ${box(408, 72, 88, 56, "相似度", "N×N", "is-active")}
-    <text x="280" y="14" class="arch-anno">CLIP：双塔 → 同一嵌入空间 → batch 内对比学习（Radford et al.）</text>`;
+    <text x="280" y="14" class="arch-anno">CLIP：双塔 → 同一嵌入空间 → 批内对比学习（Radford et al.）</text>`;
   mount(container, inner, "0 0 520 200", "CLIP 双塔架构");
 }
 

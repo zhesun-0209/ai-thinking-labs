@@ -984,7 +984,7 @@ function drawConvGrid(ctx, w, h, gridSize, kernelSize, kPos, phase) {
     const curIdx = convProgress;
     const fr = Math.floor((curIdx - 1) / 2);
     const fc = (curIdx - 1) % 2;
-    status = `kernel(${kPos[0]},${kPos[1]}) → 特征图[${fr},${fc}] = ${featValues[curIdx - 1].toFixed(2)} · 已填 ${convProgress}/4`;
+    status = `卷积核(${kPos[0]},${kPos[1]}) → 特征图[${fr},${fc}] = ${featValues[curIdx - 1].toFixed(2)} · 已填 ${convProgress}/4`;
   } else if (phase === "pool") {
     status = `MaxPool 2×2 → 1×1，max = ${Math.max(...featValues).toFixed(2)}`;
   }

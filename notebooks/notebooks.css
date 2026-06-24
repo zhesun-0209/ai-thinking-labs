@@ -531,6 +531,11 @@
   padding-top: 14px;
 }
 
+.nb-actions--inline {
+  margin-top: 16px;
+  padding-top: 0;
+}
+
 .nb-btn {
   min-height: 40px;
   padding: 0 12px;

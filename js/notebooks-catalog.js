@@ -375,10 +375,40 @@ function renderChapterSection(chNum) {
   </section>`;
 }
 
-function renderChapterPage(chNum) {
+function renderOverview(titleText) {
+  return `<section class="nb-overview" aria-labelledby="nbOverviewTitle">
+    <div>
+      <p class="nb-kicker">Python 代码实验</p>
+      <h2 id="nbOverviewTitle">${titleText}</h2>
+      <p>Notebook 已预渲染，可直接在线阅读。下载运行前请先安装依赖；部分实验首次运行可能需要联网或本地缓存。</p>
+    </div>
+  </section>`;
+}
+
+function renderInvalidChapterPage(rawValue) {
+  const titleEl = document.getElementById("nbPageTitle");
+  const mainEl = document.getElementById("nbMain");
+  if (titleEl) titleEl.textContent = "Python 代码实验";
+  if (!mainEl) return;
+  const safeValue = String(rawValue || "").trim();
+  mainEl.innerHTML = `
+    <section class="nb-overview nb-overview--empty" aria-labelledby="nbOverviewTitle">
+      <div>
+        <p class="nb-kicker">Python 代码实验</p>
+        <h2 id="nbOverviewTitle">未找到该章节</h2>
+        <p>${safeValue ? `当前参数为 ${safeValue}。` : ""}请选择第 5-12 章，或直接查看全部 Python 实验。</p>
+        <div class="nb-actions nb-actions--inline">
+          <a class="nb-btn nb-btn--primary" href="../hub.html">返回全部章节</a>
+          <a class="nb-btn" href="chapter.html?ch=5-12">查看第 5-12 章</a>
+        </div>
+      </div>
+    </section>`;
+}
+
+function renderChapterPage(chNum, rawValue = chNum) {
   const ch = CHAPTER_NOTEBOOKS[chNum];
   if (!ch) {
-    document.body.innerHTML = "<main class='nb-main'><p>未找到该章节。</p></main>";
+    renderInvalidChapterPage(rawValue);
     return;
   }
   const titleEl = document.getElementById("nbPageTitle");
@@ -386,15 +416,28 @@ function renderChapterPage(chNum) {
   if (titleEl) titleEl.textContent = `第 ${chNum} 章 · ${ch.title} · Python 实验`;
   if (mainEl) {
     mainEl.innerHTML = `
-      <section class="nb-overview" aria-labelledby="nbOverviewTitle">
-        <div>
-          <p class="nb-kicker">Python 代码实验</p>
-          <h2 id="nbOverviewTitle">第 ${chNum} 章代码实验</h2>
-          <p>每个 Notebook 都包含本章案例所需代码和数据；下载后按单元格顺序运行即可复现实验输出。</p>
-        </div>
-      </section>
+      ${renderOverview(`第 ${chNum} 章代码实验`)}
       ${renderChapterSection(chNum)}`;
   }
+}
+
+function renderChapterRangePage(start, end) {
+  const titleEl = document.getElementById("nbPageTitle");
+  const mainEl = document.getElementById("nbMain");
+  if (!mainEl) return;
+  const low = Math.min(start, end);
+  const high = Math.max(start, end);
+  const chapterNums = Object.keys(CHAPTER_NOTEBOOKS)
+    .map(Number)
+    .filter((num) => num >= low && num <= high);
+  if (!chapterNums.length) {
+    renderInvalidChapterPage(`${start}-${end}`);
+    return;
+  }
+  if (titleEl) titleEl.textContent = `第 ${chapterNums[0]}-${chapterNums[chapterNums.length - 1]} 章 · Python 实验`;
+  mainEl.innerHTML = `
+    ${renderOverview(`第 ${chapterNums[0]}-${chapterNums[chapterNums.length - 1]} 章代码实验`)}
+    ${chapterNums.map((num) => renderChapterSection(num)).join("")}`;
 }
 
 function renderIndexPage() {
@@ -406,6 +449,7 @@ if (typeof window !== "undefined") {
     CHAPTER_NOTEBOOKS,
     readerUrl,
     renderChapterPage,
+    renderChapterRangePage,
     renderIndexPage,
   };
 }
