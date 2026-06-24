@@ -326,6 +326,14 @@ function readerUrl(filename) {
   return `rendered/${stem(filename)}.html`;
 }
 
+function formatPointList(text) {
+  return String(text || "")
+    .split(/[、,，]/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(" · ");
+}
+
 function renderNotebookCard(item) {
   if (!item.ready) {
     return `<article class="nb-card nb-card--soon">
@@ -334,10 +342,15 @@ function renderNotebookCard(item) {
       <p class="nb-soon">即将推出</p>
     </article>`;
   }
-  const details = [item.blurb, item.result].filter(Boolean).join(" · ");
+  const points = formatPointList(item.result);
   return `<article class="nb-card">
     <h3>${item.title}</h3>
-    ${details ? `<p class="nb-card-blurb">${details}</p>` : ""}
+    ${item.blurb ? `<p class="nb-card-blurb">${item.blurb}</p>` : ""}
+    ${
+      points
+        ? `<p class="nb-card-points"><span class="nb-card-points-label">知识点</span><span class="nb-card-points-text">${points}</span></p>`
+        : ""
+    }
     <div class="nb-actions">
       <a class="nb-btn nb-btn--primary" href="${readerUrl(item.file)}">在线阅读</a>
       <a class="nb-btn" href="${item.file}" download>下载 .ipynb</a>

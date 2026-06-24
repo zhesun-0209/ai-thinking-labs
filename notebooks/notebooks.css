@@ -449,10 +449,29 @@
 }
 
 .nb-card-blurb {
-  min-height: 44px;
-  margin: 8px 0 12px;
+  margin: 8px 0 0;
   color: #475569;
   font-size: 14px;
+  line-height: 1.65;
+}
+
+.nb-card-points {
+  margin: 10px 0 12px;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.nb-card-points-label {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--nb-accent-dark);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.nb-card-points-text {
+  display: block;
 }
 
 .nb-card-detail {
