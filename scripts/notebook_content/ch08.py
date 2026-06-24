@@ -1063,7 +1063,8 @@ plt.show()
 
 TD_CELL = """
 # 出租车调度：先看一个初始状态和六个可选动作。
-taxi_env = gym.make("Taxi-v3", render_mode="ansi")
+taxi_env = gym.make("Taxi", render_mode="ansi")
+taxi_env.action_space.seed(11)
 action_labels = ["向南", "向北", "向东", "向西", "接乘客", "放下乘客"]
 location_names = ["红色站点", "绿色站点", "黄色站点", "蓝色站点"]
 preview_state, _ = taxi_env.reset(seed=42)
