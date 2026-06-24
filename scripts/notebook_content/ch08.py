@@ -965,8 +965,17 @@ plt.show()
 
 
 TD_CELL = """
-# Taxi-v3：用 Q-learning 展示真实环境中的 TD target 和 Q 表更新。
-taxi_env = gym.make("Taxi-v3", render_mode="ansi")
+# 出租车调度：用 Q-learning 展示 TD target 和 Q 表更新。
+def make_taxi_env():
+    for env_id in ("Taxi-v4", "Taxi-v3"):
+        try:
+            return gym.make(env_id, render_mode="ansi")
+        except Exception:
+            continue
+    raise RuntimeError("Taxi environment is unavailable.")
+
+
+taxi_env = make_taxi_env()
 n_states_taxi = taxi_env.observation_space.n
 n_actions_taxi = taxi_env.action_space.n
 Q_taxi = np.zeros((n_states_taxi, n_actions_taxi))
@@ -1020,11 +1029,11 @@ display(taxi_trace.tail(8).round(3))
 
 
 TD_PLOT_CELL = """
-# 绘制 Taxi-v3 训练曲线和一个起始状态的动作价值。
+# 绘制训练曲线和一个起始状态的动作价值。
 start_state, _ = taxi_env.reset(seed=42)
 fig, axes = plt.subplots(1, 2, figsize=(10.0, 4.4))
 axes[0].plot(taxi_trace["episode"], taxi_trace["reward"], marker="o", color="#2563eb", linewidth=2.0)
-axes[0].set_title("Taxi-v3 Q-learning 回报", loc="left", fontweight="bold")
+axes[0].set_title("出租车调度 Q-learning 回报", loc="left", fontweight="bold")
 axes[0].set_xlabel("episode")
 axes[0].set_ylabel("episode reward")
 axes[0].grid(True, color="#e2e8f0", linewidth=0.8)
@@ -1862,7 +1871,7 @@ def _ch11() -> dict[str, list]:
             rs.chapter_link(
                 "第 11 章 · 出租车调度 Q-learning 代码实验",
                 "本页让智能体学习接乘客、送乘客。每一步都会产生奖励或惩罚，Q-learning 用这些反馈更新“在某个状态做某个动作”的价值。",
-                ["加载 Taxi-v3 环境", "记录 TD target 和 TD error", "绘制回报与 Q 表"],
+                ["加载出租车调度任务", "记录 TD target 和 TD error", "绘制回报与 Q 表"],
                 "../ch11.html",
             ),
             rs.section("0", "出租车任务", "先训练 Q 表，再看抽样 TD 更新和回报曲线。最后渲染一个状态，查看当前 Q 表建议哪个动作。"),
