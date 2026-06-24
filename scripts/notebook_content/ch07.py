@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 from IPython.display import display
 from sklearn.cluster import KMeans
-from sklearn.datasets import load_iris, load_wine
+from sklearn.datasets import load_diabetes, load_iris, load_wine
 from sklearn.decomposition import PCA
 from sklearn.linear_model import Perceptron, SGDRegressor
 from sklearn.metrics import (
@@ -283,42 +283,45 @@ plt.show()
 
 
 GD_DATA_CELL = """
-# 准备线性回归数据：学习时长预测测验分。
-gd_df = pd.DataFrame(
-    {
-        "学习时长": [1, 2, 3, 4, 5, 6, 7, 8],
-        "测验分": [52, 55, 61, 66, 70, 76, 82, 86],
-    }
-)
-X_gd = gd_df[["学习时长"]].to_numpy()
-y_gd = gd_df["测验分"].to_numpy()
-display(gd_df)
+# 加载 Diabetes 经典回归数据集，使用 BMI 预测一年后的疾病进展指标。
+diabetes = load_diabetes(as_frame=True)
+gd_df = diabetes.frame[["bmi", "target"]].copy()
+gd_df.columns = ["BMI", "疾病进展指标"]
+
+X_gd = gd_df[["BMI"]].to_numpy()
+y_gd = gd_df["疾病进展指标"].to_numpy()
+
+display(gd_df.head(10))
+display(gd_df.describe().round(3))
 """
 
 
 GD_PROCESS_CELL = """
-# 用 sklearn SGDRegressor 逐轮更新，记录损失下降过程。
+# 用 sklearn SGDRegressor 做梯度下降，记录损失下降过程。
+gd_scaler = StandardScaler()
+X_gd_scaled = gd_scaler.fit_transform(X_gd)
 regressor = SGDRegressor(
     loss="squared_error",
     penalty=None,
-    learning_rate="constant",
-    eta0=0.002,
+    learning_rate="invscaling",
+    eta0=0.04,
+    power_t=0.25,
     random_state=0,
 )
 
 gd_rows = []
-for epoch in range(1, 31):
-    regressor.partial_fit(X_gd, y_gd)
-    pred = regressor.predict(X_gd)
+for epoch in range(1, 61):
+    regressor.partial_fit(X_gd_scaled, y_gd)
+    pred = regressor.predict(X_gd_scaled)
     gd_rows.append({
         "轮次": epoch,
-        "斜率": round(regressor.coef_[0], 4),
+        "标准化斜率": round(regressor.coef_[0], 4),
         "截距": round(regressor.intercept_[0], 4),
         "MSE": round(mean_squared_error(y_gd, pred), 3),
     })
 
 gd_trace = pd.DataFrame(gd_rows)
-display(gd_trace.tail(8))
+display(gd_trace.iloc[[0, 1, 2, 9, 29, 59]])
 """
 
 
@@ -327,11 +330,11 @@ GD_PLOT_CELL = """
 fig, axes = plt.subplots(1, 2, figsize=(10.2, 4.5))
 
 x_line = np.linspace(X_gd.min(), X_gd.max(), 100).reshape(-1, 1)
-axes[0].scatter(X_gd[:, 0], y_gd, s=110, color="#2563eb", edgecolor="white", linewidth=1.4)
-axes[0].plot(x_line[:, 0], regressor.predict(x_line), color="#f97316", linewidth=2.4)
-axes[0].set_title("SGDRegressor 拟合结果", loc="left", fontweight="bold")
-axes[0].set_xlabel("学习时长")
-axes[0].set_ylabel("测验分")
+axes[0].scatter(X_gd[:, 0], y_gd, s=42, color="#2563eb", alpha=0.72, edgecolor="white", linewidth=0.4)
+axes[0].plot(x_line[:, 0], regressor.predict(gd_scaler.transform(x_line)), color="#f97316", linewidth=2.4)
+axes[0].set_title("Diabetes BMI 回归", loc="left", fontweight="bold")
+axes[0].set_xlabel("BMI")
+axes[0].set_ylabel("疾病进展指标")
 axes[0].grid(True, color="#e2e8f0", linewidth=0.8)
 
 axes[1].plot(gd_trace["轮次"], gd_trace["MSE"], color="#2563eb", linewidth=2.4)
@@ -346,33 +349,36 @@ plt.show()
 
 
 PERCEPTRON_DATA_CELL = """
-# 准备二分类点：两个特征对应一个掌握/未掌握标签。
-perceptron_df = pd.DataFrame(
-    {
-        "正确率": [0.90, 0.82, 0.78, 0.70, 0.58, 0.52, 0.46, 0.40],
-        "复盘次数": [3, 3, 2, 2, 1, 1, 0, 0],
-        "掌握": [1, 1, 1, 1, 0, 0, 0, 0],
-    }
-)
-X_per = perceptron_df[["正确率", "复盘次数"]].to_numpy()
-y_per = perceptron_df["掌握"].to_numpy()
+# 加载 Iris 中的 setosa 与 versicolor，使用两个花瓣特征做感知机二分类。
+iris = load_iris(as_frame=True)
+perceptron_df = iris.frame.copy()
+perceptron_df["品种"] = perceptron_df["target"].map(dict(enumerate(iris.target_names)))
+perceptron_df = perceptron_df[perceptron_df["品种"].isin(["setosa", "versicolor"])].copy()
+
+per_features = ["petal length (cm)", "petal width (cm)"]
+X_per = perceptron_df[per_features].to_numpy()
+y_per = (perceptron_df["品种"] == "versicolor").astype(int).to_numpy()
+perceptron_df["二分类标签"] = y_per
+
 display(perceptron_df)
 """
 
 
 PERCEPTRON_PROCESS_CELL = """
 # 用 sklearn Perceptron 的 partial_fit 逐轮学习，记录边界参数。
-perceptron = Perceptron(eta0=0.2, random_state=1, warm_start=True)
+per_scaler = StandardScaler()
+X_per_scaled = per_scaler.fit_transform(X_per)
+perceptron = Perceptron(eta0=0.08, random_state=1, warm_start=True)
 classes = np.array([0, 1])
 per_rows = []
 
-for epoch in range(1, 9):
-    perceptron.partial_fit(X_per, y_per, classes=classes)
-    pred = perceptron.predict(X_per)
+for epoch in range(1, 13):
+    perceptron.partial_fit(X_per_scaled, y_per, classes=classes)
+    pred = perceptron.predict(X_per_scaled)
     per_rows.append({
         "轮次": epoch,
-        "w_正确率": round(perceptron.coef_[0, 0], 4),
-        "w_复盘次数": round(perceptron.coef_[0, 1], 4),
+        "w_petal_length": round(perceptron.coef_[0, 0], 4),
+        "w_petal_width": round(perceptron.coef_[0, 1], 4),
         "bias": round(perceptron.intercept_[0], 4),
         "错误数": int((pred != y_per).sum()),
     })
@@ -392,14 +398,16 @@ x_min, x_max = X_per[:, 0].min() - 0.05, X_per[:, 0].max() + 0.05
 x_line = np.linspace(x_min, x_max, 100)
 w0, w1 = perceptron.coef_[0]
 bias = perceptron.intercept_[0]
-y_line = -(w0 * x_line + bias) / w1
+scaled_x = (x_line - per_scaler.mean_[0]) / per_scaler.scale_[0]
+scaled_y = -(w0 * scaled_x + bias) / w1
+y_line = scaled_y * per_scaler.scale_[1] + per_scaler.mean_[1]
 ax.plot(x_line, y_line, color="#0f172a", linewidth=2.2)
 
-ax.set_title("Perceptron 决策边界", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
-ax.set_xlabel("正确率")
-ax.set_ylabel("复盘次数")
+ax.set_title("Iris Perceptron 决策边界", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
+ax.set_xlabel("petal length (cm)")
+ax.set_ylabel("petal width (cm)")
 ax.set_xlim(x_min, x_max)
-ax.set_ylim(-0.25, 3.35)
+ax.set_ylim(X_per[:, 1].min() - 0.08, X_per[:, 1].max() + 0.12)
 ax.grid(True, color="#e2e8f0", linewidth=0.8)
 plt.tight_layout()
 plt.show()
@@ -407,18 +415,19 @@ plt.show()
 
 
 METRICS_CELL = """
-# 同一组概率在不同阈值下会产生不同的 precision / recall。
-y_true = np.array([1, 1, 1, 0, 0, 0])
-y_score = np.array([0.91, 0.74, 0.62, 0.55, 0.37, 0.21])
+# 用 Iris 感知机的 decision_function 分数观察阈值变化。
+y_true = y_per
+y_score = perceptron.decision_function(X_per_scaled)
+thresholds = np.quantile(y_score, [0.35, 0.50, 0.65])
 
 metric_rows = []
-for threshold in [0.3, 0.5, 0.7]:
+for threshold in thresholds:
     y_hat = (y_score >= threshold).astype(int)
     precision, recall, f1, _ = precision_recall_fscore_support(
         y_true, y_hat, average="binary", zero_division=0
     )
     metric_rows.append({
-        "阈值": threshold,
+        "阈值": round(float(threshold), 3),
         "预测为正": int(y_hat.sum()),
         "precision": round(precision, 3),
         "recall": round(recall, 3),
@@ -461,7 +470,7 @@ def _gd() -> list:
     return [
         rs.chapter_link(
             "第 7 章 · 梯度下降与感知机代码实验",
-            ["记录 SGD 损失下降", "记录感知机参数变化", "比较不同分类阈值"],
+            ["用 Diabetes 运行 SGD 回归", "用 Iris 运行 Perceptron", "比较不同分类阈值"],
             "../ch7.html",
         ),
         rs.section("0", "环境与数据"),
