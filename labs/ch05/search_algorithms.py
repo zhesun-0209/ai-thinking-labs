@@ -579,10 +579,11 @@ def comparison_table(graph: dict | None = None) -> pd.DataFrame:
 def plot_campus(
     path: list[str] | None = None,
     *,
+    graph: dict | None = None,
     title: str = "校园搜索图",
     highlight: list[str] | None = None,
 ) -> None:
-    graph = load_graph()
+    graph = graph or load_graph()
     configure_matplotlib()
     fig, ax = plt.subplots(figsize=(9.5, 5.2))
     _draw_campus_map(ax, graph, path=path, highlight=highlight, title=title)

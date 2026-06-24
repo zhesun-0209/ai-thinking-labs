@@ -7608,7 +7608,7 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=5">Python 代码实验</a><a href="../../ch5.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch05_campus_search.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=68094139">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6ed398b1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7624,7 +7624,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ed290ecd">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=bd8b3d4e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7634,7 +7634,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8ff77195">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2b6b2e3d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7642,14 +7642,46 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 保存本步骤变量，供后续代码单元使用。</span>
-<span class="n">graph</span> <span class="o">=</span> <span class="n">load_graph</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 导入表格展示工具，并直接在 notebook 中定义校园图。</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"start"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">,</span>
+    <span class="s2">"goal"</span><span class="p">:</span> <span class="s2">"c1"</span><span class="p">,</span>
+    <span class="s2">"nodes"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"x"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"校门口"</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">:</span> <span class="mi">7</span><span class="p">},</span>
+        <span class="s2">"c2"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"超市"</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="s2">"j"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"教学楼"</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+        <span class="s2">"s2"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"实验楼"</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+        <span class="s2">"s1"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"食堂"</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+        <span class="s2">"t"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"图书馆"</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+        <span class="s2">"c1"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"操场"</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">"edges"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="s2">"c2"</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="mi">7</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="s2">"j"</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="s2">"s1"</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="s2">"j"</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="s2">"s2"</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="s2">"s2"</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="s2">"s1"</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="s2">"s1"</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="s2">"t"</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="s2">"s1"</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="s2">"c1"</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="mi">6</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">"from"</span><span class="p">:</span> <span class="s2">"t"</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">:</span> <span class="s2">"c1"</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+    <span class="p">],</span>
+    <span class="s2">"expected"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"dfs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"path"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"j"</span><span class="p">,</span> <span class="s2">"s2"</span><span class="p">,</span> <span class="s2">"s1"</span><span class="p">,</span> <span class="s2">"c1"</span><span class="p">],</span> <span class="s2">"steps"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="mi">13</span><span class="p">},</span>
+        <span class="s2">"bfs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"path"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"s1"</span><span class="p">,</span> <span class="s2">"c1"</span><span class="p">],</span> <span class="s2">"steps"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="mi">8</span><span class="p">},</span>
+        <span class="s2">"ucs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"path"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"s1"</span><span class="p">,</span> <span class="s2">"t"</span><span class="p">,</span> <span class="s2">"c1"</span><span class="p">],</span> <span class="s2">"steps"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="mi">7</span><span class="p">},</span>
+        <span class="s2">"greedy"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"path"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"s1"</span><span class="p">,</span> <span class="s2">"c1"</span><span class="p">],</span> <span class="s2">"steps"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="mi">8</span><span class="p">},</span>
+        <span class="s2">"astar"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"path"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"s1"</span><span class="p">,</span> <span class="s2">"t"</span><span class="p">,</span> <span class="s2">"c1"</span><span class="p">],</span> <span class="s2">"steps"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="mi">7</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7afe4d12">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=bf390dde">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7657,14 +7689,43 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 保存本步骤变量，供后续代码单元使用。</span>
-<span class="n">adj</span> <span class="o">=</span> <span class="n">build_adjacency</span><span class="p">(</span><span class="n">graph</span><span class="p">[</span><span class="s1">'edges'</span><span class="p">])</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 用边表直接构造邻接表：每条无向边同时写入两个方向。</span>
+<span class="n">adj</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">graph</span><span class="p">[</span><span class="s2">"edges"</span><span class="p">]:</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">edge</span><span class="p">[</span><span class="s2">"from"</span><span class="p">]</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">edge</span><span class="p">[</span><span class="s2">"to"</span><span class="p">]</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="n">edge</span><span class="p">[</span><span class="s2">"cost"</span><span class="p">]</span>
+    <span class="n">adj</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">b</span><span class="p">,</span> <span class="n">cost</span><span class="p">))</span>
+    <span class="n">adj</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">cost</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">neighbors</span> <span class="ow">in</span> <span class="n">adj</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+    <span class="n">neighbors</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">adj</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9f49f50e">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[3]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>{'x': [('c2', 7), ('j', 2), ('s1', 2)],
+ 'c2': [('x', 7)],
+ 'j': [('s2', 4), ('x', 2)],
+ 's1': [('c1', 6), ('s2', 1), ('t', 3), ('x', 2)],
+ 's2': [('j', 4), ('s1', 1)],
+ 't': [('c1', 2), ('s1', 3)],
+ 'c1': [('s1', 6), ('t', 2)]}</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=75184821">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7692,7 +7753,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fbb3389e">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=050c73ee">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7700,8 +7761,12 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 显示当前实验结果表。</span>
-<span class="n">display</span><span class="p">(</span><span class="n">graph_summary</span><span class="p">())</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 保存本步骤变量，供后续代码单元使用。</span>
+<span class="n">nodes_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span>
+    <span class="p">{</span><span class="s1">'节点'</span><span class="p">:</span> <span class="n">nid</span><span class="p">,</span> <span class="s1">'名称'</span><span class="p">:</span> <span class="n">meta</span><span class="p">[</span><span class="s1">'name'</span><span class="p">],</span> <span class="s1">'h(到操场)'</span><span class="p">:</span> <span class="n">meta</span><span class="p">[</span><span class="s1">'h'</span><span class="p">]}</span>
+    <span class="k">for</span> <span class="n">nid</span><span class="p">,</span> <span class="n">meta</span> <span class="ow">in</span> <span class="n">graph</span><span class="p">[</span><span class="s1">'nodes'</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+<span class="p">])</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">'节点'</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">nodes_df</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7787,7 +7852,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4eaaedc6">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=129d343d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7795,8 +7860,12 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 显示当前实验结果表。</span>
-<span class="n">display</span><span class="p">(</span><span class="n">edges_table</span><span class="p">())</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 保存本步骤变量，供后续代码单元使用。</span>
+<span class="n">edges_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span>
+    <span class="p">{</span><span class="s1">'边'</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">edge</span><span class="p">[</span><span class="s1">'from'</span><span class="p">]</span><span class="si">}</span><span class="s2">↔</span><span class="si">{</span><span class="n">edge</span><span class="p">[</span><span class="s1">'to'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s1">'代价'</span><span class="p">:</span> <span class="n">edge</span><span class="p">[</span><span class="s1">'cost'</span><span class="p">]}</span>
+    <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">graph</span><span class="p">[</span><span class="s1">'edges'</span><span class="p">]</span>
+<span class="p">])</span>
+<span class="n">display</span><span class="p">(</span><span class="n">edges_df</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7879,7 +7948,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0bc7545e">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cefc9101">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7888,7 +7957,7 @@ body.jp-Notebook {
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 绘制当前实验图。</span>
-<span class="n">plot_campus</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">'Campus graph'</span><span class="p">)</span>
+<span class="n">plot_campus</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">'Campus graph'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7907,7 +7976,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=eef9b838">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ee091630">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7917,7 +7986,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8769909b">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a260c24c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7932,7 +8001,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5d704134">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=286b18df">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8027,7 +8096,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d8e8d77d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=06b4507d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8055,7 +8124,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c09fcf0a">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c31659ff">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8065,7 +8134,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=41ac3746">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=9622c5f8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8080,7 +8149,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=59aa3d42">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5c82317e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8095,7 +8164,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=e9cec88f">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=43e2ff06">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8110,7 +8179,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8c84dc43">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c7a9713c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8138,7 +8207,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=abc82b05">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=92bef9dd">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8147,7 +8216,7 @@ body.jp-Notebook {
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 绘制当前实验图。</span>
-<span class="n">plot_campus</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">algo</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s1"> path'</span><span class="p">)</span>
+<span class="n">plot_campus</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">algo</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s1"> path'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8166,7 +8235,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a93830d8">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7a2c97cc">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8176,7 +8245,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9bb25c5a">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a6ed54e2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
