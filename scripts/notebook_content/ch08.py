@@ -1203,7 +1203,8 @@ display(pd.DataFrame({
 BANDIT_CELL = """
 # 悬崖行走：在经典网格任务里比较不同探索率的 SARSA。
 def train_cliff_sarsa(epsilon, episodes=700, alpha=0.45, gamma=0.99, seed=0):
-    env = gym.make("CliffWalking-v0")
+    env = gym.make("CliffWalking")
+    env.action_space.seed(seed)
     rng = np.random.default_rng(seed)
     Q = np.zeros((env.observation_space.n, env.action_space.n))
     rows = []
@@ -1253,7 +1254,7 @@ display(cliff_trace.tail(12).rename(columns={
 CLIFF_PATH_CELL = """
 # 用训练后的 Q 表走一条贪心路线，查看智能体会如何从 S 走向 G。
 def run_cliff_greedy_path(Q, max_steps=40):
-    env = gym.make("CliffWalking-v0")
+    env = gym.make("CliffWalking")
     state, _ = env.reset(seed=5)
     rows = []
     path_coords = [divmod(state, 12)]
