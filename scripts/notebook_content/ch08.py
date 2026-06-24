@@ -244,44 +244,109 @@ plt.show()
 
 
 ATTENTION_CELL = """
-# Scaled dot-product attention：计算分数、权重和加权输出。
+# 用一组可解释的 query/key 特征，让同一句话的 attention 更容易读。
 tokens = ["the", "cat", "sat", "on", "the", "mat"]
-X_attn = np.array([
-    [0.55, 0.20, 0.10, 0.05],
-    [0.10, 0.85, 0.20, 0.05],
-    [0.15, 0.65, 0.55, 0.10],
-    [0.35, 0.10, 0.15, 0.65],
-    [0.55, 0.20, 0.10, 0.05],
-    [0.08, 0.80, 0.12, 0.25],
-])
-Wq = np.array([[0.7, 0.1], [0.1, 0.8], [0.4, 0.3], [0.2, 0.6]])
-Wk = np.array([[0.6, 0.2], [0.2, 0.7], [0.5, 0.2], [0.1, 0.8]])
-Wv = np.array([[0.5, 0.1], [0.2, 0.7], [0.3, 0.4], [0.4, 0.3]])
+labels = ["the(1)", "cat", "sat", "on", "the(2)", "mat"]
+features = ["subject_noun", "verb", "prep", "place_noun", "det"]
 
-Q = X_attn @ Wq
-K = X_attn @ Wk
-V = X_attn @ Wv
-scores = Q @ K.T / math.sqrt(K.shape[1])
+K = pd.DataFrame([
+    [0, 0, 0, 0, 1],  # the(1): determiner
+    [1, 0, 0, 0, 0],  # cat: subject noun
+    [0, 1, 0, 0, 0],  # sat: verb
+    [0, 0, 1, 0, 0],  # on: preposition
+    [0, 0, 0, 0, 1],  # the(2): determiner
+    [0, 0, 0, 1, 0],  # mat: place noun
+], index=labels, columns=features)
+
+Q = pd.DataFrame([
+    [8.0, 0.0, 0.0, 0.0, 0.0],  # the(1) looks for the noun it modifies: cat
+    [0.0, 8.0, 0.0, 0.0, 0.0],  # cat looks for the action: sat
+    [6.5, 0.0, 0.0, 6.5, 0.0],  # sat looks at the subject and the location
+    [0.0, 0.0, 0.0, 8.0, 0.0],  # on points to its object: mat
+    [0.0, 0.0, 0.0, 8.0, 0.0],  # the(2) modifies mat
+    [0.0, 0.0, 8.0, 0.0, 0.0],  # mat looks back to the preposition: on
+], index=labels, columns=features)
+
+V = np.array([
+    [0.20, 0.10],
+    [0.85, 0.20],
+    [0.45, 0.80],
+    [0.20, 0.65],
+    [0.20, 0.10],
+    [0.70, 0.55],
+])
+
+scores = Q.to_numpy() @ K.to_numpy().T / math.sqrt(len(features))
 weights = np.exp(scores - scores.max(axis=1, keepdims=True))
 weights = weights / weights.sum(axis=1, keepdims=True)
 attn_output = weights @ V
 
-display(pd.DataFrame(np.round(weights, 3), index=tokens, columns=tokens))
-display(pd.DataFrame(np.round(attn_output, 3), index=tokens, columns=["输出1", "输出2"]))
+weight_df = pd.DataFrame(np.round(weights, 3), index=labels, columns=labels)
+focus_rows = []
+for i, label in enumerate(labels):
+    kept = [j for j in range(len(labels)) if weights[i, j] >= 0.20]
+    focus_rows.append({
+        "当前词": label,
+        "主要关注": ", ".join(labels[j] for j in kept),
+        "权重": ", ".join(f"{weights[i, j]:.2f}" for j in kept),
+    })
+
+display(pd.DataFrame(focus_rows))
+display(weight_df)
+display(pd.DataFrame(np.round(attn_output, 3), index=labels, columns=["输出1", "输出2"]))
 """
 
 
 ATTENTION_PLOT_CELL = """
-# 绘制 attention 权重热力图。
-fig, ax = plt.subplots(figsize=(6.2, 5.0))
-im = ax.imshow(weights, cmap="Blues", vmin=0, vmax=weights.max())
-ax.set_xticks(range(len(tokens)), tokens)
-ax.set_yticks(range(len(tokens)), tokens)
-for i in range(len(tokens)):
-    for j in range(len(tokens)):
-        ax.text(j, i, f"{weights[i, j]:.2f}", ha="center", va="center", color="#0f172a")
-ax.set_title("Attention 权重", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
+# 画出权重热力图，并把每一行的最高权重直接标出来。
+fig, (ax, link_ax) = plt.subplots(
+    1,
+    2,
+    figsize=(10.8, 5.2),
+    gridspec_kw={"width_ratios": [1.25, 0.9]},
+)
+im = ax.imshow(weights, cmap="YlOrRd", vmin=0, vmax=1)
+ax.set_xticks(range(len(labels)), labels, rotation=30, ha="right")
+ax.set_yticks(range(len(labels)), labels)
+ax.set_xlabel("被关注的词 key")
+ax.set_ylabel("正在读的词 query")
+
+for i in range(len(labels)):
+    max_weight = weights[i].max()
+    for j in range(len(labels)):
+        value = weights[i, j]
+        color = "#ffffff" if value > 0.45 else "#0f172a"
+        weight = "bold" if value == max_weight else "normal"
+        ax.text(j, i, f"{value:.2f}", ha="center", va="center", color=color, fontweight=weight)
+        if value == max_weight:
+            ax.add_patch(plt.Rectangle((j - 0.5, i - 0.5), 1, 1, fill=False, edgecolor="#0f172a", linewidth=2.4))
+
+ax.set_title("Attention 权重热力图", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+link_ax.set_xlim(0, 1)
+link_ax.set_ylim(-0.7, len(labels) - 0.25)
+link_ax.axis("off")
+link_ax.text(0.02, len(labels) - 0.15, "每行最高关注", fontsize=13, fontweight="bold", color="#0f172a")
+link_ax.text(0.08, len(labels) - 0.65, "当前词", color="#64748b", fontweight="bold")
+link_ax.text(0.68, len(labels) - 0.65, "被关注词", color="#64748b", fontweight="bold")
+
+for i in range(len(tokens)):
+    y = len(labels) - 1 - i
+    max_weight = weights[i].max()
+    top_indices = [j for j in range(len(labels)) if np.isclose(weights[i, j], max_weight)]
+    target_text = " / ".join(labels[j] for j in top_indices)
+    value_text = " / ".join(f"{weights[i, j]:.2f}" for j in top_indices)
+    link_ax.text(0.08, y, labels[i], ha="left", va="center", color="#0f172a")
+    link_ax.text(0.68, y, target_text, ha="left", va="center", color="#0f172a", fontweight="bold")
+    link_ax.annotate(
+        "",
+        xy=(0.65, y),
+        xytext=(0.35, y),
+        arrowprops={"arrowstyle": "->", "lw": 1.2 + 4.0 * max_weight, "color": "#ea580c", "alpha": 0.95},
+    )
+    link_ax.text(0.50, y + 0.16, value_text, ha="center", va="center", color="#c2410c", fontsize=9)
+
 plt.tight_layout()
 plt.show()
 """
