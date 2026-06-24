@@ -206,8 +206,26 @@ def draw_rule_flow(initial_facts, rules, trace, title):
     ))
     y_lookup = {fact: i for i, fact in enumerate(reversed(fact_order))}
 
-    fig, ax = plt.subplots(figsize=(9.2, 4.8))
+    fig, ax = plt.subplots(figsize=(10.2, 5.2))
     ax.set_facecolor("#fbfcfd")
+
+    def draw_fact_node(x, y, text, face, edge):
+        ax.text(
+            x,
+            y,
+            text,
+            ha="center",
+            va="center",
+            fontsize=8.6,
+            color="#0f172a",
+            zorder=4,
+            bbox={
+                "boxstyle": "round,pad=0.34",
+                "fc": face,
+                "ec": edge,
+                "lw": 1.5,
+            },
+        )
 
     for rule in rules:
         if rule["id"] not in used_rules:
@@ -220,12 +238,12 @@ def draw_rule_flow(initial_facts, rules, trace, title):
             ax.annotate(
                 "",
                 xy=(rx - 0.16, ry),
-                xytext=(0.24, y_lookup[fact]),
+                xytext=(0.42, y_lookup[fact]),
                 arrowprops={"arrowstyle": "->", "color": "#94a3b8", "lw": 1.5},
             )
         ax.annotate(
             "",
-            xy=(2.24, y_lookup[rule["then"]]),
+            xy=(2.08, y_lookup[rule["then"]]),
             xytext=(rx + 0.16, ry),
             arrowprops={"arrowstyle": "->", "color": "#2563eb", "lw": 2.0},
         )
@@ -237,16 +255,14 @@ def draw_rule_flow(initial_facts, rules, trace, title):
         edge = "#16a34a" if is_initial else "#94a3b8"
         if is_goal:
             color, edge = "#ffedd5", "#f97316"
-        ax.scatter(0, y, s=980, color=color, edgecolor=edge, linewidth=1.6, zorder=3)
-        ax.scatter(2.5, y, s=980, color=color, edgecolor=edge, linewidth=1.6, zorder=3)
-        ax.text(0, y, fact, ha="center", va="center", fontsize=9, color="#0f172a", zorder=4)
-        ax.text(2.5, y, fact, ha="center", va="center", fontsize=9, color="#0f172a", zorder=4)
+        draw_fact_node(0, y, fact, color, edge)
+        draw_fact_node(2.5, y, fact, color, edge)
 
     ax.text(0, len(y_lookup) + 0.1, "事实", ha="center", fontweight="bold", color="#334155")
     ax.text(1.0, len(y_lookup) + 0.1, "规则", ha="center", fontweight="bold", color="#334155")
     ax.text(2.5, len(y_lookup) + 0.1, "结论", ha="center", fontweight="bold", color="#334155")
     ax.set_title(title, loc="left", fontsize=14, fontweight="bold", color="#0f172a")
-    ax.set_xlim(-0.55, 3.05)
+    ax.set_xlim(-0.78, 3.28)
     ax.set_ylim(-0.75, len(y_lookup) + 0.55)
     ax.axis("off")
     plt.tight_layout()
