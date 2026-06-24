@@ -1043,9 +1043,18 @@ taxi_env.close()
 
 
 BANDIT_CELL = """
-# CliffWalking-v0：在经典悬崖环境里比较不同 epsilon 的 SARSA。
+# 悬崖行走：在经典网格任务里比较不同 epsilon 的 SARSA。
+def make_cliff_env():
+    for env_id in ("CliffWalking-v1", "CliffWalking-v0"):
+        try:
+            return gym.make(env_id)
+        except Exception:
+            continue
+    raise RuntimeError("CliffWalking environment is unavailable.")
+
+
 def train_cliff_sarsa(epsilon, episodes=700, alpha=0.45, gamma=0.99, seed=0):
-    env = gym.make("CliffWalking-v0")
+    env = make_cliff_env()
     rng = np.random.default_rng(seed)
     Q = np.zeros((env.observation_space.n, env.action_space.n))
     rows = []
@@ -1866,7 +1875,7 @@ def _ch11() -> dict[str, list]:
             rs.chapter_link(
                 "第 11 章 · 悬崖行走探索策略代码实验",
                 "本页比较不同探索强度下的路径学习。悬崖边路线更短但风险更高，epsilon 越大，智能体越可能尝试随机动作。",
-                ["加载 CliffWalking-v0 环境", "比较不同 epsilon", "绘制回报与策略"],
+                ["加载悬崖行走任务", "比较不同 epsilon", "绘制回报与策略"],
                 "../ch11.html",
             ),
             rs.section("0", "悬崖行走任务", "训练曲线展示不同探索强度的回报，策略图展示最终学到的动作方向。把两张图合起来看，才能理解探索的代价。"),
