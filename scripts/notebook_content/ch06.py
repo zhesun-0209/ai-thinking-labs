@@ -194,76 +194,97 @@ print("推理结果:", backward_success)
 
 
 RULE_PLOT_CELL = """
-# 画出规则触发路径：绿色节点来自初始事实，蓝色节点是推理得到的新事实。
+# 画出规则触发路径：每条规则一行，避免交叉线影响阅读。
 def draw_rule_flow(initial_facts, rules, trace, title):
-    used_rules = set(trace.get("触发规则", [])) | set(trace.get("使用规则", []))
-    used_rules.discard("初始事实")
-    used_rules.discard("无可用规则")
-    used_rules.discard("循环依赖")
+    if "触发规则" in trace:
+        used_order = [rid for rid in trace["触发规则"].tolist() if str(rid).startswith("R")]
+    else:
+        used_order = [rid for rid in trace.get("使用规则", []).tolist() if str(rid).startswith("R")]
+    used_order = list(dict.fromkeys(used_order))
+    selected_rules = [rule for rid in used_order for rule in rules if rule["id"] == rid]
 
-    fact_order = list(dict.fromkeys(
-        list(sorted(initial_facts)) + [rule["then"] for rule in rules] + [goal]
-    ))
-    y_lookup = {fact: i for i, fact in enumerate(reversed(fact_order))}
-
-    fig, ax = plt.subplots(figsize=(10.2, 5.2))
+    fig, ax = plt.subplots(figsize=(10.8, 5.0))
     ax.set_facecolor("#fbfcfd")
 
-    def draw_fact_node(x, y, text, face, edge):
+    def chip_style(text, role):
+        if role == "initial":
+            return {"fc": "#dcfce7", "ec": "#16a34a"}
+        if role == "goal":
+            return {"fc": "#ffedd5", "ec": "#f97316"}
+        if role == "derived":
+            return {"fc": "#eff6ff", "ec": "#2563eb"}
+        return {"fc": "#ffffff", "ec": "#94a3b8"}
+
+    def draw_chip(x, y, text, role):
+        style = chip_style(text, role)
         ax.text(
             x,
             y,
             text,
             ha="center",
             va="center",
-            fontsize=8.6,
+            fontsize=9.2,
             color="#0f172a",
-            zorder=4,
+            zorder=5,
             bbox={
-                "boxstyle": "round,pad=0.34",
-                "fc": face,
-                "ec": edge,
-                "lw": 1.5,
+                "boxstyle": "round,pad=0.38",
+                "fc": style["fc"],
+                "ec": style["ec"],
+                "lw": 1.45,
             },
         )
 
-    for rule in rules:
-        if rule["id"] not in used_rules:
-            continue
-        rx = 1.0
-        ry = sum(y_lookup[fact] for fact in rule["facts"]) / len(rule["facts"])
-        ax.scatter(rx, ry, s=760, marker="s", color="#dbeafe", edgecolor="#2563eb", linewidth=1.6, zorder=3)
-        ax.text(rx, ry, rule["id"], ha="center", va="center", fontweight="bold", color="#1e3a8a", zorder=4)
-        for fact in rule["facts"]:
+    def fact_role(fact, conclusion=False):
+        if fact == goal:
+            return "goal"
+        if fact in initial_facts:
+            return "initial"
+        if conclusion:
+            return "derived"
+        return "other"
+
+    y_positions = list(reversed(range(len(selected_rules))))
+    for row_index, (rule, y) in enumerate(zip(selected_rules, y_positions), start=1):
+        ax.axhspan(y - 0.46, y + 0.46, color="#f8fafc" if row_index % 2 else "#ffffff", zorder=0)
+        premise_offsets = [0] if len(rule["facts"]) == 1 else [0.2, -0.2]
+        for fact, offset in zip(rule["facts"], premise_offsets):
+            fy = y + offset
+            draw_chip(0.56, fy, fact, fact_role(fact))
             ax.annotate(
                 "",
-                xy=(rx - 0.16, ry),
-                xytext=(0.42, y_lookup[fact]),
-                arrowprops={"arrowstyle": "->", "color": "#94a3b8", "lw": 1.5},
+                xy=(1.78, y),
+                xytext=(1.10, fy),
+                arrowprops={"arrowstyle": "-|>", "color": "#64748b", "lw": 2.0, "shrinkA": 6, "shrinkB": 8},
+                zorder=2,
             )
+
+        ax.text(
+            2.08,
+            y,
+            rule["id"],
+            ha="center",
+            va="center",
+            fontsize=10,
+            fontweight="bold",
+            color="#1e3a8a",
+            zorder=5,
+            bbox={"boxstyle": "round,pad=0.42", "fc": "#dbeafe", "ec": "#2563eb", "lw": 1.7},
+        )
         ax.annotate(
             "",
-            xy=(2.08, y_lookup[rule["then"]]),
-            xytext=(rx + 0.16, ry),
-            arrowprops={"arrowstyle": "->", "color": "#2563eb", "lw": 2.0},
+            xy=(3.28, y),
+            xytext=(2.38, y),
+            arrowprops={"arrowstyle": "-|>", "color": "#2563eb", "lw": 2.5, "shrinkA": 8, "shrinkB": 8},
+            zorder=2,
         )
+        draw_chip(3.9, y, rule["then"], fact_role(rule["then"], conclusion=True))
 
-    for fact, y in y_lookup.items():
-        is_initial = fact in initial_facts
-        is_goal = fact == goal
-        color = "#dcfce7" if is_initial else "#ffffff"
-        edge = "#16a34a" if is_initial else "#94a3b8"
-        if is_goal:
-            color, edge = "#ffedd5", "#f97316"
-        draw_fact_node(0, y, fact, color, edge)
-        draw_fact_node(2.5, y, fact, color, edge)
-
-    ax.text(0, len(y_lookup) + 0.1, "事实", ha="center", fontweight="bold", color="#334155")
-    ax.text(1.0, len(y_lookup) + 0.1, "规则", ha="center", fontweight="bold", color="#334155")
-    ax.text(2.5, len(y_lookup) + 0.1, "结论", ha="center", fontweight="bold", color="#334155")
+    ax.text(0.56, len(selected_rules) - 0.24, "前提", ha="center", fontweight="bold", color="#334155")
+    ax.text(2.08, len(selected_rules) - 0.24, "规则", ha="center", fontweight="bold", color="#334155")
+    ax.text(3.9, len(selected_rules) - 0.24, "结论", ha="center", fontweight="bold", color="#334155")
     ax.set_title(title, loc="left", fontsize=14, fontweight="bold", color="#0f172a")
-    ax.set_xlim(-0.78, 3.28)
-    ax.set_ylim(-0.75, len(y_lookup) + 0.55)
+    ax.set_xlim(-0.18, 4.55)
+    ax.set_ylim(-0.65, len(selected_rules) - 0.02)
     ax.axis("off")
     plt.tight_layout()
     plt.show()
