@@ -8,6 +8,8 @@
 
 ## 维护
 
+章节 notebook 的产品化开发标准见 [`../docs/notebook-development-sop.md`](../docs/notebook-development-sop.md)。用户可见页面应遵守该 SOP 的文案、代码展开和验收要求。
+
 ```bash
 pip install -r ../scripts/requirements-notebooks.txt
 python ../scripts/generate_all_notebooks.py
