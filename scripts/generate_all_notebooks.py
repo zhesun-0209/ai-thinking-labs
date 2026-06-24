@@ -27,7 +27,7 @@ def write_notebook(name: str, cells: list[tuple[str, str]]) -> None:
             nb_cells.append(new_markdown_cell(src))
             continue
         metadata = {}
-        if src.lstrip().startswith("# 准备运行时"):
+        if is_hidden_setup_cell(src):
             metadata["tags"] = ["ai-labs-bootstrap"]
         nb_cells.append(new_code_cell(src, metadata=metadata))
 
@@ -45,6 +45,22 @@ def write_notebook(name: str, cells: list[tuple[str, str]]) -> None:
     n_md = sum(1 for c in cells if c[0] == "md")
     n_code = len(cells) - n_md
     print(f"generated {path.relative_to(ROOT)} ({n_md} md + {n_code} code = {len(cells)} cells)")
+
+
+def is_hidden_setup_cell(source: str) -> bool:
+    """Hide dependency/bootstrap cells from reader-facing HTML while keeping downloads runnable."""
+    src = source.lstrip()
+    hidden_markers = (
+        "# 准备运行时",
+        "# 载入本页会用到的数据集、模型和绘图工具",
+        "# 导入实验库",
+        "# 载入强化学习经典环境",
+        "# 安装并导入",
+        "required_packages =",
+        "font_paths =",
+        "INLINE_RUNTIME_FILES",
+    )
+    return any(marker in src for marker in hidden_markers)
 
 
 def main() -> None:

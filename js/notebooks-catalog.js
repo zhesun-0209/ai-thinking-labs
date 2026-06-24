@@ -86,10 +86,10 @@ const CHAPTER_NOTEBOOKS = {
     items: [
       {
         file: "ch08_mlp_backprop.ipynb",
-        title: "手写数字 MLP 分类",
-        blurb: "训练一个小型神经网络识别 8×8 手写数字，查看 loss、预测样本和混淆矩阵。",
-        outcomes: ["训练手写数字分类器", "查看测试集预测"],
-        result: "loss 曲线、准确率、样本预测、混淆矩阵",
+        title: "乳腺癌 MLP 分类",
+        blurb: "用 Wisconsin 乳腺癌数据训练小型神经网络，观察 loss、混淆矩阵和预测置信度。",
+        outcomes: ["训练 MLP 分类器", "查看测试集预测"],
+        result: "特征摘要、loss 曲线、混淆矩阵、预测置信度",
         tier: "B",
         minutes: 25,
         ready: true,
@@ -153,10 +153,10 @@ const CHAPTER_NOTEBOOKS = {
     items: [
       {
         file: "ch10_conv2d_numpy.ipynb",
-        title: "Digits Sobel 卷积与 MaxPool",
-        blurb: "用手写数字图像展示边缘卷积和池化压缩。",
+        title: "真实照片 Sobel 卷积与 MaxPool",
+        blurb: "用真实花朵照片展示边缘卷积和池化压缩。",
         outcomes: ["滑动 Sobel 卷积核", "比较卷积输出和池化输出"],
-        result: "输入图像、卷积窗口、特征图、MaxPool 结果",
+        result: "真实照片、卷积窗口、边缘特征图、MaxPool 结果",
         tier: "B",
         minutes: 18,
         ready: true,
@@ -241,7 +241,7 @@ const CHAPTER_NOTEBOOKS = {
     question: "搜索、生成和结构预测如何把模型从识别推向创造？",
     items: [
       {
-        file: "ch12_repr_search_annealing.ipynb",
+        file: "ch12_iris_parameter_search.ipynb",
         title: "鸢尾花分类参数搜索",
         blurb: "在鸢尾花分类任务里尝试多组模型参数，观察哪些组合让验证准确率更高。",
         outcomes: ["理解参数搜索空间", "观察最优结果如何出现"],
@@ -273,31 +273,31 @@ const CHAPTER_NOTEBOOKS = {
         ready: true,
       },
       {
-        file: "ch12_diffusion_digits.ipynb",
-        title: "手写数字扩散过程",
-        blurb: "用手写数字展示从清晰图像到噪声图像，再到去噪结果的变化。",
-        outcomes: ["观察清晰数字如何逐步变噪", "理解去噪模型学的是小步修复方向"],
-        result: "digits 图像序列、噪声调度表、反向去噪轨迹",
+        file: "ch12_image_denoising_diffusion.ipynb",
+        title: "真实图片扩散去噪",
+        blurb: "用真实花朵照片展示从清晰图像到噪声图像，再到 patch 去噪结果的变化。",
+        outcomes: ["观察真实图片如何逐步变噪", "理解去噪模型学的是小步修复方向"],
+        result: "真实图片序列、噪声指标、去噪输出、误差图",
         tier: "B",
         minutes: 24,
         ready: true,
       },
       {
-        file: "ch12_digits_gan.ipynb",
-        title: "手写数字 GAN 生成",
-        blurb: "在真实手写数字数据上训练生成器和判别器，观察生成样本逐步接近数字形状。",
-        outcomes: ["观察生成器与判别器损失", "查看生成数字样本"],
-        result: "训练曲线、D(real)/D(fake)、生成样本图",
+        file: "ch12_image_patch_gan.ipynb",
+        title: "真实图片 Patch-GAN",
+        blurb: "在真实花朵照片 patch 上训练生成器和判别器，观察生成纹理如何接近真实局部图像。",
+        outcomes: ["观察生成器与判别器损失", "查看生成 patch"],
+        result: "训练曲线、真实 patch、生成 patch、判别器评分",
         tier: "C",
         minutes: 25,
         ready: true,
       },
       {
-        file: "ch12_digits_denoising.ipynb",
-        title: "手写数字去噪重建",
-        blurb: "把带噪手写数字恢复成更干净的图像，对比输入噪声和模型输出。",
+        file: "ch12_image_denoising.ipynb",
+        title: "真实图片去噪重建",
+        blurb: "把带噪建筑照片恢复成更干净的图像，对比输入噪声、模型输出和误差。",
         outcomes: ["连接噪声输入和去噪输出", "比较重建误差"],
-        result: "MSE 表、clean/noisy/denoised 图像对比",
+        result: "MSE 表、原图、带噪输入、去噪输出、误差图",
         tier: "C",
         minutes: 12,
         scope: "extension",
@@ -390,7 +390,7 @@ function renderChapterPage(chNum) {
         <div>
           <p class="nb-kicker">Python 代码实验</p>
           <h2 id="nbOverviewTitle">第 ${chNum} 章代码实验</h2>
-          <p>Notebook 内嵌本章运行所需的源码和数据；下载后直接运行首个单元即可复现输出。</p>
+          <p>每个 Notebook 都包含本章案例所需代码和数据；下载后按单元格顺序运行即可复现实验输出。</p>
         </div>
       </section>
       ${renderChapterSection(chNum)}`;

@@ -34,9 +34,8 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 from PIL import Image
 from IPython.display import display
-from scipy.optimize import dual_annealing
 from scipy.signal import correlate2d
-from sklearn.datasets import load_digits, load_iris, load_sample_image, make_moons
+from sklearn.datasets import load_breast_cancer, load_iris, load_sample_image, make_moons
 from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics import accuracy_score, confusion_matrix, log_loss, mean_squared_error
 from sklearn.metrics.pairwise import cosine_similarity
@@ -73,10 +72,10 @@ plt.rcParams.update({
 
 
 MLP_DATA_CELL = """
-# 加载 8x8 手写数字数据：这是神经网络入门的经典分类案例。
-digits = load_digits()
-X_mlp = digits.data / 16.0
-y_mlp = digits.target
+# 加载 Wisconsin 乳腺癌数据：这是二分类模型的经典公开案例。
+cancer = load_breast_cancer(as_frame=True)
+X_mlp = cancer.data
+y_mlp = cancer.target
 
 X_train_mlp, X_test_mlp, y_train_mlp, y_test_mlp = train_test_split(
     X_mlp,
@@ -86,17 +85,26 @@ X_train_mlp, X_test_mlp, y_train_mlp, y_test_mlp = train_test_split(
     random_state=8,
 )
 
-digits_summary = pd.DataFrame(
+feature_preview = X_mlp[[
+    "mean radius",
+    "mean texture",
+    "mean perimeter",
+    "mean area",
+    "mean smoothness",
+]].head(8)
+
+cancer_summary = pd.DataFrame(
     {
         "样本数": [len(X_mlp)],
         "输入维度": [X_mlp.shape[1]],
         "类别数": [len(np.unique(y_mlp))],
         "训练样本": [len(X_train_mlp)],
         "测试样本": [len(X_test_mlp)],
+        "类别名称": [", ".join(cancer.target_names)],
     }
 )
-display(digits_summary)
-display(pd.DataFrame(X_mlp[:5]).round(2))
+display(cancer_summary)
+display(feature_preview.round(3))
 """
 
 
@@ -133,16 +141,17 @@ test_pred_mlp = mlp.predict(X_test_mlp)
 test_prob_mlp = mlp.predict_proba(X_test_mlp)
 
 score_df = pd.DataFrame(
-    [{"数据": "digits 测试集", "accuracy": accuracy_score(y_test_mlp, test_pred_mlp)}]
+    [{"数据": "Breast Cancer 测试集", "accuracy": accuracy_score(y_test_mlp, test_pred_mlp)}]
 ).round(3)
 confusion_df = pd.DataFrame(
     confusion_matrix(y_test_mlp, test_pred_mlp),
-    index=[f"真实_{i}" for i in range(10)],
-    columns=[f"预测_{i}" for i in range(10)],
+    index=[f"真实_{name}" for name in cancer.target_names],
+    columns=[f"预测_{name}" for name in cancer.target_names],
 )
 sample_result = pd.DataFrame(
     {
-        "真实": y_test_mlp[:12],
+        "样本编号": X_test_mlp.index[:12],
+        "真实": y_test_mlp.to_numpy()[:12],
         "预测": test_pred_mlp[:12],
         "预测置信度": np.max(test_prob_mlp[:12], axis=1),
     }
@@ -155,8 +164,8 @@ display(confusion_df)
 
 
 MLP_PLOT_CELL = """
-# 绘制 loss 曲线和测试样本预测。
-fig, axes = plt.subplots(1, 2, figsize=(10.4, 4.6))
+# 绘制 loss 曲线、混淆矩阵和预测置信度。
+fig, axes = plt.subplots(1, 3, figsize=(12.0, 4.4), gridspec_kw={"width_ratios": [1.05, 1.0, 1.15]})
 
 axes[0].plot(mlp_trace["轮次"], mlp_trace["loss"], color="#2563eb", linewidth=2.4)
 axes[0].set_title("MLP 训练 loss", loc="left", fontweight="bold")
@@ -164,24 +173,24 @@ axes[0].set_xlabel("轮次")
 axes[0].set_ylabel("loss")
 axes[0].grid(True, color="#e2e8f0", linewidth=0.8)
 
-preview = X_test_mlp[:12].reshape(-1, 8, 8)
-tile = np.block([[preview[i * 4 + j] for j in range(4)] for i in range(3)])
-axes[1].imshow(tile, cmap="gray_r")
-axes[1].set_title("测试样本预览", loc="left", fontweight="bold")
-axes[1].set_xticks([])
-axes[1].set_yticks([])
-for i in range(12):
-    row = i // 4
-    col = i % 4
-    axes[1].text(
-        col * 8 + 0.4,
-        row * 8 + 7.3,
-        f"{y_test_mlp[i]}→{test_pred_mlp[i]}",
-        color="#0f172a",
-        fontsize=8,
-        bbox={"boxstyle": "round,pad=0.12", "fc": "white", "ec": "#e2e8f0", "alpha": 0.9},
-    )
-axes[1].axis("off")
+im = axes[1].imshow(confusion_df.to_numpy(), cmap="YlGnBu")
+axes[1].set_title("测试集混淆矩阵", loc="left", fontweight="bold")
+axes[1].set_xticks([0, 1], cancer.target_names, rotation=20, ha="right")
+axes[1].set_yticks([0, 1], cancer.target_names)
+for i in range(2):
+    for j in range(2):
+        axes[1].text(j, i, int(confusion_df.iloc[i, j]), ha="center", va="center", color="#0f172a", fontweight="bold")
+
+preview_df = sample_result.copy()
+preview_df["标签"] = [cancer.target_names[int(v)] for v in preview_df["真实"]]
+preview_df["预测标签"] = [cancer.target_names[int(v)] for v in preview_df["预测"]]
+bar_colors = np.where(preview_df["真实"].to_numpy() == preview_df["预测"].to_numpy(), "#16a34a", "#dc2626")
+axes[2].barh(np.arange(len(preview_df)), preview_df["预测置信度"], color=bar_colors)
+axes[2].set_yticks(np.arange(len(preview_df)), [f"{a}->{b}" for a, b in zip(preview_df["标签"], preview_df["预测标签"])])
+axes[2].invert_yaxis()
+axes[2].set_xlim(0, 1)
+axes[2].set_title("样本预测置信度", loc="left", fontweight="bold")
+axes[2].grid(True, axis="x", color="#e2e8f0", linewidth=0.8)
 
 plt.tight_layout()
 plt.show()
@@ -610,9 +619,10 @@ plt.show()
 
 
 CONV_DATA_CELL = """
-# 使用手写数字图像，配合 Sobel 核做边缘检测。
-digits = load_digits()
-image = digits.images[13] / 16.0
+# 使用真实花朵照片，配合 Sobel 核做边缘检测。
+raw_conv_photo = load_sample_image("flower.jpg")
+conv_photo = np.asarray(Image.fromarray(raw_conv_photo).resize((96, 96))) / 255.0
+image = np.dot(conv_photo[..., :3], [0.299, 0.587, 0.114])
 kernel = np.array([
     [-1, 0, 1],
     [-1, 0, 1],
@@ -620,46 +630,61 @@ kernel = np.array([
 ], dtype=float)
 
 feature = correlate2d(image, kernel, mode="valid")
-display(pd.DataFrame(image).round(2))
+display(pd.DataFrame({
+    "图像": ["flower.jpg"],
+    "尺寸": [f"{image.shape[0]}x{image.shape[1]}"],
+    "灰度最小值": [float(image.min())],
+    "灰度最大值": [float(image.max())],
+}).round(3))
 display(pd.DataFrame(kernel.astype(int)))
 """
 
 
 CONV_PROCESS_CELL = """
-# 展开每个窗口的卷积值。
+# 展开中心区域的几个窗口，观察卷积值如何来自局部像素。
 rows = []
-for i in range(feature.shape[0]):
-    for j in range(feature.shape[1]):
+for i in range(40, 46):
+    for j in range(40, 46):
         window = image[i:i + 3, j:j + 3]
         rows.append({
             "位置": f"({i},{j})",
-            "窗口": window.astype(int).tolist(),
+            "窗口均值": window.mean(),
+            "左列均值": window[:, 0].mean(),
+            "右列均值": window[:, 2].mean(),
             "卷积值": round(float((window * kernel).sum()), 3),
         })
 
 conv_df = pd.DataFrame(rows)
-display(conv_df.head(8))
-display(pd.DataFrame(feature).round(3))
+display(conv_df.head(10).round(3))
+display(pd.DataFrame({
+    "特征图尺寸": [f"{feature.shape[0]}x{feature.shape[1]}"],
+    "最小响应": [float(feature.min())],
+    "最大响应": [float(feature.max())],
+    "平均绝对响应": [float(np.abs(feature).mean())],
+}).round(3))
 """
 
 
 CONV_PLOT_CELL = """
-# 绘制输入、卷积输出和 2x2 max pooling。
+# 绘制输入、边缘响应和 2x2 max pooling。
+positive_feature = np.maximum(feature, 0)
 pool = np.array([
-    [feature[i:i + 2, j:j + 2].max() for j in range(0, feature.shape[1], 2)]
-    for i in range(0, feature.shape[0], 2)
+    [positive_feature[i:i + 2, j:j + 2].max() for j in range(0, positive_feature.shape[1] - 1, 2)]
+    for i in range(0, positive_feature.shape[0] - 1, 2)
 ])
 
-fig, axes = plt.subplots(1, 3, figsize=(10.0, 3.8))
-for ax, data, title in zip(axes, [image, feature, pool], ["输入", "卷积输出", "MaxPool"]):
-    im = ax.imshow(data, cmap="Blues")
+fig, axes = plt.subplots(2, 2, figsize=(8.4, 7.0))
+for ax, data, title, cmap in zip(
+    axes.ravel(),
+    [conv_photo, image, feature, pool],
+    ["真实照片", "灰度输入", "Sobel 边缘响应", "MaxPool 后特征"],
+    [None, "gray", "RdBu_r", "YlGnBu"],
+):
+    im = ax.imshow(data, cmap=cmap)
     ax.set_title(title, fontweight="bold")
     ax.set_xticks([])
     ax.set_yticks([])
-    for i in range(data.shape[0]):
-        for j in range(data.shape[1]):
-            ax.text(j, i, f"{data[i, j]:.1f}", ha="center", va="center", color="#0f172a", fontsize=7)
-fig.suptitle("Digits Sobel 卷积", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+fig.suptitle("真实照片 Sobel 卷积：局部边缘被提取为特征图", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
@@ -751,9 +776,9 @@ for patch_id in masked_ids:
     masked_image[r0:r1, c0:c1] = 0.72
     recon_image[r0:r1, c0:c1] = visible_patch_mean
 
-fig, axes = plt.subplots(1, 4, figsize=(11.2, 3.8))
+fig, axes = plt.subplots(2, 2, figsize=(8.4, 7.0))
 for ax, data, title in zip(
-    axes,
+    axes.ravel(),
     [vit_image, mask_map, masked_image, recon_image],
     ["原图", "mask map", "可见 patch", "均值重建基线"],
 ):
@@ -768,8 +793,8 @@ plt.show()
 """
 
 
-CLIP_CELL = """
-# 真实图片与文本提示：计算每张图片更匹配哪一句描述。
+CLIP_SETUP_CELL = """
+# 安装并导入 CLIP 需要的公开库。
 clip_packages = {
     "torch": "torch>=2.2",
     "transformers": "transformers>=4.40",
@@ -782,9 +807,16 @@ if missing:
 import torch
 import torch.nn.functional as F
 from transformers import CLIPModel, CLIPProcessor
+from transformers.utils import logging as hf_logging
 
+hf_logging.set_verbosity_error()
+"""
+
+
+CLIP_CELL = """
+# 真实图片与文本提示：计算每张图片更匹配哪一句描述。
 model_id = "openai/clip-vit-base-patch32"
-processor = CLIPProcessor.from_pretrained(model_id)
+processor = CLIPProcessor.from_pretrained(model_id, use_fast=True)
 clip_model = CLIPModel.from_pretrained(model_id)
 clip_model.eval()
 
@@ -797,7 +829,7 @@ text_prompts = [
     "a photo of a Chinese temple by a lake",
     "a close-up photo of a red flower",
     "a photo of a taxi cab",
-    "a photo of a handwritten digit",
+    "a photo of a city street at night",
 ]
 
 inputs = processor(text=text_prompts, images=clip_images, return_tensors="pt", padding=True)
@@ -966,16 +998,7 @@ plt.show()
 
 TD_CELL = """
 # 出租车调度：用 Q-learning 展示 TD target 和 Q 表更新。
-def make_taxi_env():
-    for env_id in ("Taxi-v4", "Taxi-v3"):
-        try:
-            return gym.make(env_id, render_mode="ansi")
-        except Exception:
-            continue
-    raise RuntimeError("Taxi environment is unavailable.")
-
-
-taxi_env = make_taxi_env()
+taxi_env = gym.make("Taxi-v3", render_mode="ansi")
 n_states_taxi = taxi_env.observation_space.n
 n_actions_taxi = taxi_env.action_space.n
 Q_taxi = np.zeros((n_states_taxi, n_actions_taxi))
@@ -1053,17 +1076,8 @@ taxi_env.close()
 
 BANDIT_CELL = """
 # 悬崖行走：在经典网格任务里比较不同 epsilon 的 SARSA。
-def make_cliff_env():
-    for env_id in ("CliffWalking-v1", "CliffWalking-v0"):
-        try:
-            return gym.make(env_id)
-        except Exception:
-            continue
-    raise RuntimeError("CliffWalking environment is unavailable.")
-
-
 def train_cliff_sarsa(epsilon, episodes=700, alpha=0.45, gamma=0.99, seed=0):
-    env = make_cliff_env()
+    env = gym.make("CliffWalking-v0")
     rng = np.random.default_rng(seed)
     Q = np.zeros((env.observation_space.n, env.action_space.n))
     rows = []
@@ -1145,41 +1159,37 @@ plt.show()
 
 
 ANNEALING_CELL = """
-# 参数搜索：在鸢尾花分类任务中寻找更好的参数组合。
+# 参数搜索：在鸢尾花分类任务中比较多组候选参数。
 iris = load_iris(as_frame=True)
 X_iris = iris.data
 y_iris = iris.target
 search_rows = []
 
-def svc_cv_error(params):
-    log_c, log_gamma = params
-    C = 10 ** log_c
-    gamma = 10 ** log_gamma
+candidate_params = [
+    {"C": float(C), "gamma": float(gamma)}
+    for C in np.logspace(-1, 2, 7)
+    for gamma in np.logspace(-3, 0, 7)
+]
+rng = np.random.default_rng(12)
+rng.shuffle(candidate_params)
+
+for trial, params in enumerate(candidate_params[:36], start=1):
     model = make_pipeline(
         StandardScaler(),
-        SVC(C=C, gamma=gamma, kernel="rbf"),
+        SVC(C=params["C"], gamma=params["gamma"], kernel="rbf"),
     )
     scores = cross_val_score(model, X_iris, y_iris, cv=5)
     accuracy = float(scores.mean())
     search_rows.append({
-        "trial": len(search_rows) + 1,
-        "log10_C": log_c,
-        "log10_gamma": log_gamma,
-        "C": C,
-        "gamma": gamma,
+        "trial": trial,
+        "log10_C": np.log10(params["C"]),
+        "log10_gamma": np.log10(params["gamma"]),
+        "C": params["C"],
+        "gamma": params["gamma"],
         "cv_accuracy": accuracy,
         "error": 1 - accuracy,
     })
-    return 1 - accuracy
 
-
-result = dual_annealing(
-    svc_cv_error,
-    bounds=[(-2, 3), (-4, 1)],
-    maxiter=45,
-    seed=12,
-    no_local_search=True,
-)
 search_df = pd.DataFrame(search_rows)
 search_df["best_accuracy"] = search_df["cv_accuracy"].cummax()
 best_row = search_df.loc[search_df["cv_accuracy"].idxmax()]
@@ -1374,8 +1384,8 @@ plt.show()
 """
 
 
-DIFFUSION_1D_CELL = """
-# 真实图片扩散：按时间步逐渐加入噪声。
+DIFFUSION_SETUP_CELL = """
+# 安装并导入扩散调度器需要的公开库。
 diffusion_packages = {
     "torch": "torch>=2.2",
     "diffusers": "diffusers>=0.30",
@@ -1386,7 +1396,11 @@ if missing:
 
 import torch
 from diffusers import DDPMScheduler
+"""
 
+
+DIFFUSION_1D_CELL = """
+# 真实图片扩散：按时间步逐渐加入噪声。
 ddpm_photo = Image.fromarray(load_sample_image("flower.jpg")).resize((128, 128))
 ddpm_image = np.asarray(ddpm_photo).astype("float32") / 255.0
 sample = torch.tensor(ddpm_image).permute(2, 0, 1).unsqueeze(0) * 2 - 1
@@ -1418,93 +1432,125 @@ display(diff_1d_df.round(4))
 
 DIFFUSION_1D_PLOT_CELL = """
 # 绘制真实图片在不同时间步下的前向扩散效果。
-fig, axes = plt.subplots(1, len(ddpm_images), figsize=(11.2, 3.1))
-for ax, image, timestep in zip(axes, ddpm_images, timesteps):
+fig, axes = plt.subplots(2, 3, figsize=(9.0, 6.0))
+for ax, image, timestep in zip(axes.ravel(), ddpm_images, timesteps):
     ax.imshow(image)
     ax.set_title(f"t={timestep}", fontweight="bold")
     ax.set_xticks([])
     ax.set_yticks([])
+for ax in axes.ravel()[len(ddpm_images):]:
+    ax.axis("off")
 fig.suptitle("真实图片前向加噪", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
 
 
-DIGITS_DATA_CELL = """
-# 从手写数字数据中选出一个 8x8 样本。
-digits = load_digits()
-digit_label = 3
-digit_indices = np.where(digits.target == digit_label)[0]
-clean_digit = digits.images[digit_indices[4]] / 16.0
+PHOTO_DENOISE_DATA_CELL = """
+# 真实图片去噪：把一张花朵照片切成 patch，作为训练样本。
+photo_clean = np.asarray(Image.fromarray(load_sample_image("flower.jpg")).resize((96, 96))).astype("float32") / 255.0
+patch_size = 12
+stride = 6
 
-display(pd.DataFrame(clean_digit).round(2))
-print("样本数量:", len(digit_indices), "目标数字:", digit_label)
+clean_patches = []
+patch_positions = []
+for row in range(0, photo_clean.shape[0] - patch_size + 1, stride):
+    for col in range(0, photo_clean.shape[1] - patch_size + 1, stride):
+        clean_patches.append(photo_clean[row:row + patch_size, col:col + patch_size].reshape(-1))
+        patch_positions.append((row, col))
+clean_patches = np.array(clean_patches)
+
+display(pd.DataFrame({
+    "图片": ["flower.jpg"],
+    "图片尺寸": [f"{photo_clean.shape[0]}x{photo_clean.shape[1]}"],
+    "patch 尺寸": [f"{patch_size}x{patch_size}"],
+    "训练 patch 数": [len(clean_patches)],
+}))
 """
 
 
-DIGITS_FORWARD_CELL = """
-# 前向加噪：同一个数字在不同 t 下逐渐变得更难辨认。
+PHOTO_FORWARD_CELL = """
+# 前向加噪：同一张真实图片在不同噪声强度下逐渐丢失结构。
 rng = np.random.default_rng(11)
-digit_noise = rng.normal(size=clean_digit.shape)
-digit_steps = [0.0, 0.25, 0.50, 0.75]
-digit_forward = []
-for level in digit_steps:
-    noisy = np.sqrt(1 - level) * clean_digit + np.sqrt(level) * digit_noise
-    digit_forward.append(noisy)
+noise = rng.normal(size=photo_clean.shape)
+noise_levels = [0.00, 0.20, 0.45, 0.70]
+photo_forward = []
+for level in noise_levels:
+    noisy = np.sqrt(1 - level) * photo_clean + np.sqrt(level) * noise
+    photo_forward.append(np.clip(noisy, 0, 1))
 
-digit_forward_df = pd.DataFrame({
-    "噪声强度": digit_steps,
-    "MSE": [round(mean_squared_error(clean_digit, img), 4) for img in digit_forward],
+photo_forward_df = pd.DataFrame({
+    "噪声强度": noise_levels,
+    "相对原图 MSE": [mean_squared_error(photo_clean.reshape(-1), img.reshape(-1)) for img in photo_forward],
+    "像素标准差": [float(img.std()) for img in photo_forward],
 })
-display(digit_forward_df)
+display(photo_forward_df.round(4))
 """
 
 
-DIGITS_REVERSE_CELL = """
-# 训练一个小型去噪器，把带噪数字恢复成干净数字。
+PHOTO_REVERSE_CELL = """
+# 用 patch 去噪器学习从噪声 patch 还原干净 patch。
 train_rng = np.random.default_rng(12)
-all_clean_digits = digits.data / 16.0
-all_noisy_digits = np.clip(
-    all_clean_digits + train_rng.normal(0, 0.45, all_clean_digits.shape),
-    0,
-    1,
-)
-digit_denoiser = MLPRegressor(hidden_layer_sizes=(96,), max_iter=180, random_state=12)
-digit_denoiser.fit(all_noisy_digits, all_clean_digits)
+noisy_train = np.clip(clean_patches + train_rng.normal(0, 0.28, clean_patches.shape), 0, 1)
+photo_denoiser = MLPRegressor(hidden_layer_sizes=(128,), max_iter=140, random_state=12)
+photo_denoiser.fit(noisy_train, clean_patches)
 
-noisy_digit = np.clip(digit_forward[-1], 0, 1)
-denoised_digit = np.clip(digit_denoiser.predict(noisy_digit.reshape(1, -1))[0].reshape(8, 8), 0, 1)
-digits_summary = pd.DataFrame(
+noisy_photo = photo_forward[-1]
+noisy_patches = []
+for row, col in patch_positions:
+    noisy_patches.append(noisy_photo[row:row + patch_size, col:col + patch_size].reshape(-1))
+noisy_patches = np.array(noisy_patches)
+predicted_patches = np.clip(photo_denoiser.predict(noisy_patches), 0, 1)
+
+denoised_photo = np.zeros_like(photo_clean)
+weight = np.zeros(photo_clean.shape[:2] + (1,), dtype=float)
+for (row, col), patch in zip(patch_positions, predicted_patches):
+    denoised_photo[row:row + patch_size, col:col + patch_size] += patch.reshape(patch_size, patch_size, 3)
+    weight[row:row + patch_size, col:col + patch_size] += 1
+denoised_photo = denoised_photo / np.maximum(weight, 1)
+
+photo_denoise_summary = pd.DataFrame(
     [
-        {"图像": "noisy", "相对clean的MSE": mean_squared_error(clean_digit, noisy_digit)},
-        {"图像": "denoised", "相对clean的MSE": mean_squared_error(clean_digit, denoised_digit)},
+        {"图像": "noisy", "相对原图 MSE": mean_squared_error(photo_clean.reshape(-1), noisy_photo.reshape(-1))},
+        {"图像": "denoised", "相对原图 MSE": mean_squared_error(photo_clean.reshape(-1), denoised_photo.reshape(-1))},
     ]
-).round(4)
-display(digits_summary)
+)
+display(photo_denoise_summary.round(4))
 """
 
 
-DIGITS_PLOT_CELL = """
-# 绘制前向加噪和去噪对比。
-fig, axes = plt.subplots(2, 4, figsize=(9.5, 5.1))
-for ax, img, level in zip(axes[0], digit_forward, digit_steps):
-    ax.imshow(img, cmap="gray_r")
+PHOTO_DENOISE_PLOT_CELL = """
+# 绘制真实图片的前向加噪与 patch 去噪结果。
+fig = plt.figure(figsize=(11.2, 6.2))
+gs = fig.add_gridspec(2, 4, height_ratios=[1.0, 1.05], hspace=0.24, wspace=0.08)
+
+for idx, (img, level) in enumerate(zip(photo_forward, noise_levels)):
+    ax = fig.add_subplot(gs[0, idx])
+    ax.imshow(img)
     ax.set_title(f"noise={level:.2f}", fontweight="bold")
     ax.set_xticks([])
     ax.set_yticks([])
-for ax, img, title in zip(axes[1], [clean_digit, noisy_digit, denoised_digit, np.abs(clean_digit - denoised_digit)], ["clean", "noisy", "denoised", "error"]):
-    ax.imshow(img, cmap="gray_r")
+
+for idx, (img, title) in enumerate([
+    (photo_clean, "原图"),
+    (noisy_photo, "高噪声输入"),
+    (denoised_photo, "patch 去噪输出"),
+    (np.abs(photo_clean - denoised_photo) * 3, "误差 x3"),
+]):
+    ax = fig.add_subplot(gs[1, idx])
+    ax.imshow(np.clip(img, 0, 1))
     ax.set_title(title, fontweight="bold")
     ax.set_xticks([])
     ax.set_yticks([])
-fig.suptitle("Digits diffusion", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+
+fig.suptitle("真实图片扩散直觉：加噪破坏结构，去噪学习局部修复", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
 
 
-GAN_CELL = """
-# 手写数字 GAN：在真实手写数字数据上训练生成器和判别器。
+GAN_SETUP_CELL = """
+# 安装并导入 GAN 需要的公开库。
 gan_packages = {"torch": "torch>=2.2"}
 missing = [package for module, package in gan_packages.items() if importlib.util.find_spec(module) is None]
 if missing:
@@ -1512,36 +1558,49 @@ if missing:
 
 import torch
 from torch import nn
+"""
 
+
+GAN_CELL = """
+# 真实图片 Patch-GAN：用花朵照片中的 patch 训练生成器和判别器。
 torch.manual_seed(7)
-digits = load_digits()
-real_digits = torch.tensor(digits.images / 16.0 * 2 - 1, dtype=torch.float32).reshape(-1, 64)
-latent_dim = 16
+gan_photo = np.asarray(Image.fromarray(load_sample_image("flower.jpg")).resize((128, 128))).astype("float32") / 255.0
+gan_patch_size = 16
+gan_stride = 8
+real_patch_list = []
+for row in range(0, gan_photo.shape[0] - gan_patch_size + 1, gan_stride):
+    for col in range(0, gan_photo.shape[1] - gan_patch_size + 1, gan_stride):
+        real_patch_list.append(gan_photo[row:row + gan_patch_size, col:col + gan_patch_size])
+real_patches_np = np.array(real_patch_list)
+real_patches = torch.tensor(real_patches_np.reshape(len(real_patches_np), -1) * 2 - 1, dtype=torch.float32)
+
+latent_dim = 24
+patch_dim = real_patches.shape[1]
 batch_size = 96
 
 generator = nn.Sequential(
-    nn.Linear(latent_dim, 64),
+    nn.Linear(latent_dim, 128),
     nn.ReLU(),
-    nn.Linear(64, 128),
+    nn.Linear(128, 256),
     nn.ReLU(),
-    nn.Linear(128, 64),
+    nn.Linear(256, patch_dim),
     nn.Tanh(),
 )
 discriminator = nn.Sequential(
-    nn.Linear(64, 128),
+    nn.Linear(patch_dim, 256),
     nn.LeakyReLU(0.2),
-    nn.Linear(128, 64),
+    nn.Linear(256, 128),
     nn.LeakyReLU(0.2),
-    nn.Linear(64, 1),
+    nn.Linear(128, 1),
 )
 loss_fn = nn.BCEWithLogitsLoss()
 opt_g = torch.optim.Adam(generator.parameters(), lr=0.0015, betas=(0.5, 0.999))
 opt_d = torch.optim.Adam(discriminator.parameters(), lr=0.0015, betas=(0.5, 0.999))
 gan_rows = []
 
-for step in range(1, 501):
-    idx = torch.randint(0, len(real_digits), (batch_size,))
-    real_batch = real_digits[idx]
+for step in range(1, 401):
+    idx = torch.randint(0, len(real_patches), (batch_size,))
+    real_batch = real_patches[idx]
     z = torch.randn(batch_size, latent_dim)
     fake_batch = generator(z).detach()
 
@@ -1571,15 +1630,21 @@ for step in range(1, 501):
             })
 
 with torch.no_grad():
-    gan_samples = generator(torch.randn(16, latent_dim)).reshape(16, 8, 8).numpy()
+    gan_samples = generator(torch.randn(16, latent_dim)).reshape(16, gan_patch_size, gan_patch_size, 3).numpy()
 gan_trace = pd.DataFrame(gan_rows)
+display(pd.DataFrame({
+    "真实图片": ["flower.jpg"],
+    "patch 数": [len(real_patches)],
+    "patch 尺寸": [f"{gan_patch_size}x{gan_patch_size}"],
+    "生成向量维度": [patch_dim],
+}))
 display(gan_trace.round(3))
 """
 
 
 GAN_PLOT_CELL = """
-# 绘制训练曲线和生成的 digits 样本。
-fig = plt.figure(figsize=(10.6, 6.0))
+# 绘制训练曲线、真实 patch 和生成 patch。
+fig = plt.figure(figsize=(10.8, 7.2))
 gs = fig.add_gridspec(2, 4, height_ratios=[1.0, 1.6], hspace=0.38, wspace=0.18)
 ax_loss = fig.add_subplot(gs[0, :2])
 ax_score = fig.add_subplot(gs[0, 2:])
@@ -1595,63 +1660,92 @@ ax_score.set_title("判别器输出", loc="left", fontweight="bold")
 ax_score.grid(True, color="#e2e8f0", linewidth=0.8)
 ax_score.legend()
 
-sample_tile = np.block([[gan_samples[i * 4 + j] for j in range(4)] for i in range(4)])
-ax_img = fig.add_subplot(gs[1, :])
-ax_img.imshow((sample_tile + 1) / 2, cmap="gray_r", vmin=0, vmax=1)
-ax_img.set_title("生成样本", loc="left", fontweight="bold")
-ax_img.set_xticks([])
-ax_img.set_yticks([])
-fig.suptitle("手写数字 GAN 生成", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+def patch_tile(images, grid=4):
+    rows = [
+        np.concatenate([images[i * grid + j] for j in range(grid)], axis=1)
+        for i in range(grid)
+    ]
+    return np.concatenate(rows, axis=0)
+
+
+real_tile = patch_tile(real_patches_np[:16])
+fake_tile = patch_tile(((gan_samples[:16] + 1) / 2).clip(0, 1))
+ax_real = fig.add_subplot(gs[1, :2])
+ax_fake = fig.add_subplot(gs[1, 2:])
+ax_real.imshow(real_tile)
+ax_real.set_title("真实图片 patch", loc="left", fontweight="bold")
+ax_fake.imshow(fake_tile)
+ax_fake.set_title("生成 patch", loc="left", fontweight="bold")
+for ax in (ax_real, ax_fake):
+    ax.set_xticks([])
+    ax.set_yticks([])
+fig.suptitle("真实图片 Patch-GAN：从花朵局部纹理中学习生成分布", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
 
 
-DIFFUSION_TOY_CELL = """
-# Digits 去噪自编码器：把带噪手写数字恢复成干净图像。
-digits = load_digits()
-X_clean = digits.data / 16.0
-rng = np.random.default_rng(19)
-noise_sigma = 0.42
-X_noisy = np.clip(X_clean + rng.normal(0, noise_sigma, X_clean.shape), 0, 1)
+IMAGE_DENOISING_CELL = """
+# 真实建筑照片去噪：用同一张图片的局部 patch 训练复原模型。
+denoise_clean = np.asarray(Image.fromarray(load_sample_image("china.jpg")).resize((96, 96))).astype("float32") / 255.0
+denoise_patch_size = 12
+denoise_stride = 6
+patches_clean = []
+patch_coords = []
+for row in range(0, denoise_clean.shape[0] - denoise_patch_size + 1, denoise_stride):
+    for col in range(0, denoise_clean.shape[1] - denoise_patch_size + 1, denoise_stride):
+        patches_clean.append(denoise_clean[row:row + denoise_patch_size, col:col + denoise_patch_size].reshape(-1))
+        patch_coords.append((row, col))
+patches_clean = np.array(patches_clean)
 
-X_train_noisy, X_test_noisy, X_train_clean, X_test_clean = train_test_split(
-    X_noisy,
-    X_clean,
-    test_size=0.2,
-    random_state=19,
-)
-denoiser = make_pipeline(
-    StandardScaler(),
-    MLPRegressor(hidden_layer_sizes=(96,), max_iter=160, random_state=19),
-)
-denoiser.fit(X_train_noisy, X_train_clean)
-X_denoised = np.clip(denoiser.predict(X_test_noisy), 0, 1)
+rng = np.random.default_rng(19)
+noise_sigma = 0.24
+patches_noisy = np.clip(patches_clean + rng.normal(0, noise_sigma, patches_clean.shape), 0, 1)
+patch_denoiser = MLPRegressor(hidden_layer_sizes=(128,), max_iter=140, random_state=19)
+patch_denoiser.fit(patches_noisy, patches_clean)
+
+noisy_image = np.clip(denoise_clean + rng.normal(0, noise_sigma, denoise_clean.shape), 0, 1)
+noisy_image_patches = np.array([
+    noisy_image[row:row + denoise_patch_size, col:col + denoise_patch_size].reshape(-1)
+    for row, col in patch_coords
+])
+predicted = np.clip(patch_denoiser.predict(noisy_image_patches), 0, 1)
+
+denoised_image = np.zeros_like(denoise_clean)
+denoise_weight = np.zeros(denoise_clean.shape[:2] + (1,), dtype=float)
+for (row, col), patch in zip(patch_coords, predicted):
+    denoised_image[row:row + denoise_patch_size, col:col + denoise_patch_size] += patch.reshape(denoise_patch_size, denoise_patch_size, 3)
+    denoise_weight[row:row + denoise_patch_size, col:col + denoise_patch_size] += 1
+denoised_image = denoised_image / np.maximum(denoise_weight, 1)
 
 denoise_summary = pd.DataFrame(
     [
-        {"图像": "noisy", "MSE": mean_squared_error(X_test_clean, X_test_noisy)},
-        {"图像": "denoised", "MSE": mean_squared_error(X_test_clean, X_denoised)},
+        {"图像": "noisy input", "MSE": mean_squared_error(denoise_clean.reshape(-1), noisy_image.reshape(-1))},
+        {"图像": "denoised output", "MSE": mean_squared_error(denoise_clean.reshape(-1), denoised_image.reshape(-1))},
     ]
-).round(4)
-display(denoise_summary)
+)
+display(pd.DataFrame({
+    "图片": ["china.jpg"],
+    "patch 数": [len(patches_clean)],
+    "噪声标准差": [noise_sigma],
+}))
+display(denoise_summary.round(4))
 """
 
 
-DIFFUSION_TOY_PLOT_CELL = """
-# 绘制干净图像、加噪输入和模型去噪输出。
-preview_n = 10
-clean_tile = np.block([[X_test_clean[i * 5 + j].reshape(8, 8) for j in range(5)] for i in range(2)])
-noisy_tile = np.block([[X_test_noisy[i * 5 + j].reshape(8, 8) for j in range(5)] for i in range(2)])
-denoised_tile = np.block([[X_denoised[i * 5 + j].reshape(8, 8) for j in range(5)] for i in range(2)])
-
-fig, axes = plt.subplots(3, 1, figsize=(9.6, 5.8))
-for ax, image, title in zip(axes, [clean_tile, noisy_tile, denoised_tile], ["clean", "noisy input", "denoised output"]):
-    ax.imshow(image, cmap="gray_r", vmin=0, vmax=1)
-    ax.set_title(title, loc="left", fontweight="bold")
+IMAGE_DENOISING_PLOT_CELL = """
+# 绘制真实图片、噪声输入和模型去噪输出。
+fig, axes = plt.subplots(2, 2, figsize=(8.4, 7.0))
+for ax, image, title in zip(
+    axes.ravel(),
+    [denoise_clean, noisy_image, denoised_image, np.abs(denoise_clean - denoised_image) * 3],
+    ["原图", "带噪输入", "去噪输出", "误差 x3"],
+):
+    ax.imshow(np.clip(image, 0, 1))
+    ax.set_title(title, fontweight="bold")
     ax.set_xticks([])
     ax.set_yticks([])
-fig.suptitle("Digits denoising autoencoder", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+fig.suptitle("真实图片去噪重建：从噪声输入恢复建筑纹理", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
@@ -1714,12 +1808,12 @@ def _ch08() -> dict[str, list]:
     return {
         "ch08_mlp_backprop.ipynb": flatten([
             rs.chapter_link(
-                "第 8 章 · 手写数字 MLP 分类代码实验",
-                "本页训练一个小型神经网络识别 8×8 手写数字。读者先看数据形状，再看训练 loss 是否下降，最后看测试样本和混淆矩阵。",
-                ["训练 Digits 手写数字分类器", "查看混淆矩阵", "绘制 loss 和样本预测"],
+                "第 8 章 · 乳腺癌 MLP 分类代码实验",
+                "本页训练一个小型神经网络完成经典二分类任务。读者先看特征表，再看训练 loss 是否下降，最后看混淆矩阵和预测置信度。",
+                ["加载 Wisconsin 乳腺癌数据", "训练 MLP 分类器", "绘制 loss、混淆矩阵和预测置信度"],
                 "../ch8.html",
             ),
-            rs.section("0", "手写数字数据", "每张图像被展开成 64 个像素值。模型输入就是这些像素，输出是 0 到 9 的类别概率。"),
+            rs.section("0", "经典二分类数据", "每行是一位样本的细胞核测量指标，模型根据这些特征预测良性或恶性类别。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(MLP_DATA_CELL),
             rs.section("1", "训练与预测", "loss 曲线用于判断训练是否稳定，混淆矩阵用于找出最容易混淆的数字类别。"),
@@ -1797,12 +1891,12 @@ def _ch10() -> dict[str, list]:
     return {
         "ch10_conv2d_numpy.ipynb": flatten([
             rs.chapter_link(
-                "第 10 章 · 卷积代码实验",
-                "本页用手写数字图像观察卷积核如何提取边缘。读者先看原图和卷积核，再看每个窗口的计算值，最后看池化如何压缩特征图。",
-                ["加载 Digits 图像", "计算 Sobel 卷积", "绘制特征图"],
+                "第 10 章 · 真实照片卷积代码实验",
+                "本页用真实花朵照片观察卷积核如何提取边缘。读者先看原图和卷积核，再看局部窗口的计算值，最后看池化如何压缩特征图。",
+                ["加载真实照片", "计算 Sobel 卷积", "绘制边缘特征图"],
                 "../ch10.html",
             ),
-            rs.section("0", "图像与卷积核", "输入图像是 8×8 灰度数字，Sobel 核会强调竖向边缘。卷积输出越大，表示该区域越像这个边缘模式。"),
+            rs.section("0", "图像与卷积核", "输入图像来自真实照片，Sobel 核会强调竖向边缘。卷积输出越大，表示该区域越像这个边缘模式。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(CONV_DATA_CELL),
             rs.section("1", "卷积与池化", "卷积逐窗口计算局部模式，池化保留局部最强响应。把三张图连起来看，能看到图像如何逐步变成特征。"),
@@ -1844,6 +1938,7 @@ def _ch10() -> dict[str, list]:
             ),
             rs.section("0", "图片与文本提示", "代码会加载预训练 CLIP，但页面重点不是模型下载，而是读懂图文匹配矩阵：行是图片，列是文本，数值越大表示越匹配。"),
             rs.code(DEPENDENCIES_CELL),
+            rs.code(CLIP_SETUP_CELL),
             rs.code(CLIP_CELL),
             rs.code(CLIP_PLOT_CELL),
         ]),
@@ -1898,7 +1993,7 @@ def _ch11() -> dict[str, list]:
 
 def _ch12() -> dict[str, list]:
     return {
-        "ch12_repr_search_annealing.ipynb": flatten([
+        "ch12_iris_parameter_search.ipynb": flatten([
             rs.chapter_link(
                 "第 12 章 · 鸢尾花分类参数搜索代码实验",
                 "本页把“创造”中的搜索思想放到一个真实分类任务里：尝试多组参数，记录验证表现，观察搜索如何逐步找到更好的组合。",
@@ -1932,47 +2027,49 @@ def _ch12() -> dict[str, list]:
             ),
             rs.section("0", "图片加噪过程", "先看调度表，再看图片序列。原图权重下降表示图像信号变弱，噪声权重上升表示随机噪声变强。"),
             rs.code(DEPENDENCIES_CELL),
+            rs.code(DIFFUSION_SETUP_CELL),
             rs.code(DIFFUSION_1D_CELL),
             rs.code(DIFFUSION_1D_PLOT_CELL),
         ]),
-        "ch12_diffusion_digits.ipynb": flatten([
+        "ch12_image_denoising_diffusion.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · 手写数字扩散过程代码实验",
-                "本页用真实手写数字数据看扩散任务的直觉：前向过程把数字变成噪声，反向过程要逐步恢复可辨认的数字结构。",
-                ["加载手写数字数据", "绘制前向加噪", "展示去噪对比"],
+                "第 12 章 · 真实图片扩散去噪代码实验",
+                "本页用真实花朵照片看扩散任务的直觉：前向过程把图像逐渐变成噪声，去噪器学习把局部 patch 修复回来。",
+                ["加载真实图片 patch", "绘制前向加噪", "展示去噪对比"],
                 "../ch12.html",
             ),
-            rs.section("0", "手写数字样本", "先选出同一类数字的多个样本。干净图像用于对照，后面的噪声图像和去噪图像都要和它比较。"),
+            rs.section("0", "真实图片 patch", "先把一张照片切成可训练的局部 patch。干净图像用于对照，后面的噪声图像和去噪图像都要和它比较。"),
             rs.code(DEPENDENCIES_CELL),
-            rs.code(DIGITS_DATA_CELL),
-            rs.section("1", "加噪与去噪", "第一行展示噪声增强后数字如何变模糊；第二行比较干净图、噪声图、同类原型和去噪结果。"),
-            rs.code(DIGITS_FORWARD_CELL),
-            rs.code(DIGITS_REVERSE_CELL),
-            rs.code(DIGITS_PLOT_CELL),
+            rs.code(PHOTO_DENOISE_DATA_CELL),
+            rs.section("1", "加噪与去噪", "第一行展示噪声增强后图像结构如何被破坏；第二行比较原图、高噪声输入、去噪输出和误差。"),
+            rs.code(PHOTO_FORWARD_CELL),
+            rs.code(PHOTO_REVERSE_CELL),
+            rs.code(PHOTO_DENOISE_PLOT_CELL),
         ]),
-        "ch12_digits_gan.ipynb": flatten([
+        "ch12_image_patch_gan.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · 手写数字 GAN 生成代码实验",
-                "本页用真实手写数字训练一个小型生成对抗网络。读者要同时看两条损失曲线和生成样本：曲线说明博弈过程，样本说明生成质量。",
-                ["加载手写数字数据", "训练生成器和判别器", "绘制生成样本"],
+                "第 12 章 · 真实图片 Patch-GAN 代码实验",
+                "本页用真实花朵照片中的局部 patch 训练一个小型生成对抗网络。读者同时看损失曲线、真实 patch 和生成 patch。",
+                ["加载真实图片 patch", "训练生成器和判别器", "绘制生成 patch"],
                 "../ch12.html",
             ),
-            rs.section("0", "生成数字", "判别器学习区分真实数字和生成数字，生成器学习骗过判别器。生成样本不追求完美，但应该逐渐具有数字轮廓。"),
+            rs.section("0", "生成图片 patch", "判别器学习区分真实 patch 和生成 patch，生成器学习骗过判别器。生成样本不追求完美，但应该呈现接近照片局部的颜色和纹理。"),
             rs.code(DEPENDENCIES_CELL),
+            rs.code(GAN_SETUP_CELL),
             rs.code(GAN_CELL),
             rs.code(GAN_PLOT_CELL),
         ]),
-        "ch12_digits_denoising.ipynb": flatten([
+        "ch12_image_denoising.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · 手写数字去噪重建代码实验",
-                "本页把去噪任务单独拿出来看：给模型一张带噪数字，让它输出更干净的数字。读者重点比较 noisy 和 denoised 的 MSE 与图像差异。",
-                ["加载手写数字数据", "训练去噪模型", "比较噪声输入和去噪输出"],
+                "第 12 章 · 真实图片去噪重建代码实验",
+                "本页把去噪任务单独拿出来看：给模型一张带噪建筑照片，让它输出更干净的图像。读者重点比较 noisy 和 denoised 的 MSE 与视觉差异。",
+                ["加载真实图片 patch", "训练去噪模型", "比较噪声输入和去噪输出"],
                 "../ch12.html",
             ),
-            rs.section("0", "去噪重建", "这个实验不是完整扩散模型，而是用真实数据做去噪子任务。它帮助读者理解反向扩散每一步要学习的修复方向。"),
+            rs.section("0", "去噪重建", "这个实验不是完整扩散模型，而是用真实图片做去噪子任务。它帮助读者理解反向扩散每一步要学习的修复方向。"),
             rs.code(DEPENDENCIES_CELL),
-            rs.code(DIFFUSION_TOY_CELL),
-            rs.code(DIFFUSION_TOY_PLOT_CELL),
+            rs.code(IMAGE_DENOISING_CELL),
+            rs.code(IMAGE_DENOISING_PLOT_CELL),
         ]),
         "ch12_alphafold_concepts.ipynb": flatten([
             rs.chapter_link(

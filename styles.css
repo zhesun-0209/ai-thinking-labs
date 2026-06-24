@@ -2066,14 +2066,10 @@ code {
 
 @media (max-width: 899px) {
   .section-nav-sticky {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    box-shadow: inset -28px 0 22px -22px rgba(15, 23, 42, 0.42), 0 1px 0 rgba(15, 23, 42, 0.08);
-  }
-
-  .section-nav-sticky::-webkit-scrollbar {
-    display: none;
+    flex-wrap: wrap;
+    overflow-x: visible;
+    row-gap: 8px;
+    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.08);
   }
 }
 
@@ -2675,8 +2671,8 @@ main {
   }
 
   .section-nav-sticky {
-    overflow-x: auto;
-    flex-wrap: nowrap;
+    overflow-x: visible;
+    flex-wrap: wrap;
     padding-bottom: 8px;
   }
 

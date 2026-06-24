@@ -127,7 +127,7 @@ def boot(ch: str, imports: str = "") -> str:
         for rel in runtime_files
     }
     base = f"""
-# 准备运行时：本 notebook 内嵌所需源码和数据，不依赖在线封装文件。
+# 准备本页案例所需的本地代码和数据。
 import importlib.util
 import subprocess
 import sys
@@ -162,7 +162,7 @@ import matplotlib.pyplot as plt
 from common.mpl_setup import configure_matplotlib
 configure_matplotlib()
 from IPython.display import display, Image
-print("runtime ready:", ROOT)
+print("ready")
 """.strip()
     return base + ("\n" + imports.strip() if imports.strip() else "")
 
