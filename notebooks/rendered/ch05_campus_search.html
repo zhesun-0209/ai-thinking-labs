@@ -3,8 +3,8 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>第 5 章 · Romania 图搜索代码实验 · AI思维 Notebook</title>
-<meta name="description" content="第 5 章 · Romania 图搜索代码实验，AI思维配套 Jupyter 预渲染代码实验。"/>
+<title>第 5 章 · 经典路线图搜索代码实验 · AI思维 Notebook</title>
+<meta name="description" content="第 5 章 · 经典路线图搜索代码实验，AI思维配套 Jupyter 预渲染代码实验。"/>
 <link rel="icon" href="../../favicon.svg" type="image/svg+xml"/><style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7608,15 +7608,16 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=5">Python 代码实验</a><a href="../../ch5.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch05_campus_search.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=14ceec54">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9313f5f4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E7%AC%AC-5-%E7%AB%A0-%C2%B7-Romania-%E5%9B%BE%E6%90%9C%E7%B4%A2%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">第 5 章 · Romania 图搜索代码实验<a class="anchor-link" href="#%E7%AC%AC-5-%E7%AB%A0-%C2%B7-Romania-%E5%9B%BE%E6%90%9C%E7%B4%A2%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">¶</a></h1><p><a href="../../ch5.html">章节网页</a></p>
+<h1 id="%E7%AC%AC-5-%E7%AB%A0-%C2%B7-%E7%BB%8F%E5%85%B8%E8%B7%AF%E7%BA%BF%E5%9B%BE%E6%90%9C%E7%B4%A2%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">第 5 章 · 经典路线图搜索代码实验<a class="anchor-link" href="#%E7%AC%AC-5-%E7%AB%A0-%C2%B7-%E7%BB%8F%E5%85%B8%E8%B7%AF%E7%BA%BF%E5%9B%BE%E6%90%9C%E7%B4%A2%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">¶</a></h1><p>本页把同一张路线图交给五种搜索策略。读者先确认城市、道路和启发式距离，再逐个运行算法，看 frontier 如何变化，最后比较它们找到的路线和代价。</p>
+<p><a href="../../ch5.html">章节网页</a></p>
 <h2 id="%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">运行内容<a class="anchor-link" href="#%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">¶</a></h2><ul>
-<li>构建 Romania map 和邻接表</li>
+<li>构建路线图和邻接表</li>
 <li>实现 DFS、BFS、UCS、Greedy、A*</li>
 <li>查看每个算法的展开过程、路径图和代价</li>
 </ul>
@@ -7624,17 +7625,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=de0c0e01">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c109de95">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="0.-%E5%9B%BE%E6%95%B0%E6%8D%AE%E4%B8%8E%E7%94%BB%E5%9B%BE">0. 图数据与画图<a class="anchor-link" href="#0.-%E5%9B%BE%E6%95%B0%E6%8D%AE%E4%B8%8E%E7%94%BB%E5%9B%BE">¶</a></h2>
+<h2 id="0.-%E5%9B%BE%E6%95%B0%E6%8D%AE%E4%B8%8E%E7%94%BB%E5%9B%BE">0. 图数据与画图<a class="anchor-link" href="#0.-%E5%9B%BE%E6%95%B0%E6%8D%AE%E4%B8%8E%E7%94%BB%E5%9B%BE">¶</a></h2><p>先把问题转成图：节点是城市，边是道路距离，h 是到终点的直线距离估计。后面的所有算法都只读取这张图。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=d409c6ab">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=e2c96e1e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7642,7 +7643,7 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 导入实验所需库，并设置图表中文显示。</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 载入本页会用到的数据处理、队列和绘图工具。</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
@@ -7693,7 +7694,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=54cbc6ef">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=62e67928">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7776,7 +7777,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=6248bf73">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e2eda4e5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7839,7 +7840,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=aaea4831">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=96672a1b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8173,7 +8174,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1e3db7fb">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d4490295">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8320,17 +8321,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8fb893d6">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2f9bc833">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-%E6%90%9C%E7%B4%A2%E7%AE%97%E6%B3%95">1. 搜索算法<a class="anchor-link" href="#1.-%E6%90%9C%E7%B4%A2%E7%AE%97%E6%B3%95">¶</a></h2>
+<h2 id="1.-%E6%90%9C%E7%B4%A2%E7%AE%97%E6%B3%95">1. 搜索算法<a class="anchor-link" href="#1.-%E6%90%9C%E7%B4%A2%E7%AE%97%E6%B3%95">¶</a></h2><p>这一组 cell 保留完整算法代码。重点看每种算法的 frontier 数据结构：DFS 用栈，BFS 用队列，UCS/Greedy/A* 用优先队列，但排序依据不同。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=62509d5a">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4028eb05">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8365,7 +8366,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=280a7502">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=004e8bd4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8429,7 +8430,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=715f5e1c">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=442f04f6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8482,7 +8483,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2f693ee4">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3fd4fde1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8542,7 +8543,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=20875b8f">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=97838300">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8602,7 +8603,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=117c0655">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=eee88f2a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8669,18 +8670,18 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6f84f3e6">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4679e270">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.-%E9%80%90%E4%B8%AA%E8%BF%90%E8%A1%8C%E5%B9%B6%E6%9F%A5%E7%9C%8B%E8%BF%87%E7%A8%8B">2. 逐个运行并查看过程<a class="anchor-link" href="#2.-%E9%80%90%E4%B8%AA%E8%BF%90%E8%A1%8C%E5%B9%B6%E6%9F%A5%E7%9C%8B%E8%BF%87%E7%A8%8B">¶</a></h2>
+<h2 id="2.-%E9%80%90%E4%B8%AA%E8%BF%90%E8%A1%8C%E5%B9%B6%E6%9F%A5%E7%9C%8B%E8%BF%87%E7%A8%8B">2. 逐个运行并查看过程<a class="anchor-link" href="#2.-%E9%80%90%E4%B8%AA%E8%BF%90%E8%A1%8C%E5%B9%B6%E6%9F%A5%E7%9C%8B%E8%BF%87%E7%A8%8B">¶</a></h2><p>每个算法都会输出展开表和路径图。展开表用于看“下一步为什么选它”，路径图用于看“最终路线是否真的更短”。</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=998020e3">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=dc1a887d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8690,7 +8691,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f7aa4bf2">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9e44b4ff">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8791,7 +8792,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ef96f9e7">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e88f3d02">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8801,7 +8802,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ca808884">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=188dc264">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8947,7 +8948,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d86d4345">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=926023e0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8957,7 +8958,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=bda34ce4">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=737075ca">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -9139,7 +9140,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3e4b08ff">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=87d8c9e5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -9149,7 +9150,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=6f979ddf">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7ebb0192">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -9255,7 +9256,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c20cccef">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=03513043">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -9265,7 +9266,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=96309051">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8ad75d5a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -9398,17 +9399,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=86490423">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b5841fb3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.-%E7%BB%93%E6%9E%9C%E6%B1%87%E6%80%BB">3. 结果汇总<a class="anchor-link" href="#3.-%E7%BB%93%E6%9E%9C%E6%B1%87%E6%80%BB">¶</a></h2>
+<h2 id="3.-%E7%BB%93%E6%9E%9C%E6%B1%87%E6%80%BB">3. 结果汇总<a class="anchor-link" href="#3.-%E7%BB%93%E6%9E%9C%E6%B1%87%E6%80%BB">¶</a></h2><p>最后把路线、边数和总代价放在一起。读者可以直接比较：少走几条边不一定总代价最低，只看启发式也可能走偏。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f162c657">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fe6a6721">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

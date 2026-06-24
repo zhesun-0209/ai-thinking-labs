@@ -7,7 +7,7 @@ from notebook_content.runestone import flatten
 
 
 DEPENDENCIES_CELL = """
-# 导入实验库，并设置图表中文显示。
+# 载入本页会用到的数据表、队列和绘图工具。
 import importlib.util
 import logging
 import subprocess
@@ -504,17 +504,18 @@ def _forward() -> list:
     return [
         rs.chapter_link(
             "第 6 章 · 规则链推理代码实验",
+            "本页用一个动物分类专家系统观察“事实如何触发规则”。前向链从已知事实往外推，后向链从目标倒推需要证明的条件；两种方向得到同一个结论，但过程完全不同。",
             ["构建动物分类规则库", "运行前向链和后向链", "展示推理轨迹与规则图"],
             "../ch6.html",
         ),
-        rs.section("0", "环境与数据"),
+        rs.section("0", "规则库", "先看初始事实和规则表。每条规则都有一组前提和一个结论，推理过程就是不断检查“前提是否已经满足”。"),
         rs.code(DEPENDENCIES_CELL),
         rs.code(RULE_DATA_CELL),
-        rs.section("1", "前向链"),
+        rs.section("1", "前向链", "前向链适合回答“这些事实还能推出什么”。它每一轮寻找可触发规则，把新结论加入已知事实集合。"),
         rs.code(FORWARD_CHAIN_CELL),
-        rs.section("2", "后向链"),
+        rs.section("2", "后向链", "后向链适合回答“为了证明目标，还缺哪些条件”。它从目标出发，把目标拆成更小的子目标，直到命中初始事实。"),
         rs.code(BACKWARD_CHAIN_CELL),
-        rs.section("3", "推理路径图"),
+        rs.section("3", "推理路径图", "图里每一行是一条被触发的规则。绿色是初始事实，蓝色是中间结论，橙色是最终目标。"),
         rs.code(RULE_PLOT_CELL),
     ]
 
@@ -523,17 +524,18 @@ def _graph() -> list:
     return [
         rs.chapter_link(
             "第 6 章 · 图谱多跳推理代码实验",
+            "本页把人物、奖项、研究方向写成三元组图谱。读者要观察的不是普通 BFS，而是“每一跳关系是否符合查询意图”。",
             ["准备 Wikidata 风格三元组", "运行多跳查询", "展示路径排序与结果图"],
             "../ch6.html",
         ),
-        rs.section("0", "环境与数据"),
+        rs.section("0", "知识图谱", "先看三元组表：head 是起点实体，relation 是关系类型，tail 是指向实体。多跳查询会沿着关系一层层展开。"),
         rs.code(DEPENDENCIES_CELL),
         rs.code(KG_DATA_CELL),
         rs.code(KG_ADJ_CELL),
-        rs.section("1", "多跳查询"),
+        rs.section("1", "多跳查询", "查询过程会记录 frontier 和新增路径。读者重点看路径是如何从起点实体一步步抵达目标实体的。"),
         rs.code(GRAPH_REASONING_CELL),
-        rs.section("2", "路径排序"),
+        rs.section("2", "路径排序", "同一个目标可能有多条路径。这里把短路径和语义更贴近的关系排在前面，帮助读者理解为什么要给路径排序。"),
         rs.code(PATH_RANK_CELL),
-        rs.section("3", "结果图"),
+        rs.section("3", "结果图", "最后只高亮最高分路径，避免整张图太拥挤。读者可以把它当作“多跳推理的证据链”。"),
         rs.code(KG_PLOT_CELL),
     ]

@@ -7,7 +7,7 @@ from notebook_content.runestone import flatten
 
 
 DEPENDENCIES_CELL = """
-# 导入实验库，并设置图表中文显示。
+# 载入本页会用到的数据集、模型和绘图工具。
 import importlib.util
 import logging
 import subprocess
@@ -97,7 +97,7 @@ display(tree_df["类别名称"].value_counts().rename_axis("类别").reset_index
 
 
 TREE_MODEL_CELL = """
-# 划分训练集和测试集，再训练 sklearn 决策树。
+# 划分训练集和测试集，再训练决策树。
 X_train, X_test, y_train, y_test = train_test_split(
     X_tree,
     y_tree,
@@ -297,7 +297,7 @@ display(gd_df.describe().round(3))
 
 
 GD_PROCESS_CELL = """
-# 用 sklearn SGDRegressor 做梯度下降，记录损失下降过程。
+# 用随机梯度下降做回归，记录损失下降过程。
 gd_scaler = StandardScaler()
 X_gd_scaled = gd_scaler.fit_transform(X_gd)
 regressor = SGDRegressor(
@@ -365,7 +365,7 @@ display(perceptron_df)
 
 
 PERCEPTRON_PROCESS_CELL = """
-# 用 sklearn Perceptron 的 partial_fit 逐轮学习，记录边界参数。
+# 逐轮训练感知机，记录边界参数。
 per_scaler = StandardScaler()
 X_per_scaled = per_scaler.fit_transform(X_per)
 perceptron = Perceptron(eta0=0.08, random_state=1, warm_start=True)
@@ -448,18 +448,19 @@ def notebooks() -> dict[str, list]:
 def _tree() -> list:
     return [
         rs.chapter_link(
-            "第 7 章 · 决策树与 KMeans 代码实验",
+            "第 7 章 · 决策树与聚类代码实验",
+            "本页连接两个经典学习任务：用葡萄酒化学指标做分类，用鸢尾花形态指标做聚类。读者重点看模型如何从数据中形成规则、簇和可解释的指标。",
             ["训练 Wine 决策树", "查看特征重要性", "比较 Iris 不同 k 与肘部曲线"],
             "../ch7.html",
         ),
-        rs.section("0", "环境与数据"),
+        rs.section("0", "葡萄酒数据", "先看样本、特征和类别。决策树要学习的是：哪些化学指标最能把不同葡萄酒类别分开。"),
         rs.code(DEPENDENCIES_CELL),
         rs.code(TREE_DATA_CELL),
-        rs.section("1", "DecisionTreeClassifier"),
+        rs.section("1", "决策树分类", "训练后先看测试集预测，再看分裂规则和特征重要性。树图不是装饰，它解释了模型为什么做出这个分类。"),
         rs.code(TREE_MODEL_CELL),
         rs.code(TREE_PROCESS_CELL),
         rs.code(TREE_PLOT_CELL),
-        rs.section("2", "KMeans"),
+        rs.section("2", "鸢尾花聚类", "聚类没有直接使用品种标签。这里用不同 k 比较簇的形状，再用真实品种做事后对照，理解聚类是否有意义。"),
         rs.code(KMEANS_DATA_CELL),
         rs.code(KMEANS_PROCESS_CELL),
         rs.code(KMEANS_PLOT_CELL),
@@ -469,20 +470,21 @@ def _tree() -> list:
 def _gd() -> list:
     return [
         rs.chapter_link(
-            "第 7 章 · 梯度下降与感知机代码实验",
+            "第 7 章 · 误差下降与线性边界代码实验",
+            "本页看两个基础学习过程：回归模型如何让误差下降，线性分类器如何把两类鸢尾花分开。重点不是公式，而是参数、误差和边界怎样随训练变化。",
             ["用 Diabetes 运行 SGD 回归", "用 Iris 运行 Perceptron", "比较不同分类阈值"],
             "../ch7.html",
         ),
-        rs.section("0", "环境与数据"),
+        rs.section("0", "疾病指标回归数据", "先看 BMI 与疾病进展指标的关系。这个实验只用一个输入特征，方便读者把拟合直线和误差曲线对起来看。"),
         rs.code(DEPENDENCIES_CELL),
         rs.code(GD_DATA_CELL),
-        rs.section("1", "SGDRegressor"),
+        rs.section("1", "误差下降", "训练会重复更新斜率和截距。表格记录每一轮误差，图像显示拟合线是否逐步贴近数据趋势。"),
         rs.code(GD_PROCESS_CELL),
         rs.code(GD_PLOT_CELL),
-        rs.section("2", "Perceptron"),
+        rs.section("2", "线性分类边界", "感知机会学习一条分界线。读者可以观察错误数下降，以及最终边界如何把两类样本分开。"),
         rs.code(PERCEPTRON_DATA_CELL),
         rs.code(PERCEPTRON_PROCESS_CELL),
         rs.code(PERCEPTRON_PLOT_CELL),
-        rs.section("3", "阈值指标"),
+        rs.section("3", "阈值指标", "同一组分数，换不同阈值会改变 precision、recall 和 F1。这里用表格展示分类指标为什么依赖决策阈值。"),
         rs.code(METRICS_CELL),
     ]

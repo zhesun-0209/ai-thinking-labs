@@ -3,8 +3,8 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>第 7 章 · 梯度下降与感知机代码实验 · AI思维 Notebook</title>
-<meta name="description" content="第 7 章 · 梯度下降与感知机代码实验，AI思维配套 Jupyter 预渲染代码实验。"/>
+<title>第 7 章 · 误差下降与线性边界代码实验 · AI思维 Notebook</title>
+<meta name="description" content="第 7 章 · 误差下降与线性边界代码实验，AI思维配套 Jupyter 预渲染代码实验。"/>
 <link rel="icon" href="../../favicon.svg" type="image/svg+xml"/><style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7608,13 +7608,14 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=7">Python 代码实验</a><a href="../../ch7.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch07_perceptron_gd.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ca3672f1">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1a659c18">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E7%AC%AC-7-%E7%AB%A0-%C2%B7-%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E4%B8%8E%E6%84%9F%E7%9F%A5%E6%9C%BA%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">第 7 章 · 梯度下降与感知机代码实验<a class="anchor-link" href="#%E7%AC%AC-7-%E7%AB%A0-%C2%B7-%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E4%B8%8E%E6%84%9F%E7%9F%A5%E6%9C%BA%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">¶</a></h1><p><a href="../../ch7.html">章节网页</a></p>
+<h1 id="%E7%AC%AC-7-%E7%AB%A0-%C2%B7-%E8%AF%AF%E5%B7%AE%E4%B8%8B%E9%99%8D%E4%B8%8E%E7%BA%BF%E6%80%A7%E8%BE%B9%E7%95%8C%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">第 7 章 · 误差下降与线性边界代码实验<a class="anchor-link" href="#%E7%AC%AC-7-%E7%AB%A0-%C2%B7-%E8%AF%AF%E5%B7%AE%E4%B8%8B%E9%99%8D%E4%B8%8E%E7%BA%BF%E6%80%A7%E8%BE%B9%E7%95%8C%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">¶</a></h1><p>本页看两个基础学习过程：回归模型如何让误差下降，线性分类器如何把两类鸢尾花分开。重点不是公式，而是参数、误差和边界怎样随训练变化。</p>
+<p><a href="../../ch7.html">章节网页</a></p>
 <h2 id="%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">运行内容<a class="anchor-link" href="#%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">¶</a></h2><ul>
 <li>用 Diabetes 运行 SGD 回归</li>
 <li>用 Iris 运行 Perceptron</li>
@@ -7624,17 +7625,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=54337205">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8493f87f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="0.-%E7%8E%AF%E5%A2%83%E4%B8%8E%E6%95%B0%E6%8D%AE">0. 环境与数据<a class="anchor-link" href="#0.-%E7%8E%AF%E5%A2%83%E4%B8%8E%E6%95%B0%E6%8D%AE">¶</a></h2>
+<h2 id="0.-%E7%96%BE%E7%97%85%E6%8C%87%E6%A0%87%E5%9B%9E%E5%BD%92%E6%95%B0%E6%8D%AE">0. 疾病指标回归数据<a class="anchor-link" href="#0.-%E7%96%BE%E7%97%85%E6%8C%87%E6%A0%87%E5%9B%9E%E5%BD%92%E6%95%B0%E6%8D%AE">¶</a></h2><p>先看 BMI 与疾病进展指标的关系。这个实验只用一个输入特征，方便读者把拟合直线和误差曲线对起来看。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5cfaeaed">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a2f8f0b2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7642,7 +7643,7 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 导入实验库，并设置图表中文显示。</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 载入本页会用到的数据集、模型和绘图工具。</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
@@ -7709,7 +7710,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=240ce149">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0e4b0360">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7891,17 +7892,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3c518f9d">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9849d03c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-SGDRegressor">1. SGDRegressor<a class="anchor-link" href="#1.-SGDRegressor">¶</a></h2>
+<h2 id="1.-%E8%AF%AF%E5%B7%AE%E4%B8%8B%E9%99%8D">1. 误差下降<a class="anchor-link" href="#1.-%E8%AF%AF%E5%B7%AE%E4%B8%8B%E9%99%8D">¶</a></h2><p>训练会重复更新斜率和截距。表格记录每一轮误差，图像显示拟合线是否逐步贴近数据趋势。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c9dabf60">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0d3351ce">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7909,7 +7910,7 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 用 sklearn SGDRegressor 做梯度下降，记录损失下降过程。</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 用随机梯度下降做回归，记录损失下降过程。</span>
 <span class="n">gd_scaler</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span>
 <span class="n">X_gd_scaled</span> <span class="o">=</span> <span class="n">gd_scaler</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_gd</span><span class="p">)</span>
 <span class="n">regressor</span> <span class="o">=</span> <span class="n">SGDRegressor</span><span class="p">(</span>
@@ -8020,7 +8021,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cf8eb7f7">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=50213075">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8065,17 +8066,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=47f5425b">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=490e1da8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.-Perceptron">2. Perceptron<a class="anchor-link" href="#2.-Perceptron">¶</a></h2>
+<h2 id="2.-%E7%BA%BF%E6%80%A7%E5%88%86%E7%B1%BB%E8%BE%B9%E7%95%8C">2. 线性分类边界<a class="anchor-link" href="#2.-%E7%BA%BF%E6%80%A7%E5%88%86%E7%B1%BB%E8%BE%B9%E7%95%8C">¶</a></h2><p>感知机会学习一条分界线。读者可以观察错误数下降，以及最终边界如何把两类样本分开。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b01a0dd5">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=578432c5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8253,7 +8254,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d6bcc072">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=324b01cb">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8261,7 +8262,7 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 用 sklearn Perceptron 的 partial_fit 逐轮学习，记录边界参数。</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 逐轮训练感知机，记录边界参数。</span>
 <span class="n">per_scaler</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span>
 <span class="n">X_per_scaled</span> <span class="o">=</span> <span class="n">per_scaler</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_per</span><span class="p">)</span>
 <span class="n">perceptron</span> <span class="o">=</span> <span class="n">Perceptron</span><span class="p">(</span><span class="n">eta0</span><span class="o">=</span><span class="mf">0.08</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">warm_start</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -8422,7 +8423,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=39ec5b34">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c3d9743e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8470,17 +8471,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9fa777ef">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=451038b1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.-%E9%98%88%E5%80%BC%E6%8C%87%E6%A0%87">3. 阈值指标<a class="anchor-link" href="#3.-%E9%98%88%E5%80%BC%E6%8C%87%E6%A0%87">¶</a></h2>
+<h2 id="3.-%E9%98%88%E5%80%BC%E6%8C%87%E6%A0%87">3. 阈值指标<a class="anchor-link" href="#3.-%E9%98%88%E5%80%BC%E6%8C%87%E6%A0%87">¶</a></h2><p>同一组分数，换不同阈值会改变 precision、recall 和 F1。这里用表格展示分类指标为什么依赖决策阈值。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=672b8fc2">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b8fd97e9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

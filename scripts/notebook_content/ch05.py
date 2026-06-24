@@ -7,7 +7,7 @@ from notebook_content.runestone import flatten
 
 
 DEPENDENCIES_CELL = """
-# 导入实验所需库，并设置图表中文显示。
+# 载入本页会用到的数据处理、队列和绘图工具。
 import importlib.util
 import logging
 import subprocess
@@ -626,15 +626,16 @@ def notebooks() -> dict[str, list]:
 def _cells() -> list:
     return [
         rs.chapter_link(
-            "第 5 章 · Romania 图搜索代码实验",
+            "第 5 章 · 经典路线图搜索代码实验",
+            "本页把同一张路线图交给五种搜索策略。读者先确认城市、道路和启发式距离，再逐个运行算法，看 frontier 如何变化，最后比较它们找到的路线和代价。",
             [
-                "构建 Romania map 和邻接表",
+                "构建路线图和邻接表",
                 "实现 DFS、BFS、UCS、Greedy、A*",
                 "查看每个算法的展开过程、路径图和代价",
             ],
             "../ch5.html",
         ),
-        rs.section("0", "图数据与画图"),
+        rs.section("0", "图数据与画图", "先把问题转成图：节点是城市，边是道路距离，h 是到终点的直线距离估计。后面的所有算法都只读取这张图。"),
         *rs.stepcode(
             DEPENDENCIES_CELL,
             CAMPUS_GRAPH_CELL,
@@ -642,7 +643,7 @@ def _cells() -> list:
             TABLES_CELL,
             DRAWING_CELL,
         ),
-        rs.section("1", "搜索算法"),
+        rs.section("1", "搜索算法", "这一组 cell 保留完整算法代码。重点看每种算法的 frontier 数据结构：DFS 用栈，BFS 用队列，UCS/Greedy/A* 用优先队列，但排序依据不同。"),
         *rs.stepcode(
             HELPERS_CELL,
             DFS_CELL,
@@ -651,7 +652,7 @@ def _cells() -> list:
             GREEDY_CELL,
             ASTAR_CELL,
         ),
-        rs.section("2", "逐个运行并查看过程"),
+        rs.section("2", "逐个运行并查看过程", "每个算法都会输出展开表和路径图。展开表用于看“下一步为什么选它”，路径图用于看“最终路线是否真的更短”。"),
         rs.subsection("2.1", "DFS"),
         *rs.stepcode(RUN_DFS_CELL),
         rs.subsection("2.2", "BFS"),
@@ -662,6 +663,6 @@ def _cells() -> list:
         *rs.stepcode(RUN_GREEDY_CELL),
         rs.subsection("2.5", "A*"),
         *rs.stepcode(RUN_ASTAR_CELL),
-        rs.section("3", "结果汇总"),
+        rs.section("3", "结果汇总", "最后把路线、边数和总代价放在一起。读者可以直接比较：少走几条边不一定总代价最低，只看启发式也可能走偏。"),
         *rs.stepcode(SUMMARY_CELL),
     ]

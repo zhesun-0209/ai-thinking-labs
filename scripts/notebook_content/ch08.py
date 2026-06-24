@@ -7,7 +7,7 @@ from notebook_content.runestone import flatten
 
 
 DEPENDENCIES_CELL = """
-# 导入实验库，并设置图表中文显示。
+# 载入本页会用到的数据集、模型和绘图工具。
 import importlib.util
 import logging
 import math
@@ -73,7 +73,7 @@ plt.rcParams.update({
 
 
 MLP_DATA_CELL = """
-# 加载 sklearn digits：8x8 手写数字分类是神经网络入门的经典案例。
+# 加载 8x8 手写数字数据：这是神经网络入门的经典分类案例。
 digits = load_digits()
 X_mlp = digits.data / 16.0
 y_mlp = digits.target
@@ -101,7 +101,7 @@ display(pd.DataFrame(X_mlp[:5]).round(2))
 
 
 MLP_TRAIN_CELL = """
-# 训练 sklearn MLPClassifier，并读取 loss_curve_。
+# 训练小型 MLP，并读取每轮 loss。
 mlp = make_pipeline(
     StandardScaler(),
     MLPClassifier(
@@ -610,7 +610,7 @@ plt.show()
 
 
 CONV_DATA_CELL = """
-# 使用 sklearn digits 中的手写数字，配合 Sobel 核做边缘检测。
+# 使用手写数字图像，配合 Sobel 核做边缘检测。
 digits = load_digits()
 image = digits.images[13] / 16.0
 kernel = np.array([
@@ -666,7 +666,7 @@ plt.show()
 
 
 PATCHIFY_CELL = """
-# 使用 sklearn 内置真实照片 china.jpg，按 ViT 常见设置切成 16x16 patch。
+# 使用真实建筑照片，按 ViT 常见设置切成 16x16 patch。
 raw_photo = load_sample_image("china.jpg")
 vit_image = np.asarray(Image.fromarray(raw_photo).resize((224, 224))) / 255.0
 patch_size = 16
@@ -769,7 +769,7 @@ plt.show()
 
 
 CLIP_CELL = """
-# CLIP 官方 API：用真实图片和文本提示计算图文匹配。
+# 真实图片与文本提示：计算每张图片更匹配哪一句描述。
 clip_packages = {
     "torch": "torch>=2.2",
     "transformers": "transformers>=4.40",
@@ -816,7 +816,7 @@ print("image-text contrastive loss:", round(float(clip_loss), 4))
 
 
 CLIP_PLOT_CELL = """
-# 绘制真实图片和 CLIP 图文概率矩阵。
+# 绘制真实图片和图文匹配概率矩阵。
 sim_matrix = probs.numpy()
 fig = plt.figure(figsize=(11.0, 5.4))
 gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.0, 2.2], wspace=0.35)
@@ -839,7 +839,7 @@ for i in range(len(image_names)):
         ax.text(j, i, f"{value:.2f}", ha="center", va="center", color="#0f172a", fontweight="bold" if j == best else "normal")
         if j == best:
             ax.add_patch(plt.Rectangle((j - 0.5, i - 0.5), 1, 1, fill=False, edgecolor="#0f172a", linewidth=2.2))
-ax.set_title("CLIP 官方模型：图文匹配概率", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
+ax.set_title("图文匹配概率", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 plt.tight_layout()
 plt.show()
@@ -847,7 +847,7 @@ plt.show()
 
 
 GYM_SETUP_CELL = """
-# 第 11 章使用 Gymnasium 经典环境，保持和官方教程一致的环境接口。
+# 载入强化学习经典环境。
 if importlib.util.find_spec("gymnasium") is None:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "gymnasium>=0.29"])
 
@@ -856,7 +856,7 @@ import gymnasium as gym
 
 
 MDP_CELL = """
-# FrozenLake-v1：读取 Gymnasium 官方环境自带的 MDP 转移表 P。
+# 冰湖导航：读取环境自带的 MDP 转移表 P。
 frozen_env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
 n_states = frozen_env.observation_space.n
 n_actions = frozen_env.action_space.n
@@ -1127,7 +1127,7 @@ plt.show()
 
 
 ANNEALING_CELL = """
-# SciPy dual_annealing：在 Iris 数据集上搜索 SVC 的 C 和 gamma。
+# 参数搜索：在鸢尾花分类任务中寻找更好的参数组合。
 iris = load_iris(as_frame=True)
 X_iris = iris.data
 y_iris = iris.target
@@ -1166,10 +1166,10 @@ search_df = pd.DataFrame(search_rows)
 search_df["best_accuracy"] = search_df["cv_accuracy"].cummax()
 best_row = search_df.loc[search_df["cv_accuracy"].idxmax()]
 best_params = pd.DataFrame([{
-    "best_C": best_row["C"],
-    "best_gamma": best_row["gamma"],
-    "cv_accuracy": best_row["cv_accuracy"],
-    "trials": len(search_df),
+    "最佳 C": best_row["C"],
+    "最佳 gamma": best_row["gamma"],
+    "验证准确率": best_row["cv_accuracy"],
+    "尝试次数": len(search_df),
 }])
 
 display(pd.DataFrame({
@@ -1178,18 +1178,24 @@ display(pd.DataFrame({
     "类别": [", ".join(iris.target_names)],
 }))
 display(best_params.round(4))
-display(search_df.tail(10).round(4))
+display(search_df.tail(10).rename(columns={
+    "trial": "尝试",
+    "log10_C": "log10(C)",
+    "log10_gamma": "log10(gamma)",
+    "cv_accuracy": "验证准确率",
+    "error": "错误率",
+}).round(4))
 """
 
 
 ANNEALING_PLOT_CELL = """
 # 绘制超参数搜索轨迹和搜索空间中的高分区域。
 fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.7))
-axes[0].plot(search_df["trial"], search_df["cv_accuracy"], color="#94a3b8", linewidth=1.4, label="trial accuracy")
-axes[0].plot(search_df["trial"], search_df["best_accuracy"], color="#2563eb", linewidth=2.5, label="best so far")
-axes[0].set_title("dual_annealing 搜索过程", loc="left", fontweight="bold")
-axes[0].set_xlabel("trial")
-axes[0].set_ylabel("5-fold CV accuracy")
+axes[0].plot(search_df["trial"], search_df["cv_accuracy"], color="#94a3b8", linewidth=1.4, label="本次尝试")
+axes[0].plot(search_df["trial"], search_df["best_accuracy"], color="#2563eb", linewidth=2.5, label="当前最好")
+axes[0].set_title("参数搜索过程", loc="left", fontweight="bold")
+axes[0].set_xlabel("尝试次数")
+axes[0].set_ylabel("验证准确率")
 axes[0].grid(True, color="#e2e8f0", linewidth=0.8)
 axes[0].legend()
 
@@ -1203,7 +1209,7 @@ sc = axes[1].scatter(
     linewidth=0.45,
 )
 axes[1].scatter(best_row["log10_C"], best_row["log10_gamma"], s=180, marker="*", color="#f97316", edgecolor="#0f172a", linewidth=0.7)
-axes[1].set_title("Iris SVC 搜索空间", loc="left", fontweight="bold")
+axes[1].set_title("鸢尾花参数空间", loc="left", fontweight="bold")
 axes[1].set_xlabel("log10(C)")
 axes[1].set_ylabel("log10(gamma)")
 axes[1].grid(True, color="#e2e8f0", linewidth=0.8)
@@ -1317,7 +1323,7 @@ x = np.arange(len(mcts_root_df))
 axes[0].bar(x, mcts_root_df["mean_value"], color="#2563eb", label="mean value")
 axes[0].bar(x, mcts_root_df["explore"], bottom=mcts_root_df["mean_value"], color="#f97316", label="exploration")
 axes[0].set_xticks(x, mcts_root_df["action"])
-axes[0].set_title("Root UCT 组成", loc="left", fontweight="bold")
+axes[0].set_title("起点动作评分组成", loc="left", fontweight="bold")
 axes[0].set_ylabel("score")
 axes[0].grid(True, axis="y", color="#e2e8f0", linewidth=0.8)
 axes[0].legend()
@@ -1351,7 +1357,7 @@ plt.show()
 
 
 DIFFUSION_1D_CELL = """
-# Diffusers 官方 scheduler：在真实图片上执行 DDPM 前向加噪。
+# 真实图片扩散：按时间步逐渐加入噪声。
 diffusion_packages = {
     "torch": "torch>=2.2",
     "diffusers": "diffusers>=0.30",
@@ -1380,11 +1386,11 @@ for t in timesteps:
     ddpm_images.append(image)
     alpha_bar = float(scheduler.alphas_cumprod[t])
     diff_rows.append({
-        "timestep": t,
+        "时间步": t,
         "alpha_bar": alpha_bar,
-        "signal_weight": np.sqrt(alpha_bar),
-        "noise_weight": np.sqrt(1 - alpha_bar),
-        "pixel_std": float(image.std()),
+        "原图权重": np.sqrt(alpha_bar),
+        "噪声权重": np.sqrt(1 - alpha_bar),
+        "像素标准差": float(image.std()),
     })
 
 diff_1d_df = pd.DataFrame(diff_rows)
@@ -1393,26 +1399,25 @@ display(diff_1d_df.round(4))
 
 
 DIFFUSION_1D_PLOT_CELL = """
-# 绘制真实图片在不同 timestep 下的前向扩散效果。
+# 绘制真实图片在不同时间步下的前向扩散效果。
 fig, axes = plt.subplots(1, len(ddpm_images), figsize=(11.2, 3.1))
 for ax, image, timestep in zip(axes, ddpm_images, timesteps):
     ax.imshow(image)
     ax.set_title(f"t={timestep}", fontweight="bold")
     ax.set_xticks([])
     ax.set_yticks([])
-fig.suptitle("DDPMScheduler：真实图片前向加噪", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+fig.suptitle("真实图片前向加噪", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
 
 
 DIGITS_DATA_CELL = """
-# 使用 sklearn digits 数据，选出一个 8x8 手写数字。
+# 从手写数字数据中选出一个 8x8 样本。
 digits = load_digits()
 digit_label = 3
 digit_indices = np.where(digits.target == digit_label)[0]
 clean_digit = digits.images[digit_indices[4]] / 16.0
-prototype_digit = digits.images[digit_indices].mean(axis=0) / 16.0
 
 display(pd.DataFrame(clean_digit).round(2))
 print("样本数量:", len(digit_indices), "目标数字:", digit_label)
@@ -1438,9 +1443,19 @@ display(digit_forward_df)
 
 
 DIGITS_REVERSE_CELL = """
-# 反向去噪示例：用同类数字原型把 noisy 图像拉回数字形状。
-noisy_digit = digit_forward[-1]
-denoised_digit = 0.58 * noisy_digit + 0.42 * prototype_digit
+# 训练一个小型去噪器，把带噪数字恢复成干净数字。
+train_rng = np.random.default_rng(12)
+all_clean_digits = digits.data / 16.0
+all_noisy_digits = np.clip(
+    all_clean_digits + train_rng.normal(0, 0.45, all_clean_digits.shape),
+    0,
+    1,
+)
+digit_denoiser = MLPRegressor(hidden_layer_sizes=(96,), max_iter=180, random_state=12)
+digit_denoiser.fit(all_noisy_digits, all_clean_digits)
+
+noisy_digit = np.clip(digit_forward[-1], 0, 1)
+denoised_digit = np.clip(digit_denoiser.predict(noisy_digit.reshape(1, -1))[0].reshape(8, 8), 0, 1)
 digits_summary = pd.DataFrame(
     [
         {"图像": "noisy", "相对clean的MSE": mean_squared_error(clean_digit, noisy_digit)},
@@ -1459,7 +1474,7 @@ for ax, img, level in zip(axes[0], digit_forward, digit_steps):
     ax.set_title(f"noise={level:.2f}", fontweight="bold")
     ax.set_xticks([])
     ax.set_yticks([])
-for ax, img, title in zip(axes[1], [clean_digit, noisy_digit, prototype_digit, denoised_digit], ["clean", "noisy", "prototype", "denoised"]):
+for ax, img, title in zip(axes[1], [clean_digit, noisy_digit, denoised_digit, np.abs(clean_digit - denoised_digit)], ["clean", "noisy", "denoised", "error"]):
     ax.imshow(img, cmap="gray_r")
     ax.set_title(title, fontweight="bold")
     ax.set_xticks([])
@@ -1471,7 +1486,7 @@ plt.show()
 
 
 GAN_CELL = """
-# PyTorch GAN：在 sklearn Digits 真实手写数字上训练生成器和判别器。
+# 手写数字 GAN：在真实手写数字数据上训练生成器和判别器。
 gan_packages = {"torch": "torch>=2.2"}
 missing = [package for module, package in gan_packages.items() if importlib.util.find_spec(module) is None]
 if missing:
@@ -1530,11 +1545,11 @@ for step in range(1, 501):
     if step % 50 == 0:
         with torch.no_grad():
             gan_rows.append({
-                "step": step,
-                "D_loss": float(d_loss),
-                "G_loss": float(g_loss),
-                "D(real)": float(torch.sigmoid(discriminator(real_batch)).mean()),
-                "D(fake)": float(torch.sigmoid(discriminator(generator(torch.randn(batch_size, latent_dim)))).mean()),
+                "训练步": step,
+                "判别器损失": float(d_loss),
+                "生成器损失": float(g_loss),
+                "真实样本评分": float(torch.sigmoid(discriminator(real_batch)).mean()),
+                "生成样本评分": float(torch.sigmoid(discriminator(generator(torch.randn(batch_size, latent_dim)))).mean()),
             })
 
 with torch.no_grad():
@@ -1550,14 +1565,14 @@ fig = plt.figure(figsize=(10.6, 6.0))
 gs = fig.add_gridspec(2, 4, height_ratios=[1.0, 1.6], hspace=0.38, wspace=0.18)
 ax_loss = fig.add_subplot(gs[0, :2])
 ax_score = fig.add_subplot(gs[0, 2:])
-ax_loss.plot(gan_trace["step"], gan_trace["D_loss"], color="#2563eb", linewidth=2.0, label="D loss")
-ax_loss.plot(gan_trace["step"], gan_trace["G_loss"], color="#f97316", linewidth=2.0, label="G loss")
-ax_loss.set_title("GAN loss", loc="left", fontweight="bold")
+ax_loss.plot(gan_trace["训练步"], gan_trace["判别器损失"], color="#2563eb", linewidth=2.0, label="判别器损失")
+ax_loss.plot(gan_trace["训练步"], gan_trace["生成器损失"], color="#f97316", linewidth=2.0, label="生成器损失")
+ax_loss.set_title("训练损失", loc="left", fontweight="bold")
 ax_loss.grid(True, color="#e2e8f0", linewidth=0.8)
 ax_loss.legend()
 
-ax_score.plot(gan_trace["step"], gan_trace["D(real)"], color="#16a34a", linewidth=2.0, label="D(real)")
-ax_score.plot(gan_trace["step"], gan_trace["D(fake)"], color="#dc2626", linewidth=2.0, label="D(fake)")
+ax_score.plot(gan_trace["训练步"], gan_trace["真实样本评分"], color="#16a34a", linewidth=2.0, label="真实样本评分")
+ax_score.plot(gan_trace["训练步"], gan_trace["生成样本评分"], color="#dc2626", linewidth=2.0, label="生成样本评分")
 ax_score.set_title("判别器输出", loc="left", fontweight="bold")
 ax_score.grid(True, color="#e2e8f0", linewidth=0.8)
 ax_score.legend()
@@ -1568,7 +1583,7 @@ ax_img.imshow((sample_tile + 1) / 2, cmap="gray_r", vmin=0, vmax=1)
 ax_img.set_title("生成样本", loc="left", fontweight="bold")
 ax_img.set_xticks([])
 ax_img.set_yticks([])
-fig.suptitle("PyTorch GAN on Digits", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+fig.suptitle("手写数字 GAN 生成", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
@@ -1681,14 +1696,15 @@ def _ch08() -> dict[str, list]:
     return {
         "ch08_mlp_backprop.ipynb": flatten([
             rs.chapter_link(
-                "第 8 章 · MLPClassifier 代码实验",
+                "第 8 章 · 手写数字 MLP 分类代码实验",
+                "本页训练一个小型神经网络识别 8×8 手写数字。读者先看数据形状，再看训练 loss 是否下降，最后看测试样本和混淆矩阵。",
                 ["训练 Digits 手写数字分类器", "查看混淆矩阵", "绘制 loss 和样本预测"],
                 "../ch8.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "手写数字数据", "每张图像被展开成 64 个像素值。模型输入就是这些像素，输出是 0 到 9 的类别概率。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(MLP_DATA_CELL),
-            rs.section("1", "训练过程"),
+            rs.section("1", "训练与预测", "loss 曲线用于判断训练是否稳定，混淆矩阵用于找出最容易混淆的数字类别。"),
             rs.code(MLP_TRAIN_CELL),
             rs.code(MLP_RESULT_CELL),
             rs.code(MLP_PLOT_CELL),
@@ -1696,15 +1712,16 @@ def _ch08() -> dict[str, list]:
         "ch08_transe_attention.ipynb": flatten([
             rs.chapter_link(
                 "第 8 章 · TransE 与 Attention 代码实验",
+                "本页把“关系”和“注意力”都变成可计算表格。TransE 部分看向量平移是否把国家指向首都；Attention 部分看一个词主要关注句子里的哪些词。",
                 ["计算国家-首都 TransE 距离", "计算 Transformer attention 权重", "绘制几何图和热力图"],
                 "../ch8.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "环境与数据", "先载入表格、向量和画图工具。后续两部分彼此独立，可以分开运行和阅读。"),
             rs.code(DEPENDENCIES_CELL),
-            rs.section("1", "TransE"),
+            rs.section("1", "关系向量", "正确三元组的距离应该更小，替换实体后的距离应该变大。几何图帮助读者看到 h + r 是否靠近 t。"),
             rs.code(TRANSE_CELL),
             rs.code(TRANSE_PLOT_CELL),
-            rs.section("2", "Attention"),
+            rs.section("2", "注意力权重", "热力图的每一行代表一个正在读的词，每一列代表它可以关注的词。颜色越深、数值越大，说明关注越强。"),
             rs.code(ATTENTION_CELL),
             rs.code(ATTENTION_PLOT_CELL),
         ]),
@@ -1716,39 +1733,42 @@ def _ch09() -> dict[str, list]:
         "ch09_bpe.ipynb": flatten([
             rs.chapter_link(
                 "第 9 章 · BPE 代码实验",
+                "本页用经典英文词频语料演示子词合并。读者重点看每一轮最高频相邻符号是什么，以及 token 总数如何下降。",
                 ["准备字符级词表", "执行 merge 步骤", "绘制 pair 频次"],
                 "../ch9.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "词频语料", "先把单词拆成字符序列，并保留每个单词出现频次。高频词会对合并选择产生更大影响。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(BPE_DATA_CELL),
-            rs.section("1", "Merge 过程"),
+            rs.section("1", "合并过程", "每一轮选择当前最高频 pair，把它合并成更长的子词。图表同时展示选择依据和压缩效果。"),
             rs.code(BPE_RUN_CELL),
             rs.code(BPE_PLOT_CELL),
         ]),
-        "ch09_skipgram_toy.ipynb": flatten([
+        "ch09_word2vec_analogy.ipynb": flatten([
             rs.chapter_link(
                 "第 9 章 · Skip-gram 代码实验",
+                "本页用词向量类比帮助读者理解“向量空间里的语义方向”。重点看最近邻和 king - man + woman 的结果。",
                 ["运行 Word2Vec 类比", "计算最近邻", "绘制词向量位置"],
                 "../ch9.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "词向量表", "这里使用一组可解释的二维/三维向量，目的是看清类比关系，而不是训练大模型。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(SKIPGRAM_DATA_CELL),
-            rs.section("1", "词向量"),
+            rs.section("1", "类比与最近邻", "最近邻展示相似词，类比向量展示方向差。图里的箭头说明 gender 方向如何在词之间迁移。"),
             rs.code(SKIPGRAM_EMBED_CELL),
             rs.code(SKIPGRAM_PLOT_CELL),
         ]),
         "ch09_attention_lm.ipynb": flatten([
             rs.chapter_link(
                 "第 9 章 · Causal Attention 与词 Bigram LM 代码实验",
+                "本页把下一词预测拆成两件事：因果注意力只能看左侧上下文，bigram 统计给出最简单的下一词分布。",
                 ["计算 causal attention", "统计词 bigram", "绘制 attention 热力图"],
                 "../ch9.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "因果注意力", "因果 mask 会遮住当前位置右侧的词。热力图中右上角为 0，说明模型不能偷看未来。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(SELF_ATTENTION_CELL),
-            rs.section("1", "词 Bigram LM"),
+            rs.section("1", "下一词统计", "bigram 只根据当前词预测下一个词。它很简单，但能帮助读者理解语言模型的条件概率视角。"),
             rs.code(CHAR_LM_CELL),
             rs.code(SELF_ATTENTION_PLOT_CELL),
         ]),
@@ -1760,23 +1780,25 @@ def _ch10() -> dict[str, list]:
         "ch10_conv2d_numpy.ipynb": flatten([
             rs.chapter_link(
                 "第 10 章 · 卷积代码实验",
+                "本页用手写数字图像观察卷积核如何提取边缘。读者先看原图和卷积核，再看每个窗口的计算值，最后看池化如何压缩特征图。",
                 ["加载 Digits 图像", "计算 Sobel 卷积", "绘制特征图"],
                 "../ch10.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "图像与卷积核", "输入图像是 8×8 灰度数字，Sobel 核会强调竖向边缘。卷积输出越大，表示该区域越像这个边缘模式。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(CONV_DATA_CELL),
-            rs.section("1", "卷积过程"),
+            rs.section("1", "卷积与池化", "卷积逐窗口计算局部模式，池化保留局部最强响应。把三张图连起来看，能看到图像如何逐步变成特征。"),
             rs.code(CONV_PROCESS_CELL),
             rs.code(CONV_PLOT_CELL),
         ]),
         "ch10_vit_patchify.ipynb": flatten([
             rs.chapter_link(
                 "第 10 章 · ViT Patchify 代码实验",
+                "本页用真实照片展示 ViT 的第一步：把图片切成固定大小的小块，再把每个小块展开成 token。读者重点看原图网格和 patch 表格如何对应。",
                 ["加载真实照片", "切分 16×16 patch token", "绘制 patch 网格"],
                 "../ch10.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "真实照片切块", "一张 224×224 图片会被切成 14×14 个 patch。每个 patch 展平后是一条向量，后续模型把这些向量当作序列读取。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(PATCHIFY_CELL),
             rs.code(PATCHIFY_PLOT_CELL),
@@ -1784,23 +1806,25 @@ def _ch10() -> dict[str, list]:
         "ch10_mae_masking.ipynb": flatten([
             rs.chapter_link(
                 "第 10 章 · MAE Masking 代码实验",
+                "本页继续使用同一张真实照片，遮住大部分 patch，只把少量可见 patch 交给模型。读者要观察的是：MAE 学习的不是分类，而是从缺失上下文中重建图像。",
                 ["加载同一张真实照片", "随机 mask 75% patch", "绘制可见图和重建基线"],
                 "../ch10.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "同一张照片", "先复用上一页的 patch 切分方式，保证读者看到的是同一个图像案例。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(PATCHIFY_CELL),
-            rs.section("1", "Mask"),
+            rs.section("1", "遮挡与重建", "mask map 说明哪些 patch 被隐藏。可见图显示模型能看到的输入，重建基线用于理解“补全缺失区域”的任务形态。"),
             rs.code(MAE_CELL),
             rs.code(MAE_PLOT_CELL),
         ]),
         "ch10_clip_infonce.ipynb": flatten([
             rs.chapter_link(
-                "第 10 章 · CLIP / InfoNCE 代码实验",
-                ["加载真实图片和文本 prompt", "运行官方 CLIPModel", "绘制图文匹配概率"],
+                "第 10 章 · CLIP 真实图文匹配代码实验",
+                "本页用真实图片和自然语言提示做图文匹配。读者先看图片和候选文本，再看概率矩阵：每一行应该把更准确的文字描述排在前面。",
+                ["加载真实图片和文本 prompt", "计算图文相似度", "绘制图文匹配概率"],
                 "../ch10.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "图片与文本提示", "代码会加载预训练 CLIP，但页面重点不是模型下载，而是读懂图文匹配矩阵：行是图片，列是文本，数值越大表示越匹配。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(CLIP_CELL),
             rs.code(CLIP_PLOT_CELL),
@@ -1812,25 +1836,27 @@ def _ch11() -> dict[str, list]:
     return {
         "ch11_mdp_value_iteration.ipynb": flatten([
             rs.chapter_link(
-                "第 11 章 · MDP 与价值迭代代码实验",
+                "第 11 章 · 冰湖导航价值迭代代码实验",
+                "本页把冰湖导航看成一个 MDP：每个格子是状态，每个方向是动作，滑倒会让转移带有不确定性。读者重点看价值如何从终点向外传播。",
                 ["读取 FrozenLake-v1 转移表", "执行价值迭代", "绘制价值与策略"],
                 "../ch11.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "冰湖环境", "先看地图和转移表。S 是起点，F 是安全冰面，H 是洞，G 是终点；同一个动作可能因为滑动转到不同格子。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(GYM_SETUP_CELL),
             rs.code(MDP_CELL),
-            rs.section("1", "价值迭代"),
+            rs.section("1", "价值迭代", "Bellman 更新会反复估计每个状态的长期收益。误差曲线下降后，策略箭头就代表当前最推荐的动作。"),
             rs.code(VALUE_ITERATION_CELL),
             rs.code(VALUE_PLOT_CELL),
         ]),
         "ch11_td_learning.ipynb": flatten([
             rs.chapter_link(
-                "第 11 章 · Taxi-v3 Q-learning 代码实验",
+                "第 11 章 · 出租车调度 Q-learning 代码实验",
+                "本页让智能体学习接乘客、送乘客。每一步都会产生奖励或惩罚，Q-learning 用这些反馈更新“在某个状态做某个动作”的价值。",
                 ["加载 Taxi-v3 环境", "记录 TD target 和 TD error", "绘制回报与 Q 表"],
                 "../ch11.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "出租车任务", "先训练 Q 表，再看抽样 TD 更新和回报曲线。最后渲染一个状态，查看当前 Q 表建议哪个动作。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(GYM_SETUP_CELL),
             rs.code(TD_CELL),
@@ -1838,11 +1864,12 @@ def _ch11() -> dict[str, list]:
         ]),
         "ch11_epsilon_greedy.ipynb": flatten([
             rs.chapter_link(
-                "第 11 章 · CliffWalking SARSA 代码实验",
+                "第 11 章 · 悬崖行走探索策略代码实验",
+                "本页比较不同探索强度下的路径学习。悬崖边路线更短但风险更高，epsilon 越大，智能体越可能尝试随机动作。",
                 ["加载 CliffWalking-v0 环境", "比较不同 epsilon", "绘制回报与策略"],
                 "../ch11.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "悬崖行走任务", "训练曲线展示不同探索强度的回报，策略图展示最终学到的动作方向。把两张图合起来看，才能理解探索的代价。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(GYM_SETUP_CELL),
             rs.code(BANDIT_CELL),
@@ -1855,81 +1882,88 @@ def _ch12() -> dict[str, list]:
     return {
         "ch12_repr_search_annealing.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · Iris SVC 退火搜索代码实验",
-                ["加载 Iris 数据集", "用 dual_annealing 搜索超参数", "绘制搜索轨迹"],
+                "第 12 章 · 鸢尾花分类参数搜索代码实验",
+                "本页把“创造”中的搜索思想放到一个真实分类任务里：尝试多组参数，记录验证表现，观察搜索如何逐步找到更好的组合。",
+                ["加载鸢尾花数据", "尝试多组模型参数", "绘制搜索轨迹"],
                 "../ch12.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "分类任务与参数搜索", "先看数据规模和类别，再看每次尝试的验证准确率。散点图中的每个点都是一组参数，颜色越深代表表现越好。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(ANNEALING_CELL),
             rs.code(ANNEALING_PLOT_CELL),
         ]),
         "ch12_mcts.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · FrozenLake MCTS / UCT 代码实验",
-                ["加载 FrozenLake-v1", "运行 UCT 模拟", "绘制访问价值"],
+                "第 12 章 · 冰湖导航 MCTS 规划代码实验",
+                "本页让智能体从起点反复模拟未来路线。MCTS 不一次性穷举所有可能，而是在“看起来好”和“还没探索够”的动作之间分配模拟次数。",
+                ["加载冰湖导航任务", "反复模拟候选路线", "绘制访问价值"],
                 "../ch12.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "从起点规划动作", "表格展示起点四个动作的访问次数、平均回报和探索分。访问价值图展示模拟经验在地图上的分布。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(GYM_SETUP_CELL),
             rs.code(MCTS_CELL),
             rs.code(MCTS_PLOT_CELL),
         ]),
-        "ch12_diffusion_1d.ipynb": flatten([
+        "ch12_image_diffusion.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · Diffusers DDPM Scheduler 代码实验",
-                ["加载真实图片", "调用 DDPMScheduler 前向加噪", "绘制噪声调度"],
+                "第 12 章 · 真实图片扩散加噪代码实验",
+                "本页用一张真实花朵照片观察扩散模型的前向过程。时间步越靠后，原图信号越弱、噪声越强，图像结构会逐渐被破坏。",
+                ["加载真实图片", "按时间步加入噪声", "绘制噪声调度"],
                 "../ch12.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "图片加噪过程", "先看调度表，再看图片序列。原图权重下降表示图像信号变弱，噪声权重上升表示随机噪声变强。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(DIFFUSION_1D_CELL),
             rs.code(DIFFUSION_1D_PLOT_CELL),
         ]),
         "ch12_diffusion_digits.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · Digits Diffusion 代码实验",
-                ["加载 sklearn digits", "绘制前向加噪", "展示原型去噪"],
+                "第 12 章 · 手写数字扩散过程代码实验",
+                "本页用真实手写数字数据看扩散任务的直觉：前向过程把数字变成噪声，反向过程要逐步恢复可辨认的数字结构。",
+                ["加载手写数字数据", "绘制前向加噪", "展示去噪对比"],
                 "../ch12.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "手写数字样本", "先选出同一类数字的多个样本。干净图像用于对照，后面的噪声图像和去噪图像都要和它比较。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(DIGITS_DATA_CELL),
-            rs.section("1", "加噪与去噪"),
+            rs.section("1", "加噪与去噪", "第一行展示噪声增强后数字如何变模糊；第二行比较干净图、噪声图、同类原型和去噪结果。"),
             rs.code(DIGITS_FORWARD_CELL),
             rs.code(DIGITS_REVERSE_CELL),
             rs.code(DIGITS_PLOT_CELL),
         ]),
-        "ch12_gan_toy.ipynb": flatten([
+        "ch12_digits_gan.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · Digits GAN 代码实验",
-                ["加载 sklearn Digits", "训练 PyTorch GAN", "绘制生成样本"],
+                "第 12 章 · 手写数字 GAN 生成代码实验",
+                "本页用真实手写数字训练一个小型生成对抗网络。读者要同时看两条损失曲线和生成样本：曲线说明博弈过程，样本说明生成质量。",
+                ["加载手写数字数据", "训练生成器和判别器", "绘制生成样本"],
                 "../ch12.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "生成数字", "判别器学习区分真实数字和生成数字，生成器学习骗过判别器。生成样本不追求完美，但应该逐渐具有数字轮廓。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(GAN_CELL),
             rs.code(GAN_PLOT_CELL),
         ]),
-        "ch12_diffusion_toy.ipynb": flatten([
+        "ch12_digits_denoising.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · Digits 去噪自编码器代码实验",
-                ["加载 Digits 数据", "训练 MLPRegressor 去噪器", "比较 noisy 与 denoised"],
+                "第 12 章 · 手写数字去噪重建代码实验",
+                "本页把去噪任务单独拿出来看：给模型一张带噪数字，让它输出更干净的数字。读者重点比较 noisy 和 denoised 的 MSE 与图像差异。",
+                ["加载手写数字数据", "训练去噪模型", "比较噪声输入和去噪输出"],
                 "../ch12.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "去噪重建", "这个实验不是完整扩散模型，而是用真实数据做去噪子任务。它帮助读者理解反向扩散每一步要学习的修复方向。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(DIFFUSION_TOY_CELL),
             rs.code(DIFFUSION_TOY_PLOT_CELL),
         ]),
         "ch12_alphafold_concepts.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · AlphaFold 概念代码实验",
-                ["读取 MSA", "计算位置保守性", "绘制 pair 表征"],
+                "第 12 章 · 蛋白序列 Pair 表征代码实验",
+                "本页用一个短蛋白片段的多序列对齐，观察哪些位置更保守，以及位置两两组合如何形成 pair 表征。",
+                ["读取多序列对齐", "计算位置保守性", "绘制 pair 表征"],
                 "../ch12.html",
             ),
-            rs.section("0", "环境与数据"),
+            rs.section("0", "序列对齐与 pair 表征", "保守性高的位置通常更重要。pair 表征把两个位置的保守性组合起来，作为结构预测中“位置对关系”的简化入口。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(ALPHAFOLD_CELL),
             rs.code(ALPHAFOLD_PLOT_CELL),

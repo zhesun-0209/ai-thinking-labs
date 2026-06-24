@@ -7608,13 +7608,14 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=6">Python 代码实验</a><a href="../../ch6.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch06_forward_backward_chain.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fe31fb37">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ead772fc">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E8%A7%84%E5%88%99%E9%93%BE%E6%8E%A8%E7%90%86%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">第 6 章 · 规则链推理代码实验<a class="anchor-link" href="#%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E8%A7%84%E5%88%99%E9%93%BE%E6%8E%A8%E7%90%86%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">¶</a></h1><p><a href="../../ch6.html">章节网页</a></p>
+<h1 id="%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E8%A7%84%E5%88%99%E9%93%BE%E6%8E%A8%E7%90%86%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">第 6 章 · 规则链推理代码实验<a class="anchor-link" href="#%E7%AC%AC-6-%E7%AB%A0-%C2%B7-%E8%A7%84%E5%88%99%E9%93%BE%E6%8E%A8%E7%90%86%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">¶</a></h1><p>本页用一个动物分类专家系统观察“事实如何触发规则”。前向链从已知事实往外推，后向链从目标倒推需要证明的条件；两种方向得到同一个结论，但过程完全不同。</p>
+<p><a href="../../ch6.html">章节网页</a></p>
 <h2 id="%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">运行内容<a class="anchor-link" href="#%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">¶</a></h2><ul>
 <li>构建动物分类规则库</li>
 <li>运行前向链和后向链</li>
@@ -7624,17 +7625,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=bc884c6b">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=287daa82">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="0.-%E7%8E%AF%E5%A2%83%E4%B8%8E%E6%95%B0%E6%8D%AE">0. 环境与数据<a class="anchor-link" href="#0.-%E7%8E%AF%E5%A2%83%E4%B8%8E%E6%95%B0%E6%8D%AE">¶</a></h2>
+<h2 id="0.-%E8%A7%84%E5%88%99%E5%BA%93">0. 规则库<a class="anchor-link" href="#0.-%E8%A7%84%E5%88%99%E5%BA%93">¶</a></h2><p>先看初始事实和规则表。每条规则都有一组前提和一个结论，推理过程就是不断检查“前提是否已经满足”。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=9c6dc063">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=03361e22">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7642,7 +7643,7 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 导入实验库，并设置图表中文显示。</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 载入本页会用到的数据表、队列和绘图工具。</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
@@ -7692,7 +7693,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=64052eaa">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=498f64a6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7856,17 +7857,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4c2065f4">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=be59d522">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-%E5%89%8D%E5%90%91%E9%93%BE">1. 前向链<a class="anchor-link" href="#1.-%E5%89%8D%E5%90%91%E9%93%BE">¶</a></h2>
+<h2 id="1.-%E5%89%8D%E5%90%91%E9%93%BE">1. 前向链<a class="anchor-link" href="#1.-%E5%89%8D%E5%90%91%E9%93%BE">¶</a></h2><p>前向链适合回答“这些事实还能推出什么”。它每一轮寻找可触发规则，把新结论加入已知事实集合。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=be082e66">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a21fdcf5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7996,17 +7997,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a68fbdd4">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b79ac87c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.-%E5%90%8E%E5%90%91%E9%93%BE">2. 后向链<a class="anchor-link" href="#2.-%E5%90%8E%E5%90%91%E9%93%BE">¶</a></h2>
+<h2 id="2.-%E5%90%8E%E5%90%91%E9%93%BE">2. 后向链<a class="anchor-link" href="#2.-%E5%90%8E%E5%90%91%E9%93%BE">¶</a></h2><p>后向链适合回答“为了证明目标，还缺哪些条件”。它从目标出发，把目标拆成更小的子目标，直到命中初始事实。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b90d20d1">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=18a0ab99">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8187,17 +8188,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1c5b7bfa">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7b7e9a33">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.-%E6%8E%A8%E7%90%86%E8%B7%AF%E5%BE%84%E5%9B%BE">3. 推理路径图<a class="anchor-link" href="#3.-%E6%8E%A8%E7%90%86%E8%B7%AF%E5%BE%84%E5%9B%BE">¶</a></h2>
+<h2 id="3.-%E6%8E%A8%E7%90%86%E8%B7%AF%E5%BE%84%E5%9B%BE">3. 推理路径图<a class="anchor-link" href="#3.-%E6%8E%A8%E7%90%86%E8%B7%AF%E5%BE%84%E5%9B%BE">¶</a></h2><p>图里每一行是一条被触发的规则。绿色是初始事实，蓝色是中间结论，橙色是最终目标。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=6d5970e1">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8332580a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

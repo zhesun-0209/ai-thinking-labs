@@ -7608,13 +7608,14 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=9">Python 代码实验</a><a href="../../ch9.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch09_bpe.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9d94539c">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ff94f09b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E7%AC%AC-9-%E7%AB%A0-%C2%B7-BPE-%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">第 9 章 · BPE 代码实验<a class="anchor-link" href="#%E7%AC%AC-9-%E7%AB%A0-%C2%B7-BPE-%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">¶</a></h1><p><a href="../../ch9.html">章节网页</a></p>
+<h1 id="%E7%AC%AC-9-%E7%AB%A0-%C2%B7-BPE-%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">第 9 章 · BPE 代码实验<a class="anchor-link" href="#%E7%AC%AC-9-%E7%AB%A0-%C2%B7-BPE-%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">¶</a></h1><p>本页用经典英文词频语料演示子词合并。读者重点看每一轮最高频相邻符号是什么，以及 token 总数如何下降。</p>
+<p><a href="../../ch9.html">章节网页</a></p>
 <h2 id="%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">运行内容<a class="anchor-link" href="#%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">¶</a></h2><ul>
 <li>准备字符级词表</li>
 <li>执行 merge 步骤</li>
@@ -7624,17 +7625,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7da15abe">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=73dadd51">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="0.-%E7%8E%AF%E5%A2%83%E4%B8%8E%E6%95%B0%E6%8D%AE">0. 环境与数据<a class="anchor-link" href="#0.-%E7%8E%AF%E5%A2%83%E4%B8%8E%E6%95%B0%E6%8D%AE">¶</a></h2>
+<h2 id="0.-%E8%AF%8D%E9%A2%91%E8%AF%AD%E6%96%99">0. 词频语料<a class="anchor-link" href="#0.-%E8%AF%8D%E9%A2%91%E8%AF%AD%E6%96%99">¶</a></h2><p>先把单词拆成字符序列，并保留每个单词出现频次。高频词会对合并选择产生更大影响。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=360f415d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2eb9afc0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7642,7 +7643,7 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 导入实验库，并设置图表中文显示。</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 载入本页会用到的数据集、模型和绘图工具。</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
@@ -7709,7 +7710,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=77560904">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=280c19c7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7837,17 +7838,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=da235b54">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e2503166">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-Merge-%E8%BF%87%E7%A8%8B">1. Merge 过程<a class="anchor-link" href="#1.-Merge-%E8%BF%87%E7%A8%8B">¶</a></h2>
+<h2 id="1.-%E5%90%88%E5%B9%B6%E8%BF%87%E7%A8%8B">1. 合并过程<a class="anchor-link" href="#1.-%E5%90%88%E5%B9%B6%E8%BF%87%E7%A8%8B">¶</a></h2><p>每一轮选择当前最高频 pair，把它合并成更长的子词。图表同时展示选择依据和压缩效果。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=da970bde">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=386b70cd">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7981,7 +7982,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4033e01b">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c91332d9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
