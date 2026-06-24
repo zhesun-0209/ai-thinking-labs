@@ -1,10 +1,10 @@
-# Jupyter Notebook 索引
+# Jupyter Notebook
 
-配套《AI思维》第 5–12 章：可下载运行的 Python 代码实验。首个代码单元会准备运行时脚本、数据和依赖，真实执行后导出为静态 HTML。
+配套《AI思维》第 5–12 章：可下载运行的 Python 代码实验。首个代码单元内嵌本章所需源码和数据，不再联网下载仓库里的封装脚本。
 
 ## 阅读
 
-[index.html](./index.html) 默认展示核心 Notebook；切换「全部」可查看扩展实验。点击 **在线阅读** 进入 `rendered/*.html`，或直接下载 `.ipynb` 运行。
+从各章正文顶部的 **Python 代码实验** 进入本章 Notebook 列表。点击 **在线阅读** 进入 `rendered/*.html`，或直接下载 `.ipynb` 运行。
 
 ## 维护
 

@@ -7605,10 +7605,10 @@ body.jp-Notebook {
 </style>
 </head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
-<nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../index.html">Notebook 索引</a><a href="../../ch6.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch06_graph_reasoning.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
+<nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=6">Python 代码实验</a><a href="../../ch6.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch06_graph_reasoning.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=936dbc0a">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=55d2b53e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7624,7 +7624,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c03bdbcc">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8439bfbb">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7634,78 +7634,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c1bed1cf">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 准备运行时：若下载单个 ipynb 后本地没有 labs/，会自动拉取所需脚本和数据。</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.request</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlretrieve</span>
-
-<span class="n">BASE_URL</span> <span class="o">=</span> <span class="s2">"https://raw.githubusercontent.com/zhesun-0209/ai-thinking-labs/main"</span>
-<span class="n">RUNTIME_FILES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'labs/ch06/reasoning.py'</span><span class="p">,</span> <span class="s1">'labs/common/campus_graph.json'</span><span class="p">,</span> <span class="s1">'labs/common/ch6_kg.json'</span><span class="p">,</span> <span class="s1">'labs/common/ch6_rules.json'</span><span class="p">,</span> <span class="s1">'labs/common/codelens.py'</span><span class="p">,</span> <span class="s1">'labs/common/luxun_bpe.json'</span><span class="p">,</span> <span class="s1">'labs/common/mpl_setup.py'</span><span class="p">,</span> <span class="s1">'labs/common/notebook_helpers.py'</span><span class="p">,</span> <span class="s1">'labs/common/viz_anim.py'</span><span class="p">]</span>
-
-<span class="n">ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-    <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ROOT</span><span class="o">.</span><span class="n">parent</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-    <span class="n">ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"_ai_thinking_labs_runtime"</span>
-    <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">RUNTIME_FILES</span><span class="p">:</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="n">ROOT</span> <span class="o">/</span> <span class="n">rel</span>
-        <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="k">continue</span>
-        <span class="n">target</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">urlretrieve</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">BASE_URL</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
-
-<span class="n">missing</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">module</span><span class="p">,</span> <span class="n">package</span> <span class="ow">in</span> <span class="p">[</span>
-    <span class="p">(</span><span class="s2">"numpy"</span><span class="p">,</span> <span class="s2">"numpy&gt;=1.24"</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">"pandas"</span><span class="p">,</span> <span class="s2">"pandas&gt;=2.0"</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">"matplotlib"</span><span class="p">,</span> <span class="s2">"matplotlib&gt;=3.7"</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">"scipy"</span><span class="p">,</span> <span class="s2">"scipy&gt;=1.10"</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">"sklearn"</span><span class="p">,</span> <span class="s2">"scikit-learn&gt;=1.3"</span><span class="p">),</span>
-<span class="p">]:</span>
-    <span class="k">if</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
-    <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">([</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="o">*</span><span class="n">missing</span><span class="p">])</span>
-
-<span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
-    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span><span class="p">))</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span><span class="p">))</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"labs"</span> <span class="o">/</span> <span class="s2">"ch06"</span><span class="p">))</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">common.mpl_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">configure_matplotlib</span>
-<span class="n">configure_matplotlib</span><span class="p">()</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">Image</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"runtime ready:"</span><span class="p">,</span> <span class="n">ROOT</span><span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">reasoning</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>runtime ready: /Users/zhesun/Desktop/Fudan/phd/vibe coding
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=dc394c91">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=d6d6e67b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7720,7 +7649,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4e5e41a1">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=499cc439">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7782,7 +7711,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cae471d4">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7dd012e5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7901,7 +7830,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6c728448">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a19c1fa9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7916,7 +7845,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9d8b2926">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=299de2bf">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7982,7 +7911,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9c4bf9ba">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8662b6c0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7992,7 +7921,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8bab2632">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=53e7d715">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8075,7 +8004,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d4db2032">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2c6d5295">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8085,7 +8014,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ddfd20d9">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ceb03f6f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8152,7 +8081,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=074f7d4d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=bafa0a55">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

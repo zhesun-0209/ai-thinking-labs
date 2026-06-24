@@ -26,4 +26,4 @@ labs/
 notebooks/          # Jupyter Notebook（见 notebooks/README.md）
 ```
 
-Notebook 在浏览器中通过 **独立页面** 打开（不嵌入章节页），见站点 `notebooks/index.html`。
+Notebook 从各章正文顶部的 **Python 代码实验** 按钮进入；下载后的 `.ipynb` 内嵌运行所需源码和数据。

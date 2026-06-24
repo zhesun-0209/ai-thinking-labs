@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 Cell = tuple[str, str]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def md(text: str) -> Cell:
@@ -97,7 +101,6 @@ def exercises(*items: str) -> list[Cell]:
 _COMMON_RUNTIME_FILES = [
     "labs/common/mpl_setup.py",
     "labs/common/codelens.py",
-    "labs/common/viz_anim.py",
     "labs/common/notebook_helpers.py",
     "labs/common/campus_graph.json",
     "labs/common/ch6_rules.json",
@@ -119,28 +122,24 @@ _CHAPTER_RUNTIME_FILES = {
 
 def boot(ch: str, imports: str = "") -> str:
     runtime_files = sorted(set(_COMMON_RUNTIME_FILES + _CHAPTER_RUNTIME_FILES[ch]))
+    payload = {
+        rel: (ROOT / rel).read_text(encoding="utf-8")
+        for rel in runtime_files
+    }
     base = f"""
-# 准备运行时：若下载单个 ipynb 后本地没有 labs/，会自动拉取所需脚本和数据。
+# 准备运行时：本 notebook 内嵌所需源码和数据，不依赖在线封装文件。
 import importlib.util
 import subprocess
 import sys
 from pathlib import Path
-from urllib.request import urlretrieve
 
-BASE_URL = "https://raw.githubusercontent.com/zhesun-0209/ai-thinking-labs/main"
-RUNTIME_FILES = {runtime_files!r}
+INLINE_RUNTIME_FILES = {json.dumps(payload, ensure_ascii=False, indent=2)}
 
-ROOT = Path.cwd()
-if not (ROOT / "labs").exists() and (ROOT.parent / "labs").exists():
-    ROOT = ROOT.parent
-if not (ROOT / "labs").exists():
-    ROOT = Path.cwd() / "_ai_thinking_labs_runtime"
-    for rel in RUNTIME_FILES:
-        target = ROOT / rel
-        if target.exists():
-            continue
-        target.parent.mkdir(parents=True, exist_ok=True)
-        urlretrieve(f"{{BASE_URL}}/{{rel}}", target)
+ROOT = Path.cwd() / "_ai_thinking_labs_inline_runtime"
+for rel, source in INLINE_RUNTIME_FILES.items():
+    target = ROOT / rel
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(source, encoding="utf-8")
 
 missing = []
 for module, package in [

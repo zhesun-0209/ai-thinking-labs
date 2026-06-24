@@ -21,11 +21,18 @@ from notebook_content import all_notebooks  # noqa: E402
 
 
 def write_notebook(name: str, cells: list[tuple[str, str]]) -> None:
+    nb_cells = []
+    for kind, src in cells:
+        if kind == "md":
+            nb_cells.append(new_markdown_cell(src))
+            continue
+        metadata = {}
+        if src.lstrip().startswith("# 准备运行时"):
+            metadata["tags"] = ["ai-labs-bootstrap"]
+        nb_cells.append(new_code_cell(src, metadata=metadata))
+
     nb = new_notebook(
-        cells=[
-            new_markdown_cell(src) if kind == "md" else new_code_cell(src)
-            for kind, src in cells
-        ],
+        cells=nb_cells,
         metadata={
             "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
             "language_info": {"name": "python", "pygments_lexer": "ipython3"},

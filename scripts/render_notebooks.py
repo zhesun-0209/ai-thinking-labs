@@ -401,6 +401,8 @@ def export_html(path: Path) -> Path:
             "--template",
             "lab",
             "--embed-images",
+            "--TagRemovePreprocessor.enabled=True",
+            "--TagRemovePreprocessor.remove_cell_tags=ai-labs-bootstrap",
             f"--output={stem}",
             f"--output-dir={RENDERED_DIR.relative_to(ROOT)}",
             str(path.relative_to(ROOT)),
@@ -433,9 +435,10 @@ def chapter_number(notebook_path: Path) -> str | None:
 def reader_chrome(notebook_path: Path) -> str:
     ch = chapter_number(notebook_path)
     chapter_link = f'<a href="../../ch{ch}.html">章节网页</a>' if ch else '<a href="../../hub.html">章节目录</a>'
+    lab_link = f'<a href="../chapter.html?ch={ch}">Python 代码实验</a>' if ch else '<a href="../../hub.html">章节目录</a>'
     return (
         '<nav id="ai-labs-chrome" aria-label="Notebook 导航">'
-        '<a href="../index.html">Notebook 索引</a>'
+        f"{lab_link}"
         f"{chapter_link}"
         '<a href="../../hub.html">章节目录</a>'
         f'<a href="../{notebook_path.name}" download>下载 .ipynb</a>'

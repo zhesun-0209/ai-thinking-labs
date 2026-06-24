@@ -1,45 +1,6 @@
 /** Notebook catalog for 《AI思维》labs — used by notebooks/*.html */
 "use strict";
 
-const NOTEBOOKS_REPO = "zhesun-0209/ai-thinking-labs";
-const NOTEBOOKS_BRANCH = "main";
-const NOTEBOOKS_BASE = `https://github.com/${NOTEBOOKS_REPO}/blob/${NOTEBOOKS_BRANCH}/notebooks`;
-
-const TIER_META = {
-  A: {
-    label: "纯 Python",
-    summary: "先理解流程，不依赖机器学习库。",
-    tone: "green",
-  },
-  B: {
-    label: "numpy / sklearn",
-    summary: "把算法拆成数组、矩阵和可视化。",
-    tone: "blue",
-  },
-  C: {
-    label: "本地 torch",
-    summary: "适合已有 Python 环境后继续动手。",
-    tone: "amber",
-  },
-  D: {
-    label: "概念走读",
-    summary: "用代码骨架理解系统流程。",
-    tone: "violet",
-  },
-};
-
-const SCOPE_META = {
-  core: "核心实验",
-  extension: "扩展参考",
-};
-
-const LEARNING_PATH = [
-  { title: "打开", text: "进入预渲染页面，确认代码单元和输出。" },
-  { title: "下载", text: "下载 .ipynb 后直接运行首个环境单元。" },
-  { title: "改参数", text: "替换输入、调参数，观察输出变化。" },
-  { title: "复现", text: "用同一代码复现章节网页中的关键结果。" },
-];
-
 /** @type {Record<number, { title: string; slug: string; web: string; question: string; items: Array<object> }>} */
 const CHAPTER_NOTEBOOKS = {
   5: {
@@ -365,214 +326,40 @@ function readerUrl(filename) {
   return `rendered/${stem(filename)}.html`;
 }
 
-function githubUrl(filename) {
-  return `${NOTEBOOKS_BASE}/${filename}`;
-}
-
-function chapterEntries() {
-  return Object.keys(CHAPTER_NOTEBOOKS)
-    .sort((a, b) => Number(a) - Number(b))
-    .map((n) => [Number(n), CHAPTER_NOTEBOOKS[n]]);
-}
-
-function notebookEntries(chapterFilter = null) {
-  return chapterEntries()
-    .filter(([chNum]) => chapterFilter === null || chNum === chapterFilter)
-    .flatMap(([chNum, ch]) => ch.items.map((item) => ({ ...item, chNum, chapterTitle: ch.title, chapterQuestion: ch.question })));
-}
-
-function minutesLabel(minutes) {
-  if (minutes <= 12) return "短练习";
-  if (minutes <= 20) return "标准练习";
-  return "进阶练习";
-}
-
-function itemScope(item) {
-  return item.scope || "core";
-}
-
-function renderPills(item) {
-  const tier = TIER_META[item.tier] || { label: item.tier, tone: "green" };
-  const scope = itemScope(item);
-  return `<div class="nb-pills" aria-label="学习属性">
-    <span class="nb-pill nb-pill--chapter">第 ${item.chNum} 章</span>
-    <span class="nb-pill ${scope === "core" ? "nb-pill--core" : "nb-pill--extension"}">${SCOPE_META[scope]}</span>
-    <span class="nb-pill nb-pill--${tier.tone}">${item.tier} 层 · ${tier.label}</span>
-    <span class="nb-pill">${minutesLabel(item.minutes)} · ${item.minutes} 分钟</span>
-  </div>`;
-}
-
 function renderNotebookCard(item) {
-  const tier = TIER_META[item.tier] || { label: item.tier, summary: "", tone: "green" };
-  const outcomes = (item.outcomes || []).map((text) => `<li>${text}</li>`).join("");
   if (!item.ready) {
-    return `<article class="nb-card nb-card--soon" data-tier="${item.tier}" data-scope="${itemScope(item)}" data-chapter="${item.chNum}" data-minutes="${item.minutes}">
-      ${renderPills(item)}
+    return `<article class="nb-card nb-card--soon">
       <h3>${item.title}</h3>
       ${item.blurb ? `<p class="nb-card-blurb">${item.blurb}</p>` : ""}
       <p class="nb-soon">即将推出</p>
     </article>`;
   }
-  return `<article class="nb-card" data-tier="${item.tier}" data-scope="${itemScope(item)}" data-chapter="${item.chNum}" data-minutes="${item.minutes}" data-search="${[
-    item.file,
-    item.id,
-    item.title,
-    item.blurb,
-    item.result,
-    item.chapterTitle,
-    item.chapterQuestion,
-    ...(item.outcomes || []),
-    tier.label,
-    SCOPE_META[itemScope(item)],
-  ]
-    .join(" ")
-    .toLowerCase()}">
-    ${renderPills(item)}
+  const details = [item.blurb, item.result].filter(Boolean).join(" · ");
+  return `<article class="nb-card">
     <h3>${item.title}</h3>
-    ${item.blurb ? `<p class="nb-card-blurb">${item.blurb}</p>` : ""}
-    <div class="nb-card-detail">
-      <div>
-        <strong>观察重点</strong>
-        <ul>${outcomes}</ul>
-      </div>
-      <div>
-        <strong>代码产出</strong>
-        <p>${item.result}</p>
-      </div>
-    </div>
+    ${details ? `<p class="nb-card-blurb">${details}</p>` : ""}
     <div class="nb-actions">
       <a class="nb-btn nb-btn--primary" href="${readerUrl(item.file)}">在线阅读</a>
       <a class="nb-btn" href="${item.file}" download>下载 .ipynb</a>
-      <a class="nb-btn" href="${githubUrl(item.file)}" target="_blank" rel="noopener noreferrer">GitHub 源码 ↗</a>
     </div>
   </article>`;
 }
 
-function catalogStats(entries = notebookEntries()) {
-  const ready = entries.filter((item) => item.ready);
-  const core = ready.filter((item) => itemScope(item) === "core");
-  return {
-    total: ready.length,
-    core: core.length,
-    minutes: core.reduce((sum, item) => sum + item.minutes, 0),
-    chapters: new Set(core.map((item) => item.chNum)).size,
-  };
-}
-
-function renderOverview(chapterFilter = null) {
-  const entries = notebookEntries(chapterFilter);
-  const stats = catalogStats(entries);
-  return `<section class="nb-overview" aria-labelledby="nbOverviewTitle">
-    <div>
-      <p class="nb-kicker">代码实验台</p>
-      <h2 id="nbOverviewTitle">${chapterFilter ? `第 ${chapterFilter} 章学习包` : "从交互理解到可复现实验"}</h2>
-      <p>${chapterFilter ? CHAPTER_NOTEBOOKS[chapterFilter].question : "每个 Notebook 都是可下载运行的代码实验：首个单元准备依赖和数据，后续单元调用主流库或轻量 numpy 示例复现关键结果。"}</p>
-    </div>
-    <dl class="nb-stats">
-      <div><dt>${stats.core}</dt><dd>核心实验</dd></div>
-      <div><dt>${stats.total}</dt><dd>可读总数</dd></div>
-      <div><dt>${stats.chapters}</dt><dd>覆盖章节</dd></div>
-    </dl>
-  </section>`;
-}
-
-function renderLearningPath() {
-  return `<section class="nb-path" aria-label="学习路线">
-    ${LEARNING_PATH.map(
-      (step, index) => `<article>
-        <span>${index + 1}</span>
-        <strong>${step.title}</strong>
-        <p>${step.text}</p>
-      </article>`,
-    ).join("")}
-  </section>`;
-}
-
-function renderControls(chapterFilter = null) {
-  const entries = notebookEntries(chapterFilter);
-  const tiers = [...new Set(entries.map((item) => item.tier))];
-  const coreCount = entries.filter((item) => itemScope(item) === "core").length;
-  return `<section class="nb-controls" aria-label="Notebook 筛选">
-    <label class="nb-search">
-      <span>查找 Notebook</span>
-      <input id="nbSearch" type="search" placeholder="搜索算法、章节、产出..." autocomplete="off" />
-    </label>
-    <div class="nb-segmented nb-scope-filter" role="group" aria-label="展示范围">
-      <button class="is-active" type="button" data-scope="core" aria-pressed="true">核心</button>
-      <button type="button" data-scope="all" aria-pressed="false">全部</button>
-    </div>
-    <div class="nb-segmented nb-tier-filter" role="group" aria-label="难度层级">
-      <button class="is-active" type="button" data-tier="all" aria-pressed="true">全部</button>
-      ${tiers.map((tier) => `<button type="button" data-tier="${tier}" aria-pressed="false">${tier} 层</button>`).join("")}
-    </div>
-    <p class="nb-count" id="nbCount" aria-live="polite">${coreCount} 个核心实验</p>
-  </section>`;
-}
-
-function renderChapterSection(chNum, opts = {}) {
+function renderChapterSection(chNum) {
   const ch = CHAPTER_NOTEBOOKS[chNum];
   if (!ch) return "";
-  const heading =
-    opts.heading !== false
-      ? `<div class="nb-chapter-head">
-        <span class="nb-chapter-num">${chNum}</span>
-        <div>
-          <p class="nb-chapter-question">${ch.question}</p>
-          <h2>${ch.title}</h2>
-          <a class="nb-back-ch" href="${ch.web}">返回第 ${chNum} 章网页</a>
-        </div>
-      </div>`
-      : "";
-  const cards = ch.items.map((item) => renderNotebookCard({ ...item, chNum, chapterTitle: ch.title, chapterQuestion: ch.question })).join("");
-  return `<section class="nb-chapter" id="ch${chNum}">${heading}<div class="nb-grid">${cards}</div></section>`;
-}
-
-function filterCards() {
-  const searchEl = document.getElementById("nbSearch");
-  const countEl = document.getElementById("nbCount");
-  const query = (searchEl?.value || "").trim().toLowerCase();
-  const activeTier = document.querySelector(".nb-tier-filter button.is-active")?.dataset.tier || "all";
-  const activeScope = document.querySelector(".nb-scope-filter button.is-active")?.dataset.scope || "core";
-  const cards = [...document.querySelectorAll(".nb-card")];
-  const isFiltered = Boolean(query) || activeTier !== "all" || activeScope !== "core";
-  let shown = 0;
-  cards.forEach((card) => {
-    const matchesTier = activeTier === "all" || card.dataset.tier === activeTier;
-    const matchesScope = activeScope === "all" || card.dataset.scope === "core";
-    const matchesQuery = !query || (card.dataset.search || card.textContent.toLowerCase()).includes(query);
-    const visible = matchesTier && matchesScope && matchesQuery;
-    card.hidden = !visible;
-    if (visible) shown += 1;
-  });
-
-  document.querySelectorAll(".nb-chapter").forEach((section) => {
-    const visibleCards = section.querySelectorAll(".nb-card:not([hidden])").length;
-    section.hidden = visibleCards === 0;
-  });
-
-  const emptyEl = document.querySelector(".nb-empty");
-  if (emptyEl) emptyEl.hidden = shown !== 0;
-  document.querySelectorAll(".nb-toc").forEach((toc) => {
-    toc.hidden = isFiltered;
-  });
-  if (countEl) countEl.textContent = `${shown} 个${activeScope === "core" ? "核心" : ""}实验`;
-}
-
-function setupControls() {
-  const searchEl = document.getElementById("nbSearch");
-  searchEl?.addEventListener("input", filterCards);
-  document.querySelectorAll(".nb-segmented button").forEach((button) => {
-    button.addEventListener("click", () => {
-      button.closest(".nb-segmented")?.querySelectorAll("button").forEach((item) => {
-        item.classList.remove("is-active");
-        item.setAttribute("aria-pressed", "false");
-      });
-      button.classList.add("is-active");
-      button.setAttribute("aria-pressed", "true");
-      filterCards();
-    });
-  });
-  filterCards();
+  const cards = ch.items.map((item) => renderNotebookCard(item)).join("");
+  return `<section class="nb-chapter" id="ch${chNum}">
+    <div class="nb-chapter-head">
+      <span class="nb-chapter-num">${chNum}</span>
+      <div>
+        <p class="nb-chapter-question">${ch.question}</p>
+        <h2>${ch.title}</h2>
+        <a class="nb-back-ch" href="${ch.web}">返回第 ${chNum} 章网页</a>
+      </div>
+    </div>
+    <div class="nb-grid">${cards}</div>
+  </section>`;
 }
 
 function renderChapterPage(chNum) {
@@ -586,42 +373,25 @@ function renderChapterPage(chNum) {
   if (titleEl) titleEl.textContent = `第 ${chNum} 章 · ${ch.title} · Python 实验`;
   if (mainEl) {
     mainEl.innerHTML = `
-      ${renderOverview(chNum)}
-      ${renderControls(chNum)}
-      ${renderChapterSection(chNum)}
-      <p class="nb-empty" hidden>没有匹配的 Notebook。</p>
-      <p class="nb-foot"><a href="index.html">全部 Notebook 索引</a> · <a href="../labs/README.md">labs/ 脚本说明 ↗</a></p>`;
-    setupControls();
+      <section class="nb-overview" aria-labelledby="nbOverviewTitle">
+        <div>
+          <p class="nb-kicker">Python 代码实验</p>
+          <h2 id="nbOverviewTitle">第 ${chNum} 章代码实验</h2>
+          <p>Notebook 内嵌本章运行所需的源码和数据；下载后直接运行首个单元即可复现输出。</p>
+        </div>
+      </section>
+      ${renderChapterSection(chNum)}`;
   }
 }
 
 function renderIndexPage() {
-  const mainEl = document.getElementById("nbMain");
-  if (!mainEl) return;
-  const sections = chapterEntries().map(([n]) => renderChapterSection(n)).join("");
-  mainEl.innerHTML = `
-    ${renderOverview()}
-    ${renderLearningPath()}
-    ${renderControls()}
-    <nav class="nb-toc" aria-label="章节 Notebook 索引">
-      ${chapterEntries()
-        .map(([n, ch]) => {
-          const ready = ch.items.filter((item) => item.ready).length;
-          const core = ch.items.filter((item) => item.ready && itemScope(item) === "core").length;
-          return `<a href="chapter.html?ch=${n}"><span>第 ${n} 章</span><strong>${ch.title}</strong><em>${core} 核心 · ${ready} 可读</em></a>`;
-        })
-        .join("")}
-    </nav>
-    ${sections}
-    <p class="nb-empty" hidden>没有匹配的 Notebook。</p>`;
-  setupControls();
+  window.location.replace("../hub.html");
 }
 
 if (typeof window !== "undefined") {
   window.NOTEBOOKS_CATALOG = {
     CHAPTER_NOTEBOOKS,
     readerUrl,
-    githubUrl,
     renderChapterPage,
     renderIndexPage,
   };
