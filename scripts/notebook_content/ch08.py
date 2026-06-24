@@ -353,9 +353,15 @@ plt.show()
 
 
 BPE_DATA_CELL = """
-# 准备 BPE 语料，把每个词拆成字符序列。
-corpus = ["low", "lower", "newest", "widest"]
-vocab = Counter(tuple(word) + ("</w>",) for word in corpus)
+# 准备带频次的 BPE 语料，把每个词拆成字符序列。
+word_freq = {
+    "low": 5,
+    "lower": 2,
+    "newest": 6,
+    "widest": 3,
+    "newer": 4,
+}
+vocab = Counter({tuple(word) + ("</w>",): freq for word, freq in word_freq.items()})
 
 def pair_counts(vocab):
     counts = Counter()
@@ -376,28 +382,43 @@ def merge_pair(vocab, pair):
     return Counter(merged)
 
 
-display(pd.DataFrame({"token序列": [" ".join(k) for k in vocab.keys()], "频次": list(vocab.values())}))
+def weighted_token_count(vocab):
+    return sum(len(symbols) * freq for symbols, freq in vocab.items())
+
+
+display(pd.DataFrame({
+    "word": list(word_freq.keys()),
+    "频次": list(word_freq.values()),
+    "初始token序列": [" ".join(tuple(word) + ("</w>",)) for word in word_freq],
+}))
+print("初始加权 token 数:", weighted_token_count(vocab))
 """
 
 
 BPE_RUN_CELL = """
-# 连续执行若干次 merge，记录每轮最高频 pair。
+# 连续执行若干次 merge，记录每轮最高频 pair 和 token 数变化。
 bpe_rows = []
 history = []
 current_vocab = vocab.copy()
+token_totals = [weighted_token_count(current_vocab)]
 
 for step in range(1, 7):
     counts = pair_counts(current_vocab)
     best_pair, best_count = counts.most_common(1)[0]
+    before_total = weighted_token_count(current_vocab)
     current_vocab = merge_pair(current_vocab, best_pair)
+    after_total = weighted_token_count(current_vocab)
+    token_totals.append(after_total)
     state = [" ".join(symbols) for symbols in current_vocab.keys()]
     bpe_rows.append({
         "轮次": step,
         "合并pair": " + ".join(best_pair),
         "频次": best_count,
+        "token数": f"{before_total} → {after_total}",
+        "减少": before_total - after_total,
         "当前token序列": " | ".join(state),
     })
-    history.append((best_pair, counts))
+    history.append((best_pair, best_count, counts, before_total, after_total))
 
 bpe_trace = pd.DataFrame(bpe_rows)
 display(bpe_trace)
@@ -405,17 +426,59 @@ display(bpe_trace)
 
 
 BPE_PLOT_CELL = """
-# 绘制第一轮 pair 频次。
-first_counts = history[0][1]
-top_pairs = first_counts.most_common(6)
-labels = ["+".join(pair) for pair, _ in top_pairs]
-values = [count for _, count in top_pairs]
+# 展示第一轮选择依据和连续 merge 后的压缩过程。
+first_pair, _, first_counts, _, _ = history[0]
+top_pairs = first_counts.most_common(10)
+pair_labels = ["+".join(pair) for pair, _ in top_pairs]
+pair_values = [count for _, count in top_pairs]
+pair_colors = ["#f97316" if pair == first_pair else "#2563eb" for pair, _ in top_pairs]
 
-fig, ax = plt.subplots(figsize=(7.2, 4.6))
-ax.bar(labels, values, color="#2563eb")
-ax.set_title("BPE 第一轮 pair 频次", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
-ax.set_ylabel("频次")
-ax.grid(True, axis="y", color="#e2e8f0", linewidth=0.8)
+fig = plt.figure(figsize=(11.0, 7.0))
+gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 1.15], width_ratios=[1.2, 1.0], hspace=0.42, wspace=0.32)
+
+ax1 = fig.add_subplot(gs[0, 0])
+y = np.arange(len(pair_labels))
+ax1.barh(y, pair_values, color=pair_colors)
+ax1.set_yticks(y, pair_labels)
+ax1.invert_yaxis()
+ax1.set_xlabel("加权频次")
+ax1.set_title("第一轮 pair 频次", loc="left", fontsize=13, fontweight="bold", color="#0f172a")
+for idx, value in enumerate(pair_values):
+    ax1.text(value + 0.25, idx, str(value), va="center", color="#0f172a", fontweight="bold" if idx == 0 else "normal")
+ax1.grid(True, axis="x", color="#e2e8f0", linewidth=0.8)
+
+ax2 = fig.add_subplot(gs[0, 1])
+steps = np.arange(len(token_totals))
+ax2.plot(steps, token_totals, marker="o", linewidth=2.4, color="#2563eb")
+for x, value in zip(steps, token_totals):
+    ax2.text(x, value + 2.0, str(value), ha="center", color="#0f172a")
+ax2.set_xticks(steps, ["初始"] + [str(i) for i in range(1, len(token_totals))])
+ax2.set_xlabel("merge 轮次")
+ax2.set_ylabel("加权 token 数")
+ax2.set_title("token 数逐轮下降", loc="left", fontsize=13, fontweight="bold", color="#0f172a")
+ax2.grid(True, color="#e2e8f0", linewidth=0.8)
+
+ax3 = fig.add_subplot(gs[1, :])
+ax3.set_xlim(0, 1)
+ax3.set_ylim(0, len(bpe_trace) + 0.8)
+ax3.axis("off")
+ax3.text(0.02, len(bpe_trace) + 0.35, "Merge 过程", fontsize=13, fontweight="bold", color="#0f172a")
+ax3.text(0.05, len(bpe_trace) - 0.05, "轮次", color="#64748b", fontweight="bold")
+ax3.text(0.18, len(bpe_trace) - 0.05, "选中 pair", color="#64748b", fontweight="bold")
+ax3.text(0.43, len(bpe_trace) - 0.05, "频次", color="#64748b", fontweight="bold")
+ax3.text(0.56, len(bpe_trace) - 0.05, "token 数", color="#64748b", fontweight="bold")
+ax3.text(0.76, len(bpe_trace) - 0.05, "减少", color="#64748b", fontweight="bold")
+
+for idx, row in bpe_trace.iterrows():
+    y = len(bpe_trace) - idx - 0.65
+    ax3.add_patch(plt.Rectangle((0.02, y - 0.22), 0.92, 0.38, color="#eff6ff" if idx % 2 == 0 else "#ffffff", ec="#dbeafe", lw=0.8))
+    ax3.text(0.07, y, str(row["轮次"]), ha="center", va="center", color="#0f172a", fontweight="bold")
+    ax3.text(0.18, y, row["合并pair"], ha="left", va="center", color="#c2410c", fontweight="bold")
+    ax3.text(0.45, y, str(row["频次"]), ha="center", va="center", color="#0f172a")
+    ax3.text(0.57, y, row["token数"], ha="left", va="center", color="#0f172a")
+    ax3.text(0.78, y, f"-{row['减少']}", ha="center", va="center", color="#16a34a", fontweight="bold")
+
+fig.suptitle("BPE：高频相邻符号被合并，序列随轮次变短", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """

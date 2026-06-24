@@ -115,9 +115,9 @@ const CHAPTER_NOTEBOOKS = {
       {
         file: "ch09_bpe.ipynb",
         title: "BPE 经典词表合并",
-        blurb: "用 low / lower / newest / widest 观察高频 pair 如何形成子词。",
+        blurb: "用 low / lower / newest / widest / newer 的词频语料观察高频 pair 如何形成子词。",
         outcomes: ["统计高频 pair", "理解子词词表的生成逻辑"],
-        result: "初始词表、合并轮次、pair 频次图",
+        result: "初始词表、合并轮次、pair 频次图、token 数变化",
         tier: "A",
         minutes: 10,
         ready: true,
