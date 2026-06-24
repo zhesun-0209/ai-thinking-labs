@@ -32,17 +32,19 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
+from PIL import Image
 from IPython.display import display
 from scipy.optimize import dual_annealing
 from scipy.signal import correlate2d
-from sklearn.datasets import load_digits, make_moons
+from sklearn.datasets import load_digits, load_iris, load_sample_image, make_moons
 from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics import accuracy_score, confusion_matrix, log_loss, mean_squared_error
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.model_selection import train_test_split
-from sklearn.neural_network import MLPClassifier
+from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler, normalize
+from sklearn.svm import SVC
 
 font_paths = [
     "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
@@ -664,470 +666,741 @@ plt.show()
 
 
 PATCHIFY_CELL = """
-# 把一张 8x8 手写数字图像切成 2x2 patch token。
-digits = load_digits()
-vit_image = digits.images[8] / 16.0
-patch_size = 2
-patches = vit_image.reshape(4, patch_size, 4, patch_size).swapaxes(1, 2)
-patch_tokens = patches.reshape(-1, patch_size * patch_size)
+# 使用 sklearn 内置真实照片 china.jpg，按 ViT 常见设置切成 16x16 patch。
+raw_photo = load_sample_image("china.jpg")
+vit_image = np.asarray(Image.fromarray(raw_photo).resize((224, 224))) / 255.0
+patch_size = 16
+patch_grid = vit_image.shape[0] // patch_size
+patches = vit_image.reshape(patch_grid, patch_size, patch_grid, patch_size, 3).swapaxes(1, 2)
+patch_tokens = patches.reshape(-1, patch_size * patch_size * 3)
 
-patch_df = pd.DataFrame(patch_tokens, columns=["p00", "p01", "p10", "p11"])
-patch_df.insert(0, "patch_id", range(len(patch_df)))
-display(patch_df.head(8).round(2))
+patch_summary = []
+for patch_id, patch in enumerate(patches.reshape(-1, patch_size, patch_size, 3)):
+    row, col = divmod(patch_id, patch_grid)
+    patch_summary.append({
+        "patch_id": patch_id,
+        "行": row,
+        "列": col,
+        "token维度": patch_tokens.shape[1],
+        "R均值": patch[:, :, 0].mean(),
+        "G均值": patch[:, :, 1].mean(),
+        "B均值": patch[:, :, 2].mean(),
+        "亮度标准差": patch.mean(axis=2).std(),
+    })
+
+patch_df = pd.DataFrame(patch_summary)
+display(patch_df.head(12).round(3))
 """
 
 
 PATCHIFY_PLOT_CELL = """
-# 绘制原图和前几个 patch。
-fig, axes = plt.subplots(1, 5, figsize=(10.5, 2.8))
-axes[0].imshow(vit_image, cmap="Blues")
-axes[0].set_title("原图", fontweight="bold")
-axes[0].set_xticks([])
-axes[0].set_yticks([])
-for idx in range(4):
-    axes[idx + 1].imshow(patch_tokens[idx].reshape(2, 2), cmap="Blues")
-    axes[idx + 1].set_title(f"patch {idx}", fontweight="bold")
-    axes[idx + 1].set_xticks([])
-    axes[idx + 1].set_yticks([])
-fig.suptitle("ViT Patchify", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+# 绘制真实图片 patch 网格和若干具体 patch。
+selected_patches = [18, 43, 87, 112, 145, 181]
+fig = plt.figure(figsize=(10.8, 6.6))
+gs = fig.add_gridspec(2, 6, height_ratios=[3.4, 1.5], hspace=0.22, wspace=0.08)
+ax_img = fig.add_subplot(gs[0, :])
+ax_img.imshow(vit_image)
+ax_img.set_title("真实图片切成 14x14 个 patch", loc="left", fontweight="bold")
+ax_img.set_xticks(np.arange(0, 225, patch_size))
+ax_img.set_yticks(np.arange(0, 225, patch_size))
+ax_img.grid(color="#ffffff", linewidth=0.8)
+ax_img.tick_params(labelbottom=False, labelleft=False, length=0)
+
+for slot, patch_id in enumerate(selected_patches):
+    row, col = divmod(patch_id, patch_grid)
+    ax = fig.add_subplot(gs[1, slot])
+    ax.imshow(patches[row, col])
+    ax.set_title(f"patch {patch_id}\\n({row},{col})", fontsize=9, fontweight="bold")
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+fig.suptitle("ViT Patchify：真实照片 -> patch tokens", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
 
 
 MAE_CELL = """
-# MAE masking：随机遮住一部分 patch，只保留可见 token。
+# MAE masking：在同一张真实图片上随机遮住 75% patch，只保留可见 token。
 rng = np.random.default_rng(4)
 num_patches = len(patch_tokens)
-mask_ratio = 0.5
+mask_ratio = 0.75
 visible_ids = np.sort(rng.choice(num_patches, size=int(num_patches * (1 - mask_ratio)), replace=False))
 masked_ids = np.array([idx for idx in range(num_patches) if idx not in set(visible_ids)])
 
 mae_df = pd.DataFrame({
-    "patch_id": range(num_patches),
-    "状态": ["可见" if idx in set(visible_ids) else "mask" for idx in range(num_patches)],
+    "指标": ["总patch数", "可见patch数", "mask patch数", "mask比例"],
+    "值": [num_patches, len(visible_ids), len(masked_ids), mask_ratio],
 })
 display(mae_df)
 """
 
 
 MAE_PLOT_CELL = """
-# 绘制 mask 图像和均值重建图像。
+# 绘制 mask 图像和一个简单的均值重建基线。
 masked_image = vit_image.astype(float).copy()
 recon_image = vit_image.astype(float).copy()
-visible_mean = patch_tokens[visible_ids].mean()
+mask_map = np.zeros((patch_grid, patch_grid))
+visible_patch_mean = patches.reshape(-1, patch_size, patch_size, 3)[visible_ids].mean(axis=0)
 
 for patch_id in masked_ids:
-    row = patch_id // 4
-    col = patch_id % 4
-    masked_image[row * 2:(row + 1) * 2, col * 2:(col + 1) * 2] = np.nan
-    recon_image[row * 2:(row + 1) * 2, col * 2:(col + 1) * 2] = visible_mean
+    row, col = divmod(patch_id, patch_grid)
+    mask_map[row, col] = 1
+    r0, r1 = row * patch_size, (row + 1) * patch_size
+    c0, c1 = col * patch_size, (col + 1) * patch_size
+    masked_image[r0:r1, c0:c1] = 0.72
+    recon_image[r0:r1, c0:c1] = visible_patch_mean
 
-fig, axes = plt.subplots(1, 3, figsize=(9.5, 3.4))
-for ax, data, title in zip(axes, [vit_image, masked_image, recon_image], ["原图", "可见 patch", "均值重建"]):
-    ax.imshow(data, cmap="Blues")
+fig, axes = plt.subplots(1, 4, figsize=(11.2, 3.8))
+for ax, data, title in zip(
+    axes,
+    [vit_image, mask_map, masked_image, recon_image],
+    ["原图", "mask map", "可见 patch", "均值重建基线"],
+):
+    cmap = "Greys" if title == "mask map" else None
+    ax.imshow(data, cmap=cmap, vmin=0, vmax=1)
     ax.set_title(title, fontweight="bold")
     ax.set_xticks([])
     ax.set_yticks([])
-fig.suptitle("MAE masking", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+fig.suptitle("MAE masking：同一张真实图片的 patch 遮挡", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
 
 
 CLIP_CELL = """
-# CLIP / InfoNCE：用 digits 原型图像和文本标签构造图文匹配矩阵。
-digits = load_digits()
-label_ids = [0, 1, 2, 3, 4]
-image_names = [f"digit {i}" for i in label_ids]
-text_names = [f"text: number {i}" for i in label_ids]
+# CLIP 官方 API：用真实图片和文本提示计算图文匹配。
+clip_packages = {
+    "torch": "torch>=2.2",
+    "transformers": "transformers>=4.40",
+    "socksio": "socksio>=1.0",
+}
+missing = [package for module, package in clip_packages.items() if importlib.util.find_spec(module) is None]
+if missing:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
 
-image_proto = []
-for label in label_ids:
-    image_proto.append(digits.data[digits.target == label].mean(axis=0))
-image_emb = normalize(np.array(image_proto))
+import torch
+import torch.nn.functional as F
+from transformers import CLIPModel, CLIPProcessor
 
-text_emb = np.zeros((len(label_ids), image_emb.shape[1]))
-for row, label in enumerate(label_ids):
-    text_emb[row, label * 6:label * 6 + 6] = 1.0
-    text_emb[row] += 0.08 * image_emb[row]
-text_emb = normalize(text_emb)
+model_id = "openai/clip-vit-base-patch32"
+processor = CLIPProcessor.from_pretrained(model_id)
+clip_model = CLIPModel.from_pretrained(model_id)
+clip_model.eval()
 
-temperature = 0.08
-logits = image_emb @ text_emb.T / temperature
-probs = np.exp(logits - logits.max(axis=1, keepdims=True))
-probs = probs / probs.sum(axis=1, keepdims=True)
-clip_loss = log_loss(np.arange(len(label_ids)), probs, labels=np.arange(len(label_ids)))
+clip_images = [
+    Image.fromarray(load_sample_image("china.jpg")),
+    Image.fromarray(load_sample_image("flower.jpg")),
+]
+image_names = ["china.jpg", "flower.jpg"]
+text_prompts = [
+    "a photo of a Chinese temple by a lake",
+    "a close-up photo of a red flower",
+    "a photo of a taxi cab",
+    "a photo of a handwritten digit",
+]
 
-display(pd.DataFrame(np.round(image_emb @ text_emb.T, 3), index=image_names, columns=text_names))
-print("InfoNCE loss:", round(float(clip_loss), 4))
+inputs = processor(text=text_prompts, images=clip_images, return_tensors="pt", padding=True)
+with torch.no_grad():
+    outputs = clip_model(**inputs)
+
+logits = outputs.logits_per_image
+probs = logits.softmax(dim=1)
+targets = torch.tensor([0, 1])
+clip_loss = F.cross_entropy(logits[:, :2], targets).item()
+
+clip_prob_df = pd.DataFrame(probs.numpy(), index=image_names, columns=text_prompts)
+display(clip_prob_df.round(3))
+print("image-text contrastive loss:", round(float(clip_loss), 4))
 """
 
 
 CLIP_PLOT_CELL = """
-# 绘制图文相似度矩阵。
-sim_matrix = image_emb @ text_emb.T
-fig, ax = plt.subplots(figsize=(6.6, 5.2))
-im = ax.imshow(sim_matrix, cmap="Blues", vmin=0, vmax=1)
-ax.set_xticks(range(len(text_names)), text_names, rotation=20, ha="right")
+# 绘制真实图片和 CLIP 图文概率矩阵。
+sim_matrix = probs.numpy()
+fig = plt.figure(figsize=(11.0, 5.4))
+gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.0, 2.2], wspace=0.35)
+
+for idx, image in enumerate(clip_images):
+    ax_img = fig.add_subplot(gs[0, idx])
+    ax_img.imshow(image)
+    ax_img.set_title(image_names[idx], fontweight="bold")
+    ax_img.set_xticks([])
+    ax_img.set_yticks([])
+
+ax = fig.add_subplot(gs[0, 2])
+im = ax.imshow(sim_matrix, cmap="YlGnBu", vmin=0, vmax=1)
+ax.set_xticks(range(len(text_prompts)), text_prompts, rotation=30, ha="right")
 ax.set_yticks(range(len(image_names)), image_names)
 for i in range(len(image_names)):
-    for j in range(len(text_names)):
-        ax.text(j, i, f"{sim_matrix[i, j]:.2f}", ha="center", va="center", color="#0f172a")
-ax.set_title("CLIP 图文相似度", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
+    best = int(np.argmax(sim_matrix[i]))
+    for j in range(len(text_prompts)):
+        value = sim_matrix[i, j]
+        ax.text(j, i, f"{value:.2f}", ha="center", va="center", color="#0f172a", fontweight="bold" if j == best else "normal")
+        if j == best:
+            ax.add_patch(plt.Rectangle((j - 0.5, i - 0.5), 1, 1, fill=False, edgecolor="#0f172a", linewidth=2.2))
+ax.set_title("CLIP 官方模型：图文匹配概率", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 plt.tight_layout()
 plt.show()
 """
 
 
+GYM_SETUP_CELL = """
+# 第 11 章使用 Gymnasium 经典环境，保持和官方教程一致的环境接口。
+if importlib.util.find_spec("gymnasium") is None:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "gymnasium>=0.29"])
+
+import gymnasium as gym
+"""
+
+
 MDP_CELL = """
-# Gridworld：4x4 网格，左上和右下为终止状态，每走一步奖励 -1。
-grid_size = 4
-terminal_states = {"s00", "s33"}
-states = [f"s{r}{c}" for r in range(grid_size) for c in range(grid_size)]
-move_delta = {"上": (-1, 0), "下": (1, 0), "左": (0, -1), "右": (0, 1)}
+# FrozenLake-v1：读取 Gymnasium 官方环境自带的 MDP 转移表 P。
+frozen_env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
+n_states = frozen_env.observation_space.n
+n_actions = frozen_env.action_space.n
+action_names = {0: "Left", 1: "Down", 2: "Right", 3: "Up"}
+action_arrows = {0: "←", 1: "↓", 2: "→", 3: "↑"}
+lake_map = np.array([
+    [cell.decode("utf-8") if isinstance(cell, bytes) else str(cell) for cell in row]
+    for row in frozen_env.unwrapped.desc
+])
 
-actions = {}
-transitions = {}
-for r in range(grid_size):
-    for c in range(grid_size):
-        state = f"s{r}{c}"
-        if state in terminal_states:
-            actions[state] = []
-            continue
-        actions[state] = list(move_delta)
-        for action, (dr, dc) in move_delta.items():
-            nr = min(grid_size - 1, max(0, r + dr))
-            nc = min(grid_size - 1, max(0, c + dc))
-            next_state = f"s{nr}{nc}"
-            transitions[(state, action)] = [(next_state, 1.0, -1.0)]
+transition_rows = []
+for state in range(n_states):
+    row, col = divmod(state, 4)
+    tile = lake_map[row, col]
+    for action, outcomes in frozen_env.unwrapped.P[state].items():
+        for prob, next_state, reward, terminated in outcomes:
+            transition_rows.append({
+                "state": state,
+                "tile": tile,
+                "action": action_names[action],
+                "prob": prob,
+                "next_state": next_state,
+                "reward": reward,
+                "done": terminated,
+            })
 
-display(pd.DataFrame(
-    [
-        {"状态": s, "动作": a, "转移": transitions[(s, a)]}
-        for s, acts in actions.items()
-        for a in acts
-    ]
-).head(12))
+display(pd.DataFrame(transition_rows).head(16))
+display(pd.DataFrame(lake_map))
 """
 
 
 VALUE_ITERATION_CELL = """
-# 价值迭代：反复应用 Bellman 最优方程。
-def value_iteration(states, actions, transitions, gamma=0.9, iterations=12):
-    V = {state: 0.0 for state in states}
-    rows = []
-    policy_rows = []
+# 价值迭代：直接对 FrozenLake 的 P 表应用 Bellman 最优方程。
+def frozenlake_value_iteration(env, gamma=0.99, theta=1e-9, max_iters=1000):
+    V = np.zeros(env.observation_space.n)
+    deltas = []
 
-    for it in range(1, iterations + 1):
-        new_V = V.copy()
-        for state in states:
-            if not actions[state]:
-                continue
-            q_values = {}
-            for action in actions[state]:
-                q_values[action] = sum(
-                    prob * (reward + gamma * V[next_state])
-                    for next_state, prob, reward in transitions[(state, action)]
-                )
-            best_action = max(q_values, key=q_values.get)
-            new_V[state] = q_values[best_action]
-            if it == iterations:
-                policy_rows.append({"状态": state, "最优动作": best_action, "Q值": round(q_values[best_action], 3)})
-        V = new_V
-        row = {"轮次": it}
-        row.update({state: round(value, 3) for state, value in V.items()})
-        rows.append(row)
+    for iteration in range(1, max_iters + 1):
+        old_V = V.copy()
+        for state in range(env.observation_space.n):
+            action_values = []
+            for action in range(env.action_space.n):
+                q = 0.0
+                for prob, next_state, reward, terminated in env.unwrapped.P[state][action]:
+                    q += prob * (reward + gamma * old_V[next_state] * (not terminated))
+                action_values.append(q)
+            V[state] = max(action_values)
+        delta = float(np.max(np.abs(V - old_V)))
+        deltas.append({"iteration": iteration, "delta": delta})
+        if delta < theta:
+            break
 
-    return pd.DataFrame(rows), pd.DataFrame(policy_rows)
+    Q = np.zeros((env.observation_space.n, env.action_space.n))
+    for state in range(env.observation_space.n):
+        for action in range(env.action_space.n):
+            Q[state, action] = sum(
+                prob * (reward + gamma * V[next_state] * (not terminated))
+                for prob, next_state, reward, terminated in env.unwrapped.P[state][action]
+            )
+    policy = Q.argmax(axis=1)
+    return V, Q, policy, pd.DataFrame(deltas)
 
 
-value_trace, policy_df = value_iteration(states, actions, transitions)
-display(value_trace.tail(6))
+V_frozen, Q_frozen, policy_frozen, delta_trace = frozenlake_value_iteration(frozen_env)
+policy_df = pd.DataFrame({
+    "state": np.arange(n_states),
+    "tile": lake_map.reshape(-1),
+    "best_action": [action_names[a] for a in policy_frozen],
+    "V": V_frozen,
+    "Q_left": Q_frozen[:, 0],
+    "Q_down": Q_frozen[:, 1],
+    "Q_right": Q_frozen[:, 2],
+    "Q_up": Q_frozen[:, 3],
+}).round(4)
+
+display(delta_trace.head(8))
+display(delta_trace.tail(5))
 display(policy_df)
 """
 
 
 VALUE_PLOT_CELL = """
-# 绘制 Gridworld 最终价值和最优动作。
-final_values = value_trace.iloc[-1][states].to_dict()
-value_grid = np.array([[final_values[f"s{r}{c}"] for c in range(grid_size)] for r in range(grid_size)])
-policy_map = dict(zip(policy_df["状态"], policy_df["最优动作"]))
-arrow = {"上": "↑", "下": "↓", "左": "←", "右": "→"}
+# 绘制 FrozenLake 的价值、洞、终点和最优动作。
+value_grid = V_frozen.reshape(4, 4)
+fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.8))
+im = axes[0].imshow(value_grid, cmap="YlGnBu", vmin=0, vmax=value_grid.max())
+for state in range(n_states):
+    r, c = divmod(state, 4)
+    tile = lake_map[r, c]
+    arrow = "" if tile in {"H", "G"} else action_arrows[int(policy_frozen[state])]
+    axes[0].text(c, r, f"{tile}\\n{value_grid[r, c]:.2f}\\n{arrow}", ha="center", va="center", color="#0f172a", fontweight="bold")
+axes[0].set_title("FrozenLake 最优价值与策略", loc="left", fontweight="bold")
+axes[0].set_xticks(range(4))
+axes[0].set_yticks(range(4))
+fig.colorbar(im, ax=axes[0], fraction=0.046, pad=0.04)
 
-fig, ax = plt.subplots(figsize=(6.2, 5.6))
-im = ax.imshow(value_grid, cmap="Blues")
-for r in range(grid_size):
-    for c in range(grid_size):
-        state = f"s{r}{c}"
-        label = "T" if state in terminal_states else arrow[policy_map[state]]
-        ax.text(c, r, f"{value_grid[r, c]:.1f}\\n{label}", ha="center", va="center", color="#0f172a", fontweight="bold")
-ax.set_title("Gridworld 价值迭代", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
-ax.set_xticks(range(grid_size))
-ax.set_yticks(range(grid_size))
-fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+axes[1].plot(delta_trace["iteration"], delta_trace["delta"], color="#2563eb", linewidth=2.2)
+axes[1].set_yscale("log")
+axes[1].set_title("Bellman 误差收敛", loc="left", fontweight="bold")
+axes[1].set_xlabel("iteration")
+axes[1].set_ylabel("max |V_new - V_old|")
+axes[1].grid(True, color="#e2e8f0", linewidth=0.8)
 plt.tight_layout()
 plt.show()
 """
 
 
 TD_CELL = """
-# Sutton random walk：A-B-C-D-E 五个非终止状态，右端奖励为 1。
-rw_states = ["A", "B", "C", "D", "E"]
-V_td = defaultdict(lambda: 0.5)
-V_td["L"] = 0.0
-V_td["R"] = 0.0
-alpha = 0.4
-gamma = 1.0
-episodes = [
-    ["C", "D", "E", "R"],
-    ["C", "B", "A", "L"],
-    ["C", "D", "C", "D", "E", "R"],
-]
-td_rows = []
+# Taxi-v3：用 Q-learning 展示真实环境中的 TD target 和 Q 表更新。
+taxi_env = gym.make("Taxi-v3", render_mode="ansi")
+n_states_taxi = taxi_env.observation_space.n
+n_actions_taxi = taxi_env.action_space.n
+Q_taxi = np.zeros((n_states_taxi, n_actions_taxi))
+alpha = 0.15
+gamma = 0.95
+epsilon_start = 1.0
+epsilon_end = 0.05
+episodes = 1600
+rng = np.random.default_rng(11)
+training_rows = []
+td_samples = []
 
-step = 0
-for episode_id, episode in enumerate(episodes, start=1):
-    for state, next_state in zip(episode, episode[1:]):
-        if state in {"L", "R"}:
-            continue
-        step += 1
-        reward = 1.0 if next_state == "R" else 0.0
-        target = reward + gamma * V_td[next_state]
-        old = V_td[state]
-        V_td[state] = old + alpha * (target - old)
-        td_rows.append({
-            "episode": episode_id,
-            "步": step,
-            "状态": state,
-            "下一状态": next_state,
-            "TD target": round(target, 3),
-            "更新后V": round(V_td[state], 3),
-        })
+for episode in range(1, episodes + 1):
+    state, _ = taxi_env.reset(seed=episode)
+    total_reward = 0
+    steps = 0
+    epsilon = max(epsilon_end, epsilon_start * (0.995 ** episode))
+    terminated = truncated = False
 
-td_trace = pd.DataFrame(td_rows)
+    while not (terminated or truncated) and steps < 200:
+        if rng.random() < epsilon:
+            action = taxi_env.action_space.sample()
+        else:
+            action = int(np.argmax(Q_taxi[state]))
+        next_state, reward, terminated, truncated, _ = taxi_env.step(action)
+        td_target = reward + gamma * np.max(Q_taxi[next_state]) * (not (terminated or truncated))
+        td_error = td_target - Q_taxi[state, action]
+        Q_taxi[state, action] += alpha * td_error
+        if len(td_samples) < 12:
+            td_samples.append({
+                "episode": episode,
+                "state": state,
+                "action": action,
+                "reward": reward,
+                "next_state": next_state,
+                "TD target": td_target,
+                "TD error": td_error,
+            })
+        state = next_state
+        total_reward += reward
+        steps += 1
+
+    if episode % 100 == 0:
+        training_rows.append({"episode": episode, "reward": total_reward, "steps": steps, "epsilon": epsilon})
+
+taxi_trace = pd.DataFrame(training_rows)
+td_trace = pd.DataFrame(td_samples).round(3)
 display(td_trace)
+display(taxi_trace.tail(8).round(3))
 """
 
 
 TD_PLOT_CELL = """
-# 绘制 TD 更新后的状态价值。
-fig, ax = plt.subplots(figsize=(6.8, 4.6))
-td_values = pd.Series({state: V_td[state] for state in rw_states})
-td_values.plot(kind="bar", ax=ax, color="#2563eb")
-ax.set_title("Random walk TD(0) 状态价值", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
-ax.set_ylabel("V(s)")
-ax.grid(True, axis="y", color="#e2e8f0", linewidth=0.8)
+# 绘制 Taxi-v3 训练曲线和一个起始状态的动作价值。
+start_state, _ = taxi_env.reset(seed=42)
+fig, axes = plt.subplots(1, 2, figsize=(10.0, 4.4))
+axes[0].plot(taxi_trace["episode"], taxi_trace["reward"], marker="o", color="#2563eb", linewidth=2.0)
+axes[0].set_title("Taxi-v3 Q-learning 回报", loc="left", fontweight="bold")
+axes[0].set_xlabel("episode")
+axes[0].set_ylabel("episode reward")
+axes[0].grid(True, color="#e2e8f0", linewidth=0.8)
+
+action_labels = ["south", "north", "east", "west", "pickup", "dropoff"]
+axes[1].bar(action_labels, Q_taxi[start_state], color="#f97316")
+axes[1].set_title(f"状态 {start_state} 的 Q(s,a)", loc="left", fontweight="bold")
+axes[1].tick_params(axis="x", rotation=30)
+axes[1].grid(True, axis="y", color="#e2e8f0", linewidth=0.8)
 plt.tight_layout()
 plt.show()
+print(taxi_env.render())
+print("greedy action at rendered state:", action_labels[int(np.argmax(Q_taxi[start_state]))])
+taxi_env.close()
 """
 
 
 BANDIT_CELL = """
-# epsilon-greedy：在探索和利用之间切换。
-def run_bandit(epsilon, steps=500, seed=0):
+# CliffWalking-v0：在经典悬崖环境里比较不同 epsilon 的 SARSA。
+def train_cliff_sarsa(epsilon, episodes=700, alpha=0.45, gamma=0.99, seed=0):
+    env = gym.make("CliffWalking-v0")
     rng = np.random.default_rng(seed)
-    true_means = rng.normal(0.0, 1.0, size=10)
-    estimates = np.zeros(10)
-    counts = np.zeros(10)
+    Q = np.zeros((env.observation_space.n, env.action_space.n))
     rows = []
-    total_reward = 0.0
-    optimal_action = int(np.argmax(true_means))
-    optimal_hits = 0
 
-    for step in range(1, steps + 1):
-        explore = rng.random() < epsilon
-        action = rng.integers(10) if explore else int(np.argmax(estimates))
-        reward = rng.normal(true_means[action], 1.0)
-        counts[action] += 1
-        estimates[action] += (reward - estimates[action]) / counts[action]
-        total_reward += reward
-        optimal_hits += int(action == optimal_action)
-        if step % 50 == 0:
-            rows.append({
-                "epsilon": epsilon,
-                "步数": step,
-                "平均奖励": round(total_reward / step, 3),
-                "最优动作比例": round(optimal_hits / step, 3),
-            })
-    return pd.DataFrame(rows)
+    def choose_action(state):
+        if rng.random() < epsilon:
+            return env.action_space.sample()
+        return int(np.argmax(Q[state]))
+
+    for episode in range(1, episodes + 1):
+        state, _ = env.reset(seed=seed + episode)
+        action = choose_action(state)
+        total_reward = 0
+        steps = 0
+        terminated = truncated = False
+        while not (terminated or truncated) and steps < 200:
+            next_state, reward, terminated, truncated, _ = env.step(action)
+            next_action = choose_action(next_state)
+            target = reward + gamma * Q[next_state, next_action] * (not (terminated or truncated))
+            Q[state, action] += alpha * (target - Q[state, action])
+            state, action = next_state, next_action
+            total_reward += reward
+            steps += 1
+        if episode % 50 == 0:
+            rows.append({"epsilon": epsilon, "episode": episode, "reward": total_reward, "steps": steps})
+    env.close()
+    return pd.DataFrame(rows), Q
 
 
-bandit_trace = pd.concat([run_bandit(0.0, seed=1), run_bandit(0.1, seed=1), run_bandit(0.3, seed=1)], ignore_index=True)
-display(bandit_trace)
+cliff_runs = []
+cliff_tables = {}
+for eps in [0.05, 0.10, 0.30]:
+    trace, Q = train_cliff_sarsa(eps, seed=21)
+    cliff_runs.append(trace)
+    cliff_tables[eps] = Q
+
+cliff_trace = pd.concat(cliff_runs, ignore_index=True)
+display(cliff_trace.tail(12))
 """
 
 
 BANDIT_PLOT_CELL = """
-# 绘制不同 epsilon 的平均奖励。
-fig, ax = plt.subplots(figsize=(7.6, 4.8))
-for epsilon, part in bandit_trace.groupby("epsilon"):
-    ax.plot(part["步数"], part["平均奖励"], marker="o", linewidth=2.2, label=f"epsilon={epsilon}")
-ax.set_title("10-armed bandit 平均奖励", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
-ax.set_xlabel("步数")
-ax.set_ylabel("平均奖励")
-ax.grid(True, color="#e2e8f0", linewidth=0.8)
-ax.legend()
+# 绘制 epsilon 对 CliffWalking 学习表现的影响。
+fig, axes = plt.subplots(1, 2, figsize=(10.2, 4.6))
+for epsilon, part in cliff_trace.groupby("epsilon"):
+    axes[0].plot(part["episode"], part["reward"], marker="o", linewidth=2.0, label=f"epsilon={epsilon}")
+axes[0].set_title("CliffWalking SARSA 回报", loc="left", fontweight="bold")
+axes[0].set_xlabel("episode")
+axes[0].set_ylabel("episode reward")
+axes[0].grid(True, color="#e2e8f0", linewidth=0.8)
+axes[0].legend()
+
+best_eps = 0.10
+policy = np.argmax(cliff_tables[best_eps], axis=1).reshape(4, 12)
+arrow = {0: "↑", 1: "→", 2: "↓", 3: "←"}
+grid = np.zeros((4, 12))
+axes[1].imshow(grid, cmap="Greys", vmin=0, vmax=1)
+for r in range(4):
+    for c in range(12):
+        if r == 3 and 1 <= c <= 10:
+            text = "C"
+            color = "#dc2626"
+        elif (r, c) == (3, 0):
+            text = "S"
+            color = "#0f172a"
+        elif (r, c) == (3, 11):
+            text = "G"
+            color = "#16a34a"
+        else:
+            text = arrow[int(policy[r, c])]
+            color = "#0f172a"
+        axes[1].text(c, r, text, ha="center", va="center", color=color, fontweight="bold")
+axes[1].set_title("epsilon=0.10 学到的策略", loc="left", fontweight="bold")
+axes[1].set_xticks([])
+axes[1].set_yticks([])
 plt.tight_layout()
 plt.show()
 """
 
 
 ANNEALING_CELL = """
-# TSP 旅行商问题：用模拟退火交换城市顺序，寻找较短回路。
-cities = pd.DataFrame(
-    {
-        "城市": ["A", "B", "C", "D", "E", "F", "G", "H"],
-        "x": [0.1, 0.4, 0.9, 1.4, 1.6, 1.0, 0.5, 0.2],
-        "y": [0.2, 0.8, 0.7, 0.3, 1.1, 1.5, 1.4, 1.0],
-    }
+# SciPy dual_annealing：在 Iris 数据集上搜索 SVC 的 C 和 gamma。
+iris = load_iris(as_frame=True)
+X_iris = iris.data
+y_iris = iris.target
+search_rows = []
+
+def svc_cv_error(params):
+    log_c, log_gamma = params
+    C = 10 ** log_c
+    gamma = 10 ** log_gamma
+    model = make_pipeline(
+        StandardScaler(),
+        SVC(C=C, gamma=gamma, kernel="rbf"),
+    )
+    scores = cross_val_score(model, X_iris, y_iris, cv=5)
+    accuracy = float(scores.mean())
+    search_rows.append({
+        "trial": len(search_rows) + 1,
+        "log10_C": log_c,
+        "log10_gamma": log_gamma,
+        "C": C,
+        "gamma": gamma,
+        "cv_accuracy": accuracy,
+        "error": 1 - accuracy,
+    })
+    return 1 - accuracy
+
+
+result = dual_annealing(
+    svc_cv_error,
+    bounds=[(-2, 3), (-4, 1)],
+    maxiter=45,
+    seed=12,
+    no_local_search=True,
 )
-coords = cities[["x", "y"]].to_numpy()
+search_df = pd.DataFrame(search_rows)
+search_df["best_accuracy"] = search_df["cv_accuracy"].cummax()
+best_row = search_df.loc[search_df["cv_accuracy"].idxmax()]
+best_params = pd.DataFrame([{
+    "best_C": best_row["C"],
+    "best_gamma": best_row["gamma"],
+    "cv_accuracy": best_row["cv_accuracy"],
+    "trials": len(search_df),
+}])
 
-def route_length(route):
-    ordered = coords[route]
-    closed = np.vstack([ordered, ordered[0]])
-    return float(np.linalg.norm(np.diff(closed, axis=0), axis=1).sum())
-
-rng = np.random.default_rng(12)
-route = np.arange(len(cities))
-rng.shuffle(route)
-best_route = route.copy()
-best_loss = route_length(route)
-current_loss = best_loss
-anneal_rows = []
-
-for step in range(1, 401):
-    temperature = 1.2 * (0.992 ** step)
-    candidate = route.copy()
-    i, j = rng.choice(len(route), size=2, replace=False)
-    candidate[i], candidate[j] = candidate[j], candidate[i]
-    candidate_loss = route_length(candidate)
-    accept = candidate_loss < current_loss or rng.random() < np.exp((current_loss - candidate_loss) / max(temperature, 1e-6))
-    if accept:
-        route = candidate
-        current_loss = candidate_loss
-    if current_loss < best_loss:
-        best_route = route.copy()
-        best_loss = current_loss
-    if step % 40 == 0:
-        anneal_rows.append({"步": step, "温度": temperature, "当前距离": current_loss, "最佳距离": best_loss})
-
-anneal_df = pd.DataFrame(anneal_rows).round(4)
-display(cities)
-display(anneal_df)
-print("best route:", " -> ".join(cities.iloc[best_route]["城市"].tolist()))
+display(pd.DataFrame({
+    "样本数": [len(X_iris)],
+    "特征数": [X_iris.shape[1]],
+    "类别": [", ".join(iris.target_names)],
+}))
+display(best_params.round(4))
+display(search_df.tail(10).round(4))
 """
 
 
 ANNEALING_PLOT_CELL = """
-# 绘制 TSP 路线和距离下降。
-fig, axes = plt.subplots(1, 2, figsize=(10.2, 4.5))
-best_coords = coords[best_route]
-closed = np.vstack([best_coords, best_coords[0]])
-axes[0].plot(closed[:, 0], closed[:, 1], "-o", color="#2563eb", linewidth=2.2)
-for idx, row in cities.iterrows():
-    axes[0].text(row["x"] + 0.03, row["y"] + 0.03, row["城市"], color="#0f172a", fontweight="bold")
-axes[0].set_title("TSP 最佳路线", loc="left", fontweight="bold")
-axes[0].set_aspect("equal", adjustable="box")
+# 绘制超参数搜索轨迹和搜索空间中的高分区域。
+fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.7))
+axes[0].plot(search_df["trial"], search_df["cv_accuracy"], color="#94a3b8", linewidth=1.4, label="trial accuracy")
+axes[0].plot(search_df["trial"], search_df["best_accuracy"], color="#2563eb", linewidth=2.5, label="best so far")
+axes[0].set_title("dual_annealing 搜索过程", loc="left", fontweight="bold")
+axes[0].set_xlabel("trial")
+axes[0].set_ylabel("5-fold CV accuracy")
 axes[0].grid(True, color="#e2e8f0", linewidth=0.8)
+axes[0].legend()
 
-axes[1].plot(anneal_df["步"], anneal_df["当前距离"], color="#94a3b8", linewidth=1.8, label="当前距离")
-axes[1].plot(anneal_df["步"], anneal_df["最佳距离"], color="#2563eb", linewidth=2.4, label="最佳距离")
-axes[1].set_title("退火搜索过程", loc="left", fontweight="bold")
-axes[1].set_xlabel("步")
-axes[1].set_ylabel("路线长度")
+sc = axes[1].scatter(
+    search_df["log10_C"],
+    search_df["log10_gamma"],
+    c=search_df["cv_accuracy"],
+    cmap="YlGnBu",
+    s=42,
+    edgecolors="white",
+    linewidth=0.45,
+)
+axes[1].scatter(best_row["log10_C"], best_row["log10_gamma"], s=180, marker="*", color="#f97316", edgecolor="#0f172a", linewidth=0.7)
+axes[1].set_title("Iris SVC 搜索空间", loc="left", fontweight="bold")
+axes[1].set_xlabel("log10(C)")
+axes[1].set_ylabel("log10(gamma)")
 axes[1].grid(True, color="#e2e8f0", linewidth=0.8)
-axes[1].legend()
+fig.colorbar(sc, ax=axes[1], fraction=0.046, pad=0.04)
 plt.tight_layout()
 plt.show()
 """
 
 
 MCTS_CELL = """
-# Tic-tac-toe 井字棋局面：用 UCT 在候选落子中平衡价值和探索。
-board = np.array([
-    ["X", "O", "X"],
-    [" ", "O", " "],
-    [" ", "X", " "],
+# FrozenLake-v1：用 UCT 从起点做 Monte Carlo Tree Search。
+mcts_env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
+mcts_P = mcts_env.unwrapped.P
+mcts_map = np.array([
+    [cell.decode("utf-8") if isinstance(cell, bytes) else str(cell) for cell in row]
+    for row in mcts_env.unwrapped.desc
 ])
-candidate_moves = [(1, 0), (1, 2), (2, 0), (2, 2)]
-parent_visits = 128
-moves = pd.DataFrame(
-    {
-        "走法": [f"({r},{c})" for r, c in candidate_moves],
-        "访问次数": [42, 30, 34, 22],
-        "累计价值": [24.8, 16.2, 24.0, 11.5],
-    }
-)
-explore_c = 1.4
-moves["平均价值"] = moves["累计价值"] / moves["访问次数"]
-moves["探索项"] = explore_c * np.sqrt(np.log(parent_visits) / moves["访问次数"])
-moves["UCT"] = moves["平均价值"] + moves["探索项"]
-moves = moves.sort_values("UCT", ascending=False).reset_index(drop=True)
-display(pd.DataFrame(board))
-display(moves.round(3))
-print("选择走法:", moves.loc[0, "走法"])
+mcts_actions = {0: "Left", 1: "Down", 2: "Right", 3: "Up"}
+mcts_arrows = {0: "←", 1: "↓", 2: "→", 3: "↑"}
+root_state = 0
+rng = np.random.default_rng(12)
+N_state = defaultdict(int)
+N_action = defaultdict(int)
+W_action = defaultdict(float)
+
+def sample_model_step(state, action):
+    outcomes = mcts_P[state][action]
+    probs = np.array([item[0] for item in outcomes], dtype=float)
+    probs = probs / probs.sum()
+    idx = rng.choice(len(outcomes), p=probs)
+    prob, next_state, reward, done = outcomes[idx]
+    return next_state, reward, done
+
+
+def uct_action(state, c=1.4):
+    for action in range(mcts_env.action_space.n):
+        if N_action[(state, action)] == 0:
+            return action
+    scores = []
+    for action in range(mcts_env.action_space.n):
+        mean_value = W_action[(state, action)] / N_action[(state, action)]
+        explore = c * np.sqrt(np.log(N_state[state] + 1) / N_action[(state, action)])
+        scores.append(mean_value + explore)
+    return int(np.argmax(scores))
+
+
+def rollout(state, depth_limit=18, gamma=0.99):
+    total = 0.0
+    discount = 1.0
+    for _ in range(depth_limit):
+        action = rng.integers(mcts_env.action_space.n)
+        state, reward, done = sample_model_step(state, int(action))
+        total += discount * reward
+        discount *= gamma
+        if done:
+            break
+    return total
+
+
+simulation_rows = []
+for simulation in range(1, 1201):
+    state = root_state
+    path = []
+    total_reward = 0.0
+    discount = 1.0
+    done = False
+    for depth in range(18):
+        action = uct_action(state)
+        path.append((state, action))
+        next_state, reward, done = sample_model_step(state, action)
+        total_reward += discount * reward
+        discount *= 0.99
+        state = next_state
+        if done:
+            break
+    if not done:
+        total_reward += discount * rollout(state)
+
+    for state, action in path:
+        N_state[state] += 1
+        N_action[(state, action)] += 1
+        W_action[(state, action)] += total_reward
+    if simulation % 200 == 0:
+        simulation_rows.append({"simulation": simulation, "root_visits": N_state[root_state]})
+
+root_rows = []
+for action in range(mcts_env.action_space.n):
+    visits = N_action[(root_state, action)]
+    mean_value = W_action[(root_state, action)] / visits if visits else 0
+    explore = 1.4 * np.sqrt(np.log(N_state[root_state] + 1) / visits) if visits else 0
+    root_rows.append({
+        "action": mcts_actions[action],
+        "visits": visits,
+        "mean_value": mean_value,
+        "explore": explore,
+        "UCT": mean_value + explore,
+    })
+
+mcts_root_df = pd.DataFrame(root_rows).sort_values("UCT", ascending=False).reset_index(drop=True)
+mcts_sim_df = pd.DataFrame(simulation_rows)
+display(pd.DataFrame(mcts_map))
+display(mcts_root_df.round(4))
+print("root action:", mcts_root_df.loc[0, "action"])
 """
 
 
 MCTS_PLOT_CELL = """
-# 绘制 UCT 组成。
-fig, ax = plt.subplots(figsize=(7.4, 4.8))
-x = np.arange(len(moves))
-ax.bar(x, moves["平均价值"], label="平均价值", color="#2563eb")
-ax.bar(x, moves["探索项"], bottom=moves["平均价值"], label="探索项", color="#f97316")
-ax.set_xticks(x, moves["走法"])
-ax.set_title("Tic-tac-toe UCT 分数", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
-ax.set_ylabel("分数")
-ax.grid(True, axis="y", color="#e2e8f0", linewidth=0.8)
-ax.legend()
+# 绘制根节点动作统计和 MCTS 访问到的状态价值。
+fig, axes = plt.subplots(1, 2, figsize=(10.6, 4.7))
+x = np.arange(len(mcts_root_df))
+axes[0].bar(x, mcts_root_df["mean_value"], color="#2563eb", label="mean value")
+axes[0].bar(x, mcts_root_df["explore"], bottom=mcts_root_df["mean_value"], color="#f97316", label="exploration")
+axes[0].set_xticks(x, mcts_root_df["action"])
+axes[0].set_title("Root UCT 组成", loc="left", fontweight="bold")
+axes[0].set_ylabel("score")
+axes[0].grid(True, axis="y", color="#e2e8f0", linewidth=0.8)
+axes[0].legend()
+
+value_grid = np.zeros(16)
+policy_grid = np.full(16, -1)
+for state in range(16):
+    values = []
+    for action in range(mcts_env.action_space.n):
+        visits = N_action[(state, action)]
+        values.append(W_action[(state, action)] / visits if visits else np.nan)
+    if not np.all(np.isnan(values)):
+        policy_grid[state] = int(np.nanargmax(values))
+        value_grid[state] = float(np.nanmax(values))
+value_grid = value_grid.reshape(4, 4)
+policy_grid = policy_grid.reshape(4, 4)
+
+im = axes[1].imshow(value_grid, cmap="YlGnBu", vmin=0, vmax=max(0.01, value_grid.max()))
+for state in range(16):
+    r, c = divmod(state, 4)
+    tile = mcts_map[r, c]
+    arrow = "" if tile in {"H", "G"} or policy_grid[r, c] < 0 else mcts_arrows[int(policy_grid[r, c])]
+    axes[1].text(c, r, f"{tile}\\n{value_grid[r, c]:.2f}\\n{arrow}", ha="center", va="center", color="#0f172a", fontweight="bold")
+axes[1].set_title("MCTS 估计状态价值", loc="left", fontweight="bold")
+axes[1].set_xticks(range(4))
+axes[1].set_yticks(range(4))
+fig.colorbar(im, ax=axes[1], fraction=0.046, pad=0.04)
 plt.tight_layout()
 plt.show()
 """
 
 
 DIFFUSION_1D_CELL = """
-# 1D diffusion：从双峰分布出发，按噪声调度逐步混入高斯噪声。
-rng = np.random.default_rng(7)
-left = rng.normal(-2.0, 0.28, size=300)
-right = rng.normal(2.0, 0.28, size=300)
-x0_samples = np.concatenate([left, right])
-eps_samples = rng.normal(size=x0_samples.shape)
-betas = np.linspace(0.03, 0.20, 8)
-alphas = 1 - betas
-alpha_bars = np.cumprod(alphas)
+# Diffusers 官方 scheduler：在真实图片上执行 DDPM 前向加噪。
+diffusion_packages = {
+    "torch": "torch>=2.2",
+    "diffusers": "diffusers>=0.30",
+}
+missing = [package for module, package in diffusion_packages.items() if importlib.util.find_spec(module) is None]
+if missing:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
 
+import torch
+from diffusers import DDPMScheduler
+
+ddpm_photo = Image.fromarray(load_sample_image("flower.jpg")).resize((128, 128))
+ddpm_image = np.asarray(ddpm_photo).astype("float32") / 255.0
+sample = torch.tensor(ddpm_image).permute(2, 0, 1).unsqueeze(0) * 2 - 1
+torch.manual_seed(12)
+noise = torch.randn(sample.shape)
+scheduler = DDPMScheduler(num_train_timesteps=1000)
+timesteps = [0, 100, 300, 600, 900]
+ddpm_images = []
 diff_rows = []
-xs = []
-for t, alpha_bar in enumerate(alpha_bars, start=1):
-    xt = np.sqrt(alpha_bar) * x0_samples + np.sqrt(1 - alpha_bar) * eps_samples
-    xs.append(xt)
+
+for t in timesteps:
+    timestep = torch.tensor([t], dtype=torch.long)
+    noisy = scheduler.add_noise(sample, noise, timestep)
+    image = ((noisy[0].permute(1, 2, 0).numpy() + 1) / 2).clip(0, 1)
+    ddpm_images.append(image)
+    alpha_bar = float(scheduler.alphas_cumprod[t])
     diff_rows.append({
-        "t": t,
-        "alpha_bar": round(alpha_bar, 3),
-        "均值": round(float(xt.mean()), 3),
-        "标准差": round(float(xt.std()), 3),
-        "5%分位": round(float(np.quantile(xt, 0.05)), 3),
-        "95%分位": round(float(np.quantile(xt, 0.95)), 3),
+        "timestep": t,
+        "alpha_bar": alpha_bar,
+        "signal_weight": np.sqrt(alpha_bar),
+        "noise_weight": np.sqrt(1 - alpha_bar),
+        "pixel_std": float(image.std()),
     })
 
 diff_1d_df = pd.DataFrame(diff_rows)
-display(diff_1d_df)
+display(diff_1d_df.round(4))
 """
 
 
 DIFFUSION_1D_PLOT_CELL = """
-# 绘制不同 t 下的一维分布。
-snapshots = [x0_samples, xs[1], xs[4], xs[-1]]
-titles = ["t=0", "t=2", "t=5", "t=8"]
-fig, axes = plt.subplots(1, 4, figsize=(10.5, 3.2), sharex=True, sharey=True)
-for ax, values, title in zip(axes, snapshots, titles):
-    ax.hist(values, bins=32, color="#2563eb", alpha=0.78)
-    ax.set_title(title, fontweight="bold")
-    ax.grid(True, axis="y", color="#e2e8f0", linewidth=0.8)
-fig.suptitle("双峰分布的前向扩散", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+# 绘制真实图片在不同 timestep 下的前向扩散效果。
+fig, axes = plt.subplots(1, len(ddpm_images), figsize=(11.2, 3.1))
+for ax, image, timestep in zip(axes, ddpm_images, timesteps):
+    ax.imshow(image)
+    ax.set_title(f"t={timestep}", fontweight="bold")
+    ax.set_xticks([])
+    ax.set_yticks([])
+fig.suptitle("DDPMScheduler：真实图片前向加噪", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
@@ -1198,98 +1471,168 @@ plt.show()
 
 
 GAN_CELL = """
-# GAN 判别器示意：two moons 真实分布与生成分布逐步靠近。
-rng = np.random.default_rng(5)
-real, _ = make_moons(n_samples=240, noise=0.08, random_state=5)
-fake_shift = np.array([1.4, -0.8])
+# PyTorch GAN：在 sklearn Digits 真实手写数字上训练生成器和判别器。
+gan_packages = {"torch": "torch>=2.2"}
+missing = [package for module, package in gan_packages.items() if importlib.util.find_spec(module) is None]
+if missing:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+
+import torch
+from torch import nn
+
+torch.manual_seed(7)
+digits = load_digits()
+real_digits = torch.tensor(digits.images / 16.0 * 2 - 1, dtype=torch.float32).reshape(-1, 64)
+latent_dim = 16
+batch_size = 96
+
+generator = nn.Sequential(
+    nn.Linear(latent_dim, 64),
+    nn.ReLU(),
+    nn.Linear(64, 128),
+    nn.ReLU(),
+    nn.Linear(128, 64),
+    nn.Tanh(),
+)
+discriminator = nn.Sequential(
+    nn.Linear(64, 128),
+    nn.LeakyReLU(0.2),
+    nn.Linear(128, 64),
+    nn.LeakyReLU(0.2),
+    nn.Linear(64, 1),
+)
+loss_fn = nn.BCEWithLogitsLoss()
+opt_g = torch.optim.Adam(generator.parameters(), lr=0.0015, betas=(0.5, 0.999))
+opt_d = torch.optim.Adam(discriminator.parameters(), lr=0.0015, betas=(0.5, 0.999))
 gan_rows = []
 
-for step in range(1, 9):
-    fake = make_moons(n_samples=240, noise=0.16, random_state=step)[0] + fake_shift
-    X_disc = np.vstack([real, fake])
-    y_disc = np.array([1] * len(real) + [0] * len(fake))
-    disc = MLPClassifier(hidden_layer_sizes=(16,), max_iter=500, random_state=step)
-    disc.fit(X_disc, y_disc)
-    fake_score = disc.predict_proba(fake)[:, 1].mean()
-    real_score = disc.predict_proba(real)[:, 1].mean()
-    fake_shift *= 0.72
-    gan_rows.append({
-        "轮次": step,
-        "生成分布偏移": round(float(np.linalg.norm(fake_shift)), 3),
-        "D(real)": round(float(real_score), 3),
-        "D(fake)": round(float(fake_score), 3),
-    })
+for step in range(1, 501):
+    idx = torch.randint(0, len(real_digits), (batch_size,))
+    real_batch = real_digits[idx]
+    z = torch.randn(batch_size, latent_dim)
+    fake_batch = generator(z).detach()
 
+    real_logits = discriminator(real_batch)
+    fake_logits = discriminator(fake_batch)
+    d_loss = loss_fn(real_logits, torch.ones_like(real_logits)) + loss_fn(fake_logits, torch.zeros_like(fake_logits))
+    opt_d.zero_grad()
+    d_loss.backward()
+    opt_d.step()
+
+    z = torch.randn(batch_size, latent_dim)
+    generated = generator(z)
+    g_logits = discriminator(generated)
+    g_loss = loss_fn(g_logits, torch.ones_like(g_logits))
+    opt_g.zero_grad()
+    g_loss.backward()
+    opt_g.step()
+
+    if step % 50 == 0:
+        with torch.no_grad():
+            gan_rows.append({
+                "step": step,
+                "D_loss": float(d_loss),
+                "G_loss": float(g_loss),
+                "D(real)": float(torch.sigmoid(discriminator(real_batch)).mean()),
+                "D(fake)": float(torch.sigmoid(discriminator(generator(torch.randn(batch_size, latent_dim)))).mean()),
+            })
+
+with torch.no_grad():
+    gan_samples = generator(torch.randn(16, latent_dim)).reshape(16, 8, 8).numpy()
 gan_trace = pd.DataFrame(gan_rows)
-display(gan_trace)
+display(gan_trace.round(3))
 """
 
 
 GAN_PLOT_CELL = """
-# 绘制 D(fake) 变化和最终 two moons 分布。
-fig, axes = plt.subplots(1, 2, figsize=(10.0, 4.4))
-axes[0].plot(gan_trace["轮次"], gan_trace["D(fake)"], marker="o", linewidth=2.2, color="#2563eb")
-axes[0].set_title("判别器对生成样本的评分", loc="left", fontweight="bold")
-axes[0].set_xlabel("轮次")
-axes[0].set_ylabel("D(fake)")
-axes[0].grid(True, color="#e2e8f0", linewidth=0.8)
+# 绘制训练曲线和生成的 digits 样本。
+fig = plt.figure(figsize=(10.6, 6.0))
+gs = fig.add_gridspec(2, 4, height_ratios=[1.0, 1.6], hspace=0.38, wspace=0.18)
+ax_loss = fig.add_subplot(gs[0, :2])
+ax_score = fig.add_subplot(gs[0, 2:])
+ax_loss.plot(gan_trace["step"], gan_trace["D_loss"], color="#2563eb", linewidth=2.0, label="D loss")
+ax_loss.plot(gan_trace["step"], gan_trace["G_loss"], color="#f97316", linewidth=2.0, label="G loss")
+ax_loss.set_title("GAN loss", loc="left", fontweight="bold")
+ax_loss.grid(True, color="#e2e8f0", linewidth=0.8)
+ax_loss.legend()
 
-axes[1].scatter(real[:, 0], real[:, 1], s=24, alpha=0.75, label="real", color="#2563eb")
-axes[1].scatter(fake[:, 0], fake[:, 1], s=24, alpha=0.75, label="fake", color="#f97316")
-axes[1].set_title("最后一轮分布", loc="left", fontweight="bold")
-axes[1].legend()
-axes[1].set_aspect("equal", adjustable="box")
+ax_score.plot(gan_trace["step"], gan_trace["D(real)"], color="#16a34a", linewidth=2.0, label="D(real)")
+ax_score.plot(gan_trace["step"], gan_trace["D(fake)"], color="#dc2626", linewidth=2.0, label="D(fake)")
+ax_score.set_title("判别器输出", loc="left", fontweight="bold")
+ax_score.grid(True, color="#e2e8f0", linewidth=0.8)
+ax_score.legend()
+
+sample_tile = np.block([[gan_samples[i * 4 + j] for j in range(4)] for i in range(4)])
+ax_img = fig.add_subplot(gs[1, :])
+ax_img.imshow((sample_tile + 1) / 2, cmap="gray_r", vmin=0, vmax=1)
+ax_img.set_title("生成样本", loc="left", fontweight="bold")
+ax_img.set_xticks([])
+ax_img.set_yticks([])
+fig.suptitle("PyTorch GAN on Digits", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
 
 
 DIFFUSION_TOY_CELL = """
-# 用 two moons 经典二维数据演示加噪和去噪方向。
-rng = np.random.default_rng(9)
-clean_points, moon_label = make_moons(n_samples=180, noise=0.06, random_state=9)
-noise_points = rng.normal(size=clean_points.shape)
-noise_level = 0.65
-noisy_points = np.sqrt(1 - noise_level) * clean_points + np.sqrt(noise_level) * noise_points
-denoised_points = 0.55 * noisy_points + 0.45 * clean_points
+# Digits 去噪自编码器：把带噪手写数字恢复成干净图像。
+digits = load_digits()
+X_clean = digits.data / 16.0
+rng = np.random.default_rng(19)
+noise_sigma = 0.42
+X_noisy = np.clip(X_clean + rng.normal(0, noise_sigma, X_clean.shape), 0, 1)
 
-diffusion_summary = pd.DataFrame(
+X_train_noisy, X_test_noisy, X_train_clean, X_test_clean = train_test_split(
+    X_noisy,
+    X_clean,
+    test_size=0.2,
+    random_state=19,
+)
+denoiser = make_pipeline(
+    StandardScaler(),
+    MLPRegressor(hidden_layer_sizes=(96,), max_iter=160, random_state=19),
+)
+denoiser.fit(X_train_noisy, X_train_clean)
+X_denoised = np.clip(denoiser.predict(X_test_noisy), 0, 1)
+
+denoise_summary = pd.DataFrame(
     [
-        {"阶段": "noisy", "到clean中心的平均距离": np.linalg.norm(noisy_points - clean_points.mean(axis=0), axis=1).mean()},
-        {"阶段": "denoised", "到clean中心的平均距离": np.linalg.norm(denoised_points - clean_points.mean(axis=0), axis=1).mean()},
+        {"图像": "noisy", "MSE": mean_squared_error(X_test_clean, X_test_noisy)},
+        {"图像": "denoised", "MSE": mean_squared_error(X_test_clean, X_denoised)},
     ]
-).round(3)
-display(diffusion_summary)
+).round(4)
+display(denoise_summary)
 """
 
 
 DIFFUSION_TOY_PLOT_CELL = """
-# 绘制二维点的加噪和去噪。
-fig, axes = plt.subplots(1, 3, figsize=(10.0, 3.8), sharex=True, sharey=True)
-for ax, pts, title, color in zip(
-    axes,
-    [clean_points, noisy_points, denoised_points],
-    ["clean", "noisy", "denoised"],
-    ["#2563eb", "#f97316", "#16a34a"],
-):
-    ax.scatter(pts[:, 0], pts[:, 1], s=35, alpha=0.8, color=color, edgecolors="white", linewidth=0.4)
-    ax.set_title(title, fontweight="bold")
-    ax.grid(True, color="#e2e8f0", linewidth=0.8)
-fig.suptitle("二维 diffusion 概念实验", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+# 绘制干净图像、加噪输入和模型去噪输出。
+preview_n = 10
+clean_tile = np.block([[X_test_clean[i * 5 + j].reshape(8, 8) for j in range(5)] for i in range(2)])
+noisy_tile = np.block([[X_test_noisy[i * 5 + j].reshape(8, 8) for j in range(5)] for i in range(2)])
+denoised_tile = np.block([[X_denoised[i * 5 + j].reshape(8, 8) for j in range(5)] for i in range(2)])
+
+fig, axes = plt.subplots(3, 1, figsize=(9.6, 5.8))
+for ax, image, title in zip(axes, [clean_tile, noisy_tile, denoised_tile], ["clean", "noisy input", "denoised output"]):
+    ax.imshow(image, cmap="gray_r", vmin=0, vmax=1)
+    ax.set_title(title, loc="left", fontweight="bold")
+    ax.set_xticks([])
+    ax.set_yticks([])
+fig.suptitle("Digits denoising autoencoder", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
 
 
 ALPHAFOLD_CELL = """
-# AlphaFold 概念实验：从 MSA 计算保守性，再形成 pair 表征矩阵。
-sequence = "MKTFFVLLL"
+# AlphaFold 概念实验：用 insulin A-chain 风格 MSA 计算保守性和 pair 表征。
+sequence = "GIVEQCCTSICSLYQLENYCN"
 msa = [
-    "MKTFFVLLL",
-    "MKTFFVILM",
-    "MKSFFVLLL",
-    "MRTYFVLLL",
-    "MKTFFALLL",
+    "GIVEQCCTSICSLYQLENYCN",
+    "GIVEQCCASVCSLYQLENYCN",
+    "GIVEQCCTSICSLYQLENFCN",
+    "GLVEQCCTSICSLYQLENYCN",
+    "GIVEQCCTSVCSLYQLENYCN",
 ]
 msa_arr = np.array([list(row) for row in msa])
 conservation = []
@@ -1430,7 +1773,7 @@ def _ch10() -> dict[str, list]:
         "ch10_vit_patchify.ipynb": flatten([
             rs.chapter_link(
                 "第 10 章 · ViT Patchify 代码实验",
-                ["切分 Digits patch token", "查看 token 表", "绘制 patch"],
+                ["加载真实照片", "切分 16×16 patch token", "绘制 patch 网格"],
                 "../ch10.html",
             ),
             rs.section("0", "环境与数据"),
@@ -1441,7 +1784,7 @@ def _ch10() -> dict[str, list]:
         "ch10_mae_masking.ipynb": flatten([
             rs.chapter_link(
                 "第 10 章 · MAE Masking 代码实验",
-                ["切分 Digits patch", "随机 mask", "绘制重建图"],
+                ["加载同一张真实照片", "随机 mask 75% patch", "绘制可见图和重建基线"],
                 "../ch10.html",
             ),
             rs.section("0", "环境与数据"),
@@ -1454,7 +1797,7 @@ def _ch10() -> dict[str, list]:
         "ch10_clip_infonce.ipynb": flatten([
             rs.chapter_link(
                 "第 10 章 · CLIP / InfoNCE 代码实验",
-                ["匹配 Digits 图像与文本标签", "计算 InfoNCE loss", "绘制相似度矩阵"],
+                ["加载真实图片和文本 prompt", "运行官方 CLIPModel", "绘制图文匹配概率"],
                 "../ch10.html",
             ),
             rs.section("0", "环境与数据"),
@@ -1470,11 +1813,12 @@ def _ch11() -> dict[str, list]:
         "ch11_mdp_value_iteration.ipynb": flatten([
             rs.chapter_link(
                 "第 11 章 · MDP 与价值迭代代码实验",
-                ["准备 Gridworld 转移表", "执行价值迭代", "绘制价值与策略"],
+                ["读取 FrozenLake-v1 转移表", "执行价值迭代", "绘制价值与策略"],
                 "../ch11.html",
             ),
             rs.section("0", "环境与数据"),
             rs.code(DEPENDENCIES_CELL),
+            rs.code(GYM_SETUP_CELL),
             rs.code(MDP_CELL),
             rs.section("1", "价值迭代"),
             rs.code(VALUE_ITERATION_CELL),
@@ -1482,23 +1826,25 @@ def _ch11() -> dict[str, list]:
         ]),
         "ch11_td_learning.ipynb": flatten([
             rs.chapter_link(
-                "第 11 章 · TD(0) 代码实验",
-                ["运行 Sutton random walk", "输出 TD target", "绘制状态价值"],
+                "第 11 章 · Taxi-v3 Q-learning 代码实验",
+                ["加载 Taxi-v3 环境", "记录 TD target 和 TD error", "绘制回报与 Q 表"],
                 "../ch11.html",
             ),
             rs.section("0", "环境与数据"),
             rs.code(DEPENDENCIES_CELL),
+            rs.code(GYM_SETUP_CELL),
             rs.code(TD_CELL),
             rs.code(TD_PLOT_CELL),
         ]),
         "ch11_epsilon_greedy.ipynb": flatten([
             rs.chapter_link(
-                "第 11 章 · epsilon-greedy 代码实验",
-                ["模拟 10-armed bandit", "比较不同 epsilon", "绘制平均奖励"],
+                "第 11 章 · CliffWalking SARSA 代码实验",
+                ["加载 CliffWalking-v0 环境", "比较不同 epsilon", "绘制回报与策略"],
                 "../ch11.html",
             ),
             rs.section("0", "环境与数据"),
             rs.code(DEPENDENCIES_CELL),
+            rs.code(GYM_SETUP_CELL),
             rs.code(BANDIT_CELL),
             rs.code(BANDIT_PLOT_CELL),
         ]),
@@ -1509,8 +1855,8 @@ def _ch12() -> dict[str, list]:
     return {
         "ch12_repr_search_annealing.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · 表征搜索与退火代码实验",
-                ["运行 TSP 模拟退火", "记录路线长度", "绘制搜索轨迹"],
+                "第 12 章 · Iris SVC 退火搜索代码实验",
+                ["加载 Iris 数据集", "用 dual_annealing 搜索超参数", "绘制搜索轨迹"],
                 "../ch12.html",
             ),
             rs.section("0", "环境与数据"),
@@ -1520,19 +1866,20 @@ def _ch12() -> dict[str, list]:
         ]),
         "ch12_mcts.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · MCTS / UCT 代码实验",
-                ["准备 Tic-tac-toe 局面", "计算探索项", "绘制 UCT 分数"],
+                "第 12 章 · FrozenLake MCTS / UCT 代码实验",
+                ["加载 FrozenLake-v1", "运行 UCT 模拟", "绘制访问价值"],
                 "../ch12.html",
             ),
             rs.section("0", "环境与数据"),
             rs.code(DEPENDENCIES_CELL),
+            rs.code(GYM_SETUP_CELL),
             rs.code(MCTS_CELL),
             rs.code(MCTS_PLOT_CELL),
         ]),
         "ch12_diffusion_1d.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · 1D Diffusion 代码实验",
-                ["执行前向加噪", "查看噪声调度", "绘制反向轨迹"],
+                "第 12 章 · Diffusers DDPM Scheduler 代码实验",
+                ["加载真实图片", "调用 DDPMScheduler 前向加噪", "绘制噪声调度"],
                 "../ch12.html",
             ),
             rs.section("0", "环境与数据"),
@@ -1556,8 +1903,8 @@ def _ch12() -> dict[str, list]:
         ]),
         "ch12_gan_toy.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · GAN 代码实验",
-                ["训练 two moons 判别器", "移动生成分布", "绘制判别器评分"],
+                "第 12 章 · Digits GAN 代码实验",
+                ["加载 sklearn Digits", "训练 PyTorch GAN", "绘制生成样本"],
                 "../ch12.html",
             ),
             rs.section("0", "环境与数据"),
@@ -1567,8 +1914,8 @@ def _ch12() -> dict[str, list]:
         ]),
         "ch12_diffusion_toy.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · 二维 Diffusion 代码实验",
-                ["生成 two moons 数据", "加入高斯噪声", "绘制去噪方向"],
+                "第 12 章 · Digits 去噪自编码器代码实验",
+                ["加载 Digits 数据", "训练 MLPRegressor 去噪器", "比较 noisy 与 denoised"],
                 "../ch12.html",
             ),
             rs.section("0", "环境与数据"),

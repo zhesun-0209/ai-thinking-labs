@@ -1,4 +1,4 @@
-"""第 5 章 · 校园图搜索 — 可执行代码实验。"""
+"""第 5 章 · 经典图搜索 — 可执行代码实验。"""
 
 from __future__ import annotations
 
@@ -57,28 +57,56 @@ plt.rcParams.update({
 
 
 CAMPUS_GRAPH_CELL = """
-# 构建校园路径图：nodes 是地点信息，edges 是道路与代价。
+# AIMA Romania map：从 Arad 搜索到 Bucharest。
 graph = {
-    "start": "x",
-    "goal": "c1",
+    "start": "Arad",
+    "goal": "Bucharest",
     "nodes": {
-        "x": {"name": "校门口", "h": 7},
-        "c2": {"name": "超市", "h": 1},
-        "j": {"name": "教学楼", "h": 4},
-        "s2": {"name": "实验楼", "h": 4},
-        "s1": {"name": "食堂", "h": 3},
-        "t": {"name": "图书馆", "h": 2},
-        "c1": {"name": "操场", "h": 0},
+        "Arad": {"name": "Arad", "h": 366},
+        "Zerind": {"name": "Zerind", "h": 374},
+        "Oradea": {"name": "Oradea", "h": 380},
+        "Sibiu": {"name": "Sibiu", "h": 253},
+        "Timisoara": {"name": "Timisoara", "h": 329},
+        "Lugoj": {"name": "Lugoj", "h": 244},
+        "Mehadia": {"name": "Mehadia", "h": 241},
+        "Dobreta": {"name": "Dobreta", "h": 242},
+        "Craiova": {"name": "Craiova", "h": 160},
+        "Rimnicu Vilcea": {"name": "Rimnicu Vilcea", "h": 193},
+        "Fagaras": {"name": "Fagaras", "h": 176},
+        "Pitesti": {"name": "Pitesti", "h": 100},
+        "Bucharest": {"name": "Bucharest", "h": 0},
+        "Giurgiu": {"name": "Giurgiu", "h": 77},
+        "Urziceni": {"name": "Urziceni", "h": 80},
+        "Hirsova": {"name": "Hirsova", "h": 151},
+        "Eforie": {"name": "Eforie", "h": 161},
+        "Vaslui": {"name": "Vaslui", "h": 199},
+        "Iasi": {"name": "Iasi", "h": 226},
+        "Neamt": {"name": "Neamt", "h": 234},
     },
     "edges": [
-        {"from": "x", "to": "c2", "cost": 7},
-        {"from": "x", "to": "j", "cost": 2},
-        {"from": "x", "to": "s1", "cost": 2},
-        {"from": "j", "to": "s2", "cost": 4},
-        {"from": "s2", "to": "s1", "cost": 1},
-        {"from": "s1", "to": "t", "cost": 3},
-        {"from": "s1", "to": "c1", "cost": 6},
-        {"from": "t", "to": "c1", "cost": 2},
+        {"from": "Arad", "to": "Zerind", "cost": 75},
+        {"from": "Arad", "to": "Sibiu", "cost": 140},
+        {"from": "Arad", "to": "Timisoara", "cost": 118},
+        {"from": "Zerind", "to": "Oradea", "cost": 71},
+        {"from": "Oradea", "to": "Sibiu", "cost": 151},
+        {"from": "Timisoara", "to": "Lugoj", "cost": 111},
+        {"from": "Lugoj", "to": "Mehadia", "cost": 70},
+        {"from": "Mehadia", "to": "Dobreta", "cost": 75},
+        {"from": "Dobreta", "to": "Craiova", "cost": 120},
+        {"from": "Craiova", "to": "Rimnicu Vilcea", "cost": 146},
+        {"from": "Craiova", "to": "Pitesti", "cost": 138},
+        {"from": "Sibiu", "to": "Fagaras", "cost": 99},
+        {"from": "Sibiu", "to": "Rimnicu Vilcea", "cost": 80},
+        {"from": "Rimnicu Vilcea", "to": "Pitesti", "cost": 97},
+        {"from": "Fagaras", "to": "Bucharest", "cost": 211},
+        {"from": "Pitesti", "to": "Bucharest", "cost": 101},
+        {"from": "Bucharest", "to": "Giurgiu", "cost": 90},
+        {"from": "Bucharest", "to": "Urziceni", "cost": 85},
+        {"from": "Urziceni", "to": "Hirsova", "cost": 98},
+        {"from": "Hirsova", "to": "Eforie", "cost": 86},
+        {"from": "Urziceni", "to": "Vaslui", "cost": 142},
+        {"from": "Vaslui", "to": "Iasi", "cost": 92},
+        {"from": "Iasi", "to": "Neamt", "cost": 87},
     ],
 }
 
@@ -107,10 +135,10 @@ adj
 
 
 TABLES_CELL = """
-# 浏览图数据：节点表看启发式 h，边表看道路代价。
+# 节点表给出直线距离启发式 h，边表给出相邻城市距离。
 nodes_df = pd.DataFrame(
     [
-        {"节点": node, "名称": meta["name"], "h(到操场)": meta["h"]}
+        {"节点": node, "名称": meta["name"], "h(到 Bucharest)": meta["h"]}
         for node, meta in graph["nodes"].items()
     ]
 ).sort_values("节点")
@@ -128,15 +156,28 @@ display(edges_df)
 
 
 DRAWING_CELL = """
-# 绘制校园路径图：高亮已访问节点和最终路线。
+# 绘制 Romania map：高亮已展开节点和最终路线。
 layout = {
-    "x": (0.25, 1.15),
-    "c2": (0.75, 2.45),
-    "j": (1.85, 2.08),
-    "s2": (3.15, 2.25),
-    "s1": (1.9, 0.62),
-    "t": (3.25, 0.62),
-    "c1": (4.65, 0.68),
+    "Arad": (0.45, 3.25),
+    "Zerind": (0.25, 4.18),
+    "Oradea": (1.02, 5.02),
+    "Sibiu": (2.15, 3.52),
+    "Timisoara": (0.38, 2.02),
+    "Lugoj": (1.25, 1.32),
+    "Mehadia": (1.28, 0.52),
+    "Dobreta": (1.62, -0.22),
+    "Craiova": (2.95, -0.12),
+    "Rimnicu Vilcea": (3.12, 2.35),
+    "Fagaras": (4.15, 3.55),
+    "Pitesti": (4.42, 1.42),
+    "Bucharest": (5.82, 1.18),
+    "Giurgiu": (5.58, 0.10),
+    "Urziceni": (6.82, 1.90),
+    "Hirsova": (7.85, 2.06),
+    "Eforie": (8.28, 1.18),
+    "Vaslui": (7.55, 3.12),
+    "Iasi": (7.25, 4.18),
+    "Neamt": (6.45, 4.88),
 }
 
 
@@ -148,18 +189,15 @@ def path_edges(path):
     return {edge_key(path[i], path[i + 1]) for i in range(len(path) - 1)}
 
 
-def draw_search_result(path=None, trace=None, title="校园搜索图"):
+def draw_search_result(path=None, trace=None, title="Romania map search"):
     path = path or []
     active_edges = path_edges(path)
     visited_nodes = set(path)
     if trace is not None and not trace.empty:
         visited_nodes.update(trace["取出节点"].tolist())
 
-    fig, ax = plt.subplots(figsize=(9.5, 5.1))
+    fig, ax = plt.subplots(figsize=(11.4, 6.4))
     ax.set_facecolor("#fbfcfd")
-    ax.add_patch(
-        plt.Rectangle((-0.15, 1.42), 5.35, 0.18, color="#eef2f7", zorder=0)
-    )
 
     drawn_edges = set()
     for a, neighbors in adj.items():
@@ -201,13 +239,13 @@ def draw_search_result(path=None, trace=None, title="校园搜索图"):
             face, edge = "#d1fae5", "#059669"
         if is_goal:
             face, edge = "#ffedd5", "#f97316"
-        circle = plt.Circle((x, y), 0.23, facecolor=face, edgecolor=edge, linewidth=1.8, zorder=5)
+        circle = plt.Circle((x, y), 0.16, facecolor=face, edgecolor=edge, linewidth=1.8, zorder=5)
         ax.add_patch(circle)
-        ax.text(x, y, node, ha="center", va="center", fontweight="bold", color="#0f172a", zorder=6)
+        ax.text(x, y, node[:1], ha="center", va="center", fontweight="bold", color="#0f172a", zorder=6)
         ax.text(
             x,
-            y - 0.42,
-            f"{graph['nodes'][node]['name']}  h={h[node]}",
+            y - 0.28,
+            f"{graph['nodes'][node]['name']}\\nh={h[node]}",
             ha="center",
             va="top",
             fontsize=8,
@@ -230,15 +268,15 @@ def draw_search_result(path=None, trace=None, title="校园搜索图"):
         )
 
     ax.set_title(title, loc="left", fontsize=14, fontweight="bold", color="#0f172a")
-    ax.set_xlim(-0.25, 5.15)
-    ax.set_ylim(0.18, 2.85)
+    ax.set_xlim(-0.25, 8.65)
+    ax.set_ylim(-0.62, 5.45)
     ax.set_aspect("equal", adjustable="box")
     ax.axis("off")
     plt.tight_layout()
     plt.show()
 
 
-draw_search_result(title="校园图")
+draw_search_result(title="Romania map：Arad 到 Bucharest")
 """
 
 
@@ -588,15 +626,15 @@ def notebooks() -> dict[str, list]:
 def _cells() -> list:
     return [
         rs.chapter_link(
-            "第 5 章 · 图搜索代码实验",
+            "第 5 章 · Romania 图搜索代码实验",
             [
-                "构建校园路径图和邻接表",
+                "构建 Romania map 和邻接表",
                 "实现 DFS、BFS、UCS、Greedy、A*",
                 "查看每个算法的展开过程、路径图和代价",
             ],
             "../ch5.html",
         ),
-        rs.section("0", "数据与画图"),
+        rs.section("0", "图数据与画图"),
         *rs.stepcode(
             DEPENDENCIES_CELL,
             CAMPUS_GRAPH_CELL,

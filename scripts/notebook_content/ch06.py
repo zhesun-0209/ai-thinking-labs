@@ -56,15 +56,18 @@ plt.rcParams.update({
 
 
 RULE_DATA_CELL = """
-# 准备一组可追踪的规则：每条规则由前提 facts 和结论 then 组成。
-initial_facts = {"今天下雨", "有雨伞", "需要外出"}
-goal = "适合带伞出门"
+# 动物分类专家系统：用规则把观察事实推到物种结论。
+initial_facts = {"有毛发", "吃肉", "黄褐色", "有黑色条纹"}
+goal = "老虎"
 
 rules = [
-    {"id": "R1", "facts": ["今天下雨"], "then": "路面湿"},
-    {"id": "R2", "facts": ["今天下雨", "需要外出"], "then": "可能淋湿"},
-    {"id": "R3", "facts": ["可能淋湿", "有雨伞"], "then": "适合带伞出门"},
-    {"id": "R4", "facts": ["路面湿"], "then": "行走速度变慢"},
+    {"id": "R1", "facts": ["有毛发"], "then": "哺乳动物"},
+    {"id": "R2", "facts": ["有奶"], "then": "哺乳动物"},
+    {"id": "R3", "facts": ["有羽毛"], "then": "鸟类"},
+    {"id": "R4", "facts": ["哺乳动物", "吃肉"], "then": "食肉动物"},
+    {"id": "R5", "facts": ["哺乳动物", "有蹄"], "then": "有蹄类"},
+    {"id": "R6", "facts": ["食肉动物", "黄褐色", "有黑色斑点"], "then": "猎豹"},
+    {"id": "R7", "facts": ["食肉动物", "黄褐色", "有黑色条纹"], "then": "老虎"},
 ]
 
 facts_df = pd.DataFrame({"初始事实": sorted(initial_facts)})
@@ -194,7 +197,7 @@ print("推理结果:", backward_success)
 
 
 RULE_PLOT_CELL = """
-# 画出规则触发路径：每条规则一行，避免交叉线影响阅读。
+# 画出规则触发路径：每条规则一行，多前提规则会分层连到同一个规则节点。
 def draw_rule_flow(initial_facts, rules, trace, title):
     if "触发规则" in trace:
         used_order = [rid for rid in trace["触发规则"].tolist() if str(rid).startswith("R")]
@@ -246,7 +249,11 @@ def draw_rule_flow(initial_facts, rules, trace, title):
     y_positions = list(reversed(range(len(selected_rules))))
     for row_index, (rule, y) in enumerate(zip(selected_rules, y_positions), start=1):
         ax.axhspan(y - 0.46, y + 0.46, color="#f8fafc" if row_index % 2 else "#ffffff", zorder=0)
-        premise_offsets = [0] if len(rule["facts"]) == 1 else [0.2, -0.2]
+        if len(rule["facts"]) == 1:
+            premise_offsets = [0]
+        else:
+            center = (len(rule["facts"]) - 1) / 2
+            premise_offsets = [(center - idx) * 0.22 for idx in range(len(rule["facts"]))]
         for fact, offset in zip(rule["facts"], premise_offsets):
             fy = y + offset
             draw_chip(0.56, fy, fact, fact_role(fact))
@@ -290,26 +297,27 @@ def draw_rule_flow(initial_facts, rules, trace, title):
     plt.show()
 
 
-draw_rule_flow(initial_facts, rules, forward_trace, "前向链触发路径")
+draw_rule_flow(initial_facts, rules, forward_trace, "动物分类专家系统：前向链触发路径")
 """
 
 
 KG_DATA_CELL = """
-# 准备小型知识图谱：三元组表示为 head-relation-tail。
+# Wikidata 风格知识图谱：三元组表示为 head-relation-tail。
 triples = [
-    ("鲁迅", "创作", "《呐喊》"),
-    ("鲁迅", "创作", "《彷徨》"),
-    ("《呐喊》", "收录", "《狂人日记》"),
-    ("《呐喊》", "主题", "国民性批判"),
-    ("《狂人日记》", "体裁", "小说"),
-    ("《彷徨》", "收录", "《祝福》"),
-    ("《祝福》", "人物", "祥林嫂"),
-    ("鲁迅", "身份", "作家"),
-    ("作家", "关联", "文学作品"),
+    ("玛丽·居里", "获得", "诺贝尔物理学奖"),
+    ("玛丽·居里", "获得", "诺贝尔化学奖"),
+    ("诺贝尔物理学奖", "类型", "诺贝尔奖"),
+    ("诺贝尔化学奖", "类型", "诺贝尔奖"),
+    ("玛丽·居里", "研究", "放射性"),
+    ("放射性", "属于", "物理学"),
+    ("物理学", "关联", "诺贝尔物理学奖"),
+    ("玛丽·居里", "任职", "巴黎大学"),
+    ("巴黎大学", "位于", "巴黎"),
+    ("皮埃尔·居里", "合作", "玛丽·居里"),
 ]
 
-start_entity = "鲁迅"
-target_entity = "祥林嫂"
+start_entity = "玛丽·居里"
+target_entity = "诺贝尔奖"
 
 kg_df = pd.DataFrame(triples, columns=["head", "relation", "tail"])
 display(kg_df)
@@ -381,7 +389,7 @@ display(graph_trace)
 
 
 PATH_RANK_CELL = """
-# 路径排序：更短路径优先；含有目标人物关系的路径获得轻微加分。
+# 路径排序：更短路径优先；与目标语义更近的关系获得轻微加分。
 def path_to_text(path):
     if not path:
         return ""
@@ -394,11 +402,12 @@ def path_to_text(path):
 
 def rank_paths(paths):
     rows = []
-    for path in paths:
+    for path_id, path in enumerate(paths):
         hop_count = len(path)
-        relation_bonus = sum(1 for edge in path if edge["relation"] in {"人物", "收录"})
+        relation_bonus = sum(1 for edge in path if edge["relation"] in {"获得", "类型", "关联"})
         score = 1 / hop_count + 0.08 * relation_bonus
         rows.append({
+            "path_id": path_id,
             "路径": path_to_text(path),
             "跳数": hop_count,
             "关系加分": round(0.08 * relation_bonus, 2),
@@ -417,16 +426,15 @@ KG_PLOT_CELL = """
 def draw_kg_path(triples, best_path):
     nodes = sorted(set([h for h, _, _ in triples] + [t for _, _, t in triples]))
     layout = {
-        "鲁迅": (0.1, 1.2),
-        "《呐喊》": (1.45, 1.8),
-        "《彷徨》": (1.45, 0.62),
-        "《狂人日记》": (2.8, 2.2),
-        "国民性批判": (2.9, 1.42),
-        "《祝福》": (2.82, 0.62),
-        "祥林嫂": (4.12, 0.62),
-        "作家": (1.45, 2.75),
-        "文学作品": (2.85, 2.75),
-        "小说": (4.12, 2.2),
+        "玛丽·居里": (0.25, 1.5),
+        "诺贝尔物理学奖": (1.95, 2.25),
+        "诺贝尔化学奖": (1.95, 0.78),
+        "诺贝尔奖": (3.72, 1.5),
+        "放射性": (1.88, 3.25),
+        "物理学": (3.50, 3.25),
+        "巴黎大学": (1.88, -0.05),
+        "巴黎": (3.50, -0.05),
+        "皮埃尔·居里": (0.22, 2.85),
     }
     active = {(edge["head"], edge["relation"], edge["tail"]) for edge in best_path}
     active_nodes = {edge["head"] for edge in best_path} | {edge["tail"] for edge in best_path}
@@ -469,18 +477,19 @@ def draw_kg_path(triples, best_path):
             face, edge = "#dcfce7", "#16a34a"
         if node == target_entity:
             face, edge = "#ffedd5", "#f97316"
-        ax.scatter(x, y, s=1050, color=face, edgecolor=edge, linewidth=1.7, zorder=3)
-        ax.text(x, y, node, ha="center", va="center", fontsize=9, fontweight="bold", color="#0f172a", zorder=4)
+        ax.scatter(x, y, s=1180, color=face, edgecolor=edge, linewidth=1.7, zorder=3)
+        ax.text(x, y, node, ha="center", va="center", fontsize=8.8, fontweight="bold", color="#0f172a", zorder=4)
 
-    ax.set_title("知识图谱路径", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
-    ax.set_xlim(-0.35, 4.55)
-    ax.set_ylim(0.18, 3.15)
+    ax.set_title("知识图谱多跳路径", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
+    ax.set_xlim(-0.35, 4.25)
+    ax.set_ylim(-0.45, 3.65)
     ax.axis("off")
     plt.tight_layout()
     plt.show()
 
 
-draw_kg_path(triples, paths[ranked_paths.index[0]])
+best_path = paths[int(ranked_paths.loc[0, "path_id"])]
+draw_kg_path(triples, best_path)
 """
 
 
@@ -495,7 +504,7 @@ def _forward() -> list:
     return [
         rs.chapter_link(
             "第 6 章 · 规则链推理代码实验",
-            ["准备事实与规则表", "运行前向链和后向链", "展示推理轨迹与规则图"],
+            ["构建动物分类规则库", "运行前向链和后向链", "展示推理轨迹与规则图"],
             "../ch6.html",
         ),
         rs.section("0", "环境与数据"),
@@ -514,7 +523,7 @@ def _graph() -> list:
     return [
         rs.chapter_link(
             "第 6 章 · 图谱多跳推理代码实验",
-            ["准备三元组图谱", "运行多跳查询", "展示路径排序与结果图"],
+            ["准备 Wikidata 风格三元组", "运行多跳查询", "展示路径排序与结果图"],
             "../ch6.html",
         ),
         rs.section("0", "环境与数据"),
