@@ -77,7 +77,12 @@ TREE_DATA_CELL = """
 wine = load_wine(as_frame=True)
 tree_df = wine.frame.copy()
 feature_names = wine.feature_names
-class_names = list(wine.target_names)
+feature_names_cn = [
+    "酒精", "苹果酸", "灰分", "灰分碱度", "镁", "总酚", "黄酮",
+    "非黄酮酚", "原花青素", "颜色强度", "色调", "稀释酒吸光度", "脯氨酸",
+]
+feature_cn_map = dict(zip(feature_names, feature_names_cn))
+class_names = [f"葡萄酒第 {i} 类" for i in range(len(wine.target_names))]
 tree_df["类别名称"] = tree_df["target"].map(dict(enumerate(class_names)))
 
 X_tree = tree_df[feature_names]
@@ -91,7 +96,7 @@ summary_df = pd.DataFrame(
     }
 )
 display(summary_df)
-display(tree_df.head(8))
+display(tree_df.rename(columns=feature_cn_map).head(8))
 display(tree_df["类别名称"].value_counts().rename_axis("类别").reset_index(name="样本数"))
 """
 
@@ -113,13 +118,13 @@ train_pred = tree.predict(X_train)
 test_pred = tree.predict(X_test)
 score_df = pd.DataFrame(
     [
-        {"数据": "训练集", "样本数": len(y_train), "accuracy": accuracy_score(y_train, train_pred)},
-        {"数据": "测试集", "样本数": len(y_test), "accuracy": accuracy_score(y_test, test_pred)},
+        {"数据": "训练集", "样本数": len(y_train), "准确率": accuracy_score(y_train, train_pred)},
+        {"数据": "测试集", "样本数": len(y_test), "准确率": accuracy_score(y_test, test_pred)},
     ]
 ).round(3)
 display(score_df)
 
-test_result = X_test.copy()
+test_result = X_test.rename(columns=feature_cn_map).copy()
 test_result["真实类别"] = [class_names[i] for i in y_test]
 test_result["预测类别"] = [class_names[i] for i in test_pred]
 test_result["预测正确"] = test_result["真实类别"].eq(test_result["预测类别"])
@@ -130,7 +135,7 @@ display(test_result.head(12))
 TREE_PROCESS_CELL = """
 # 查看分裂规则、特征重要性和混淆矩阵。
 importance_df = pd.DataFrame(
-    {"特征": feature_names, "重要性": tree.feature_importances_}
+    {"特征": feature_names_cn, "重要性": tree.feature_importances_}
 ).sort_values("重要性", ascending=False)
 importance_df["累计重要性"] = importance_df["重要性"].cumsum()
 
@@ -140,7 +145,7 @@ confusion_df = pd.DataFrame(
     columns=[f"预测_{name}" for name in class_names],
 )
 
-print(export_text(tree, feature_names=feature_names, max_depth=3))
+print(export_text(tree, feature_names=feature_names_cn, max_depth=3))
 display(importance_df.head(10).round(3))
 display(confusion_df)
 """
@@ -151,7 +156,7 @@ TREE_PLOT_CELL = """
 fig, ax = plt.subplots(figsize=(12.0, 6.3))
 plot_tree(
     tree,
-    feature_names=feature_names,
+    feature_names=feature_names_cn,
     class_names=class_names,
     filled=True,
     rounded=True,
@@ -165,8 +170,8 @@ plt.show()
 top_importance = importance_df.head(8).sort_values("重要性")
 fig, ax = plt.subplots(figsize=(8.4, 5.0))
 ax.barh(top_importance["特征"], top_importance["重要性"], color="#2563eb")
-ax.set_title("特征重要性 Top 8", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
-ax.set_xlabel("importance")
+ax.set_title("特征重要性前 8 项", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
+ax.set_xlabel("重要性")
 ax.grid(True, axis="x", color="#e2e8f0", linewidth=0.8)
 plt.tight_layout()
 plt.show()
@@ -178,6 +183,8 @@ KMEANS_DATA_CELL = """
 iris = load_iris(as_frame=True)
 iris_df = iris.frame.copy()
 iris_feature_names = iris.feature_names
+iris_feature_names_cn = ["萼片长度", "萼片宽度", "花瓣长度", "花瓣宽度"]
+iris_feature_cn_map = dict(zip(iris_feature_names, iris_feature_names_cn))
 iris_class_names = list(iris.target_names)
 iris_df["品种"] = iris_df["target"].map(dict(enumerate(iris_class_names)))
 
@@ -187,14 +194,14 @@ X_iris_scaled = scaler.fit_transform(X_iris)
 pca = PCA(n_components=2, random_state=0)
 iris_pca = pca.fit_transform(X_iris_scaled)
 
-display(iris_df.head(8))
+display(iris_df.rename(columns=iris_feature_cn_map).head(8))
 display(iris_df["品种"].value_counts().rename_axis("品种").reset_index(name="样本数"))
-print("PCA 两个主成分解释方差:", np.round(pca.explained_variance_ratio_, 3))
+print("PCA 两个主成分解释方差占比:", np.round(pca.explained_variance_ratio_, 3))
 """
 
 
 KMEANS_PROCESS_CELL = """
-# 比较不同 k：inertia 用于肘部曲线，silhouette 辅助判断聚类分离度。
+# 比较不同 k：簇内平方和用于肘部曲线，轮廓系数辅助判断聚类分离度。
 k_values = range(1, 8)
 kmeans_by_k = {}
 labels_by_k = {}
@@ -207,8 +214,8 @@ for k in k_values:
     labels_by_k[k] = labels
     metric_rows.append({
         "k": k,
-        "inertia": model.inertia_,
-        "silhouette": np.nan if k == 1 else silhouette_score(X_iris_scaled, labels),
+        "簇内平方和": model.inertia_,
+        "轮廓系数": np.nan if k == 1 else silhouette_score(X_iris_scaled, labels),
         "ARI(对照真实品种)": np.nan if k == 1 else adjusted_rand_score(iris.target, labels),
     })
 
@@ -219,7 +226,7 @@ final_labels = labels_by_k[chosen_k]
 
 clustered_iris = iris_df.copy()
 clustered_iris["簇"] = final_labels
-cluster_profile = clustered_iris.groupby("簇")[iris_feature_names].mean().round(2)
+cluster_profile = clustered_iris.groupby("簇")[iris_feature_names].mean().rename(columns=iris_feature_cn_map).round(2)
 cluster_mix = pd.crosstab(clustered_iris["簇"], clustered_iris["品种"])
 
 display(k_metrics)
@@ -256,25 +263,25 @@ for ax, k in zip(axes.ravel(), [2, 3, 4, 5]):
     ax.set_title(f"k={k}", loc="left", fontweight="bold")
     ax.grid(True, color="#e2e8f0", linewidth=0.8)
 
-fig.suptitle("Iris KMeans 不同 k 的聚类效果", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
-fig.supxlabel("PCA 1")
-fig.supylabel("PCA 2")
+fig.suptitle("鸢尾花 KMeans 不同 k 的聚类效果", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+fig.supxlabel("PCA 第一主成分")
+fig.supylabel("PCA 第二主成分")
 plt.tight_layout()
 plt.show()
 
-# 肘部曲线观察 inertia 下降速度，k=3 后收益明显变小。
+# 肘部曲线观察簇内平方和下降速度，k=3 后收益明显变小。
 fig, ax1 = plt.subplots(figsize=(8.6, 5.0))
-ax1.plot(k_metrics["k"], k_metrics["inertia"], marker="o", linewidth=2.4, color="#2563eb", label="inertia")
+ax1.plot(k_metrics["k"], k_metrics["簇内平方和"], marker="o", linewidth=2.4, color="#2563eb", label="簇内平方和")
 ax1.axvline(chosen_k, color="#f97316", linestyle="--", linewidth=1.8)
 ax1.set_title("肘部曲线与 k 选择", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
 ax1.set_xlabel("k")
-ax1.set_ylabel("inertia", color="#2563eb")
+ax1.set_ylabel("簇内平方和", color="#2563eb")
 ax1.tick_params(axis="y", labelcolor="#2563eb")
 ax1.grid(True, color="#e2e8f0", linewidth=0.8)
 
 ax2 = ax1.twinx()
-ax2.plot(k_metrics["k"], k_metrics["silhouette"], marker="s", linewidth=2.0, color="#16a34a", label="silhouette")
-ax2.set_ylabel("silhouette", color="#16a34a")
+ax2.plot(k_metrics["k"], k_metrics["轮廓系数"], marker="s", linewidth=2.0, color="#16a34a", label="轮廓系数")
+ax2.set_ylabel("轮廓系数", color="#16a34a")
 ax2.tick_params(axis="y", labelcolor="#16a34a")
 ax1.text(chosen_k + 0.08, ax1.get_ylim()[1] * 0.82, "选择 k=3", color="#c2410c", fontweight="bold")
 plt.tight_layout()
@@ -332,7 +339,7 @@ fig, axes = plt.subplots(1, 2, figsize=(10.2, 4.5))
 x_line = np.linspace(X_gd.min(), X_gd.max(), 100).reshape(-1, 1)
 axes[0].scatter(X_gd[:, 0], y_gd, s=42, color="#2563eb", alpha=0.72, edgecolor="white", linewidth=0.4)
 axes[0].plot(x_line[:, 0], regressor.predict(gd_scaler.transform(x_line)), color="#f97316", linewidth=2.4)
-axes[0].set_title("Diabetes BMI 回归", loc="left", fontweight="bold")
+axes[0].set_title("糖尿病数据 BMI 回归", loc="left", fontweight="bold")
 axes[0].set_xlabel("BMI")
 axes[0].set_ylabel("疾病进展指标")
 axes[0].grid(True, color="#e2e8f0", linewidth=0.8)
@@ -340,7 +347,7 @@ axes[0].grid(True, color="#e2e8f0", linewidth=0.8)
 axes[1].plot(gd_trace["轮次"], gd_trace["MSE"], color="#2563eb", linewidth=2.4)
 axes[1].set_title("损失下降", loc="left", fontweight="bold")
 axes[1].set_xlabel("轮次")
-axes[1].set_ylabel("MSE")
+axes[1].set_ylabel("均方误差")
 axes[1].grid(True, color="#e2e8f0", linewidth=0.8)
 
 plt.tight_layout()
@@ -349,9 +356,10 @@ plt.show()
 
 
 PERCEPTRON_DATA_CELL = """
-# 加载 Iris 中的 setosa 与 versicolor，使用两个花瓣特征做感知机二分类。
+# 加载鸢尾花中的 setosa 与 versicolor，使用两个花瓣特征做感知机二分类。
 iris = load_iris(as_frame=True)
 perceptron_df = iris.frame.copy()
+iris_feature_cn_map = dict(zip(iris.feature_names, ["萼片长度", "萼片宽度", "花瓣长度", "花瓣宽度"]))
 perceptron_df["品种"] = perceptron_df["target"].map(dict(enumerate(iris.target_names)))
 perceptron_df = perceptron_df[perceptron_df["品种"].isin(["setosa", "versicolor"])].copy()
 
@@ -360,7 +368,7 @@ X_per = perceptron_df[per_features].to_numpy()
 y_per = (perceptron_df["品种"] == "versicolor").astype(int).to_numpy()
 perceptron_df["二分类标签"] = y_per
 
-display(perceptron_df)
+display(perceptron_df.rename(columns=iris_feature_cn_map))
 """
 
 
@@ -377,9 +385,9 @@ for epoch in range(1, 13):
     pred = perceptron.predict(X_per_scaled)
     per_rows.append({
         "轮次": epoch,
-        "w_petal_length": round(perceptron.coef_[0, 0], 4),
-        "w_petal_width": round(perceptron.coef_[0, 1], 4),
-        "bias": round(perceptron.intercept_[0], 4),
+        "花瓣长度权重": round(perceptron.coef_[0, 0], 4),
+        "花瓣宽度权重": round(perceptron.coef_[0, 1], 4),
+        "偏置": round(perceptron.intercept_[0], 4),
         "错误数": int((pred != y_per).sum()),
     })
 
@@ -403,9 +411,9 @@ scaled_y = -(w0 * scaled_x + bias) / w1
 y_line = scaled_y * per_scaler.scale_[1] + per_scaler.mean_[1]
 ax.plot(x_line, y_line, color="#0f172a", linewidth=2.2)
 
-ax.set_title("Iris Perceptron 决策边界", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
-ax.set_xlabel("petal length (cm)")
-ax.set_ylabel("petal width (cm)")
+ax.set_title("鸢尾花感知机决策边界", loc="left", fontsize=14, fontweight="bold", color="#0f172a")
+ax.set_xlabel("花瓣长度（cm）")
+ax.set_ylabel("花瓣宽度（cm）")
 ax.set_xlim(x_min, x_max)
 ax.set_ylim(X_per[:, 1].min() - 0.08, X_per[:, 1].max() + 0.12)
 ax.grid(True, color="#e2e8f0", linewidth=0.8)
@@ -429,8 +437,8 @@ for threshold in thresholds:
     metric_rows.append({
         "阈值": round(float(threshold), 3),
         "预测为正": int(y_hat.sum()),
-        "precision": round(precision, 3),
-        "recall": round(recall, 3),
+        "精确率": round(precision, 3),
+        "召回率": round(recall, 3),
         "F1": round(f1, 3),
     })
 
@@ -485,6 +493,6 @@ def _gd() -> list:
         rs.code(PERCEPTRON_DATA_CELL),
         rs.code(PERCEPTRON_PROCESS_CELL),
         rs.code(PERCEPTRON_PLOT_CELL),
-        rs.section("3", "阈值指标", "同一组分数，换不同阈值会改变 precision、recall 和 F1。这里用表格展示分类指标为什么依赖决策阈值。"),
+        rs.section("3", "阈值指标", "同一组分数，换不同阈值会改变精确率、召回率和 F1。这里用表格展示分类指标为什么依赖决策阈值。"),
         rs.code(METRICS_CELL),
     ]

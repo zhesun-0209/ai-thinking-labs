@@ -113,7 +113,7 @@ graph = {
 start = graph["start"]
 goal = graph["goal"]
 h = {node: meta["h"] for node, meta in graph["nodes"].items()}
-print("start:", start, "goal:", goal)
+print("起点:", start, "终点:", goal)
 """
 
 
@@ -189,7 +189,7 @@ def path_edges(path):
     return {edge_key(path[i], path[i + 1]) for i in range(len(path) - 1)}
 
 
-def draw_search_result(path=None, trace=None, title="Romania map search"):
+def draw_search_result(path=None, trace=None, title="罗马尼亚路线图搜索"):
     path = path or []
     active_edges = path_edges(path)
     visited_nodes = set(path)
@@ -276,7 +276,7 @@ def draw_search_result(path=None, trace=None, title="Romania map search"):
     plt.show()
 
 
-draw_search_result(title="Romania map：Arad 到 Bucharest")
+draw_search_result(title="罗马尼亚路线图：Arad 到 Bucharest")
 """
 
 
@@ -322,7 +322,7 @@ def dfs(start, goal, adj):
         if node in visited:
             rows.append({
                 "步骤": step,
-                "frontier取出前": frontier_text(before),
+                "边界队列取出前": frontier_text(before),
                 "取出节点": node,
                 "新增候选": "已访问，跳过",
                 "当前路径": "→".join(path),
@@ -334,7 +334,7 @@ def dfs(start, goal, adj):
         if node == goal:
             rows.append({
                 "步骤": step,
-                "frontier取出前": frontier_text(before),
+                "边界队列取出前": frontier_text(before),
                 "取出节点": node,
                 "新增候选": "到达目标",
                 "当前路径": "→".join(path),
@@ -350,7 +350,7 @@ def dfs(start, goal, adj):
 
         rows.append({
             "步骤": step,
-            "frontier取出前": frontier_text(before),
+            "边界队列取出前": frontier_text(before),
             "取出节点": node,
             "新增候选": frontier_text(pushed),
             "当前路径": "→".join(path),
@@ -377,7 +377,7 @@ def bfs(start, goal, adj):
         if node == goal:
             rows.append({
                 "步骤": step,
-                "frontier取出前": frontier_text(before),
+                "边界队列取出前": frontier_text(before),
                 "取出节点": node,
                 "新增候选": "到达目标",
                 "当前路径": "→".join(path),
@@ -394,7 +394,7 @@ def bfs(start, goal, adj):
 
         rows.append({
             "步骤": step,
-            "frontier取出前": frontier_text(before),
+            "边界队列取出前": frontier_text(before),
             "取出节点": node,
             "新增候选": frontier_text(added),
             "当前路径": "→".join(path),
@@ -426,7 +426,7 @@ def ucs(start, goal, adj):
         if node == goal:
             rows.append({
                 "步骤": step,
-                "frontier取出前": frontier_text(before),
+                "边界队列取出前": frontier_text(before),
                 "取出节点": node,
                 "新增候选": "到达目标",
                 "当前路径": "→".join(path),
@@ -445,7 +445,7 @@ def ucs(start, goal, adj):
 
         rows.append({
             "步骤": step,
-            "frontier取出前": frontier_text(before),
+            "边界队列取出前": frontier_text(before),
             "取出节点": node,
             "新增候选": frontier_text(added),
             "当前路径": "→".join(path),
@@ -476,7 +476,7 @@ def greedy(start, goal, adj, h):
         if node == goal:
             rows.append({
                 "步骤": step,
-                "frontier取出前": frontier_text(before),
+                "边界队列取出前": frontier_text(before),
                 "取出节点": node,
                 "新增候选": "到达目标",
                 "当前路径": "→".join(path),
@@ -495,7 +495,7 @@ def greedy(start, goal, adj, h):
 
         rows.append({
             "步骤": step,
-            "frontier取出前": frontier_text(before),
+            "边界队列取出前": frontier_text(before),
             "取出节点": node,
             "新增候选": frontier_text(added),
             "当前路径": "→".join(path),
@@ -528,7 +528,7 @@ def astar(start, goal, adj, h):
         if node == goal:
             rows.append({
                 "步骤": step,
-                "frontier取出前": frontier_text(before),
+                "边界队列取出前": frontier_text(before),
                 "取出节点": node,
                 "新增候选": "到达目标",
                 "当前路径": "→".join(path),
@@ -551,7 +551,7 @@ def astar(start, goal, adj, h):
 
         rows.append({
             "步骤": step,
-            "frontier取出前": frontier_text(before),
+            "边界队列取出前": frontier_text(before),
             "取出节点": node,
             "新增候选": frontier_text(added),
             "当前路径": "→".join(path),
@@ -592,7 +592,7 @@ RUN_GREEDY_CELL = """
 # 运行 Greedy：查看按启发式 h 选择节点的过程。
 greedy_path, greedy_trace = greedy(start, goal, adj, h)
 display(greedy_trace)
-draw_search_result(greedy_path, greedy_trace, "Greedy：启发式最小优先")
+draw_search_result(greedy_path, greedy_trace, "贪心搜索：启发式最小优先")
 """
 
 
@@ -627,10 +627,10 @@ def _cells() -> list:
     return [
         rs.chapter_link(
             "第 5 章 · 经典路线图搜索代码实验",
-            "本页把同一张路线图交给五种搜索策略。读者先确认城市、道路和启发式距离，再逐个运行算法，看 frontier 如何变化，最后比较它们找到的路线和代价。",
+            "本页把同一张路线图交给五种搜索策略。读者先确认城市、道路和启发式距离，再逐个运行算法，看边界队列如何变化，最后比较它们找到的路线和代价。",
             [
                 "构建路线图和邻接表",
-                "实现 DFS、BFS、UCS、Greedy、A*",
+                "实现 DFS、BFS、UCS、贪心搜索、A*",
                 "查看每个算法的展开过程、路径图和代价",
             ],
             "../ch5.html",
@@ -643,7 +643,7 @@ def _cells() -> list:
             TABLES_CELL,
             DRAWING_CELL,
         ),
-        rs.section("1", "搜索算法", "这一组 cell 保留完整算法代码。重点看每种算法的 frontier 数据结构：DFS 用栈，BFS 用队列，UCS/Greedy/A* 用优先队列，但排序依据不同。"),
+        rs.section("1", "搜索算法", "这一组代码单元保留完整算法代码。重点看每种算法的边界队列：DFS 用栈，BFS 用队列，UCS、贪心搜索和 A* 用优先队列，但排序依据不同。"),
         *rs.stepcode(
             HELPERS_CELL,
             DFS_CELL,
@@ -659,7 +659,7 @@ def _cells() -> list:
         *rs.stepcode(RUN_BFS_CELL),
         rs.subsection("2.3", "UCS"),
         *rs.stepcode(RUN_UCS_CELL),
-        rs.subsection("2.4", "Greedy"),
+        rs.subsection("2.4", "贪心搜索"),
         *rs.stepcode(RUN_GREEDY_CELL),
         rs.subsection("2.5", "A*"),
         *rs.stepcode(RUN_ASTAR_CELL),

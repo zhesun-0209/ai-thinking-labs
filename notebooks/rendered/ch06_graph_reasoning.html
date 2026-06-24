@@ -7608,7 +7608,7 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=6">Python 代码实验</a><a href="../../ch6.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch06_graph_reasoning.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=176bb9b2">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=40e09788">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7625,17 +7625,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9816e1d0">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6870cd30">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="0.-%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1">0. 知识图谱<a class="anchor-link" href="#0.-%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1">¶</a></h2><p>先看三元组表：head 是起点实体，relation 是关系类型，tail 是指向实体。多跳查询会沿着关系一层层展开。</p>
+<h2 id="0.-%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1">0. 知识图谱<a class="anchor-link" href="#0.-%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1">¶</a></h2><p>先看三元组表：头实体是起点，关系表示边的类型，尾实体是指向对象。多跳查询会沿着关系一层层展开。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b6af1050">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=38fbbead">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7643,7 +7643,7 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Wikidata 风格知识图谱：三元组表示为 head-relation-tail。</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 类 Wikidata 知识图谱：三元组表示为“头实体-关系-尾实体”。</span>
 <span class="n">triples</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">(</span><span class="s2">"玛丽·居里"</span><span class="p">,</span> <span class="s2">"获得"</span><span class="p">,</span> <span class="s2">"诺贝尔物理学奖"</span><span class="p">),</span>
     <span class="p">(</span><span class="s2">"玛丽·居里"</span><span class="p">,</span> <span class="s2">"获得"</span><span class="p">,</span> <span class="s2">"诺贝尔化学奖"</span><span class="p">),</span>
@@ -7660,7 +7660,7 @@ body.jp-Notebook {
 <span class="n">start_entity</span> <span class="o">=</span> <span class="s2">"玛丽·居里"</span>
 <span class="n">target_entity</span> <span class="o">=</span> <span class="s2">"诺贝尔奖"</span>
 
-<span class="n">kg_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">triples</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"head"</span><span class="p">,</span> <span class="s2">"relation"</span><span class="p">,</span> <span class="s2">"tail"</span><span class="p">])</span>
+<span class="n">kg_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">triples</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"头实体"</span><span class="p">,</span> <span class="s2">"关系"</span><span class="p">,</span> <span class="s2">"尾实体"</span><span class="p">])</span>
 <span class="n">display</span><span class="p">(</span><span class="n">kg_df</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -7692,9 +7692,9 @@ body.jp-Notebook {
 <thead>
 <tr style="text-align: right;">
 <th></th>
-<th>head</th>
-<th>relation</th>
-<th>tail</th>
+<th>头实体</th>
+<th>关系</th>
+<th>尾实体</th>
 </tr>
 </thead>
 <tbody>
@@ -7765,7 +7765,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=808303a7">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=eafdc2bc">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7853,17 +7853,17 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f2aef9e9">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=95aab659">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-%E5%A4%9A%E8%B7%B3%E6%9F%A5%E8%AF%A2">1. 多跳查询<a class="anchor-link" href="#1.-%E5%A4%9A%E8%B7%B3%E6%9F%A5%E8%AF%A2">¶</a></h2><p>查询过程会记录 frontier 和新增路径。读者重点看路径是如何从起点实体一步步抵达目标实体的。</p>
+<h2 id="1.-%E5%A4%9A%E8%B7%B3%E6%9F%A5%E8%AF%A2">1. 多跳查询<a class="anchor-link" href="#1.-%E5%A4%9A%E8%B7%B3%E6%9F%A5%E8%AF%A2">¶</a></h2><p>查询过程会记录边界队列和新增路径。读者重点看路径是如何从起点实体一步步抵达目标实体的。</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b2cd84b0">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=76ee36ba">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7871,7 +7871,7 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 多跳查询：用队列逐层展开，记录每一步 frontier 和新路径。</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 多跳查询：用队列逐层展开，记录每一步边界队列和新路径。</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_paths</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">kg_adj</span><span class="p">,</span> <span class="n">max_hops</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
     <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([(</span><span class="n">start</span><span class="p">,</span> <span class="p">[])])</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
@@ -7887,7 +7887,7 @@ body.jp-Notebook {
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
                 <span class="s2">"步骤"</span><span class="p">:</span> <span class="n">step</span><span class="p">,</span>
                 <span class="s2">"展开实体"</span><span class="p">:</span> <span class="n">entity</span><span class="p">,</span>
-                <span class="s2">"frontier"</span><span class="p">:</span> <span class="s2">"、"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">frontier_before</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"空"</span><span class="p">,</span>
+                <span class="s2">"边界队列"</span><span class="p">:</span> <span class="s2">"、"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">frontier_before</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"空"</span><span class="p">,</span>
                 <span class="s2">"新增路径"</span><span class="p">:</span> <span class="s2">"达到跳数上限"</span><span class="p">,</span>
             <span class="p">})</span>
             <span class="k">continue</span>
@@ -7906,7 +7906,7 @@ body.jp-Notebook {
         <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
             <span class="s2">"步骤"</span><span class="p">:</span> <span class="n">step</span><span class="p">,</span>
             <span class="s2">"展开实体"</span><span class="p">:</span> <span class="n">entity</span><span class="p">,</span>
-            <span class="s2">"frontier"</span><span class="p">:</span> <span class="s2">"、"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">frontier_before</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"空"</span><span class="p">,</span>
+            <span class="s2">"边界队列"</span><span class="p">:</span> <span class="s2">"、"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">frontier_before</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"空"</span><span class="p">,</span>
             <span class="s2">"新增路径"</span><span class="p">:</span> <span class="s2">"；"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_items</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"无"</span><span class="p">,</span>
         <span class="p">})</span>
 
@@ -7947,7 +7947,7 @@ body.jp-Notebook {
 <th></th>
 <th>步骤</th>
 <th>展开实体</th>
-<th>frontier</th>
+<th>边界队列</th>
 <th>新增路径</th>
 </tr>
 </thead>
@@ -8016,7 +8016,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a440d505">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=acd3a6d1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8026,7 +8026,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=34ab8166">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8ac3ab97">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8052,7 +8052,7 @@ body.jp-Notebook {
         <span class="n">relation_bonus</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">path</span> <span class="k">if</span> <span class="n">edge</span><span class="p">[</span><span class="s2">"relation"</span><span class="p">]</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"获得"</span><span class="p">,</span> <span class="s2">"类型"</span><span class="p">,</span> <span class="s2">"关联"</span><span class="p">})</span>
         <span class="n">score</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">hop_count</span> <span class="o">+</span> <span class="mf">0.08</span> <span class="o">*</span> <span class="n">relation_bonus</span>
         <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-            <span class="s2">"path_id"</span><span class="p">:</span> <span class="n">path_id</span><span class="p">,</span>
+            <span class="s2">"路径编号"</span><span class="p">:</span> <span class="n">path_id</span><span class="p">,</span>
             <span class="s2">"路径"</span><span class="p">:</span> <span class="n">path_to_text</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
             <span class="s2">"跳数"</span><span class="p">:</span> <span class="n">hop_count</span><span class="p">,</span>
             <span class="s2">"关系加分"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="mf">0.08</span> <span class="o">*</span> <span class="n">relation_bonus</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
@@ -8093,7 +8093,7 @@ body.jp-Notebook {
 <thead>
 <tr style="text-align: right;">
 <th></th>
-<th>path_id</th>
+<th>路径编号</th>
 <th>路径</th>
 <th>跳数</th>
 <th>关系加分</th>
@@ -8125,7 +8125,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=47bf86e8">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f970c9eb">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8135,7 +8135,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7b8be367">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fbf1100b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8209,7 +8209,7 @@ body.jp-Notebook {
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 
-<span class="n">best_path</span> <span class="o">=</span> <span class="n">paths</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">ranked_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"path_id"</span><span class="p">])]</span>
+<span class="n">best_path</span> <span class="o">=</span> <span class="n">paths</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">ranked_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"路径编号"</span><span class="p">])]</span>
 <span class="n">draw_kg_path</span><span class="p">(</span><span class="n">triples</span><span class="p">,</span> <span class="n">best_path</span><span class="p">)</span>
 </pre></div>
 </div>

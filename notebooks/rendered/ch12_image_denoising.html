@@ -7608,16 +7608,16 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=12">Python 代码实验</a><a href="../../ch12.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch12_image_denoising.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=94050ca9">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f5e24623">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="%E7%AC%AC-12-%E7%AB%A0-%C2%B7-%E7%9C%9F%E5%AE%9E%E5%9B%BE%E7%89%87%E5%8E%BB%E5%99%AA%E9%87%8D%E5%BB%BA%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">第 12 章 · 真实图片去噪重建代码实验<a class="anchor-link" href="#%E7%AC%AC-12-%E7%AB%A0-%C2%B7-%E7%9C%9F%E5%AE%9E%E5%9B%BE%E7%89%87%E5%8E%BB%E5%99%AA%E9%87%8D%E5%BB%BA%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">¶</a></h1><p>本页把去噪任务单独拿出来看：给模型一张带噪建筑照片，让它输出更干净的图像。读者重点比较 noisy 和 denoised 的 MSE 与视觉差异。</p>
+<h1 id="%E7%AC%AC-12-%E7%AB%A0-%C2%B7-%E7%9C%9F%E5%AE%9E%E5%9B%BE%E7%89%87%E5%8E%BB%E5%99%AA%E9%87%8D%E5%BB%BA%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">第 12 章 · 真实图片去噪重建代码实验<a class="anchor-link" href="#%E7%AC%AC-12-%E7%AB%A0-%C2%B7-%E7%9C%9F%E5%AE%9E%E5%9B%BE%E7%89%87%E5%8E%BB%E5%99%AA%E9%87%8D%E5%BB%BA%E4%BB%A3%E7%A0%81%E5%AE%9E%E9%AA%8C">¶</a></h1><p>本页把去噪任务单独拿出来看：给模型一张带噪建筑照片，让它输出更干净的图像。读者重点比较噪声输入和去噪输出的均方误差与视觉差异。</p>
 <p><a href="../../ch12.html">章节网页</a></p>
 <h2 id="%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">运行内容<a class="anchor-link" href="#%E8%BF%90%E8%A1%8C%E5%86%85%E5%AE%B9">¶</a></h2><ul>
-<li>加载真实图片 patch</li>
+<li>加载真实图片图块</li>
 <li>训练去噪模型</li>
 <li>比较噪声输入和去噪输出</li>
 </ul>
@@ -7625,7 +7625,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e4f1c943">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c9150d62">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7635,7 +7635,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8c433ac2">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=94593678">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7643,7 +7643,7 @@ body.jp-Notebook {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 真实建筑照片去噪：用同一张图片的局部 patch 训练复原模型。</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 真实建筑照片去噪：用同一张图片的局部图块训练复原模型。</span>
 <span class="n">denoise_clean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">load_sample_image</span><span class="p">(</span><span class="s2">"china.jpg"</span><span class="p">))</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="mi">96</span><span class="p">,</span> <span class="mi">96</span><span class="p">)))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"float32"</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
 <span class="n">denoise_patch_size</span> <span class="o">=</span> <span class="mi">12</span>
 <span class="n">denoise_stride</span> <span class="o">=</span> <span class="mi">6</span>
@@ -7677,13 +7677,13 @@ body.jp-Notebook {
 
 <span class="n">denoise_summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
     <span class="p">[</span>
-        <span class="p">{</span><span class="s2">"图像"</span><span class="p">:</span> <span class="s2">"noisy input"</span><span class="p">,</span> <span class="s2">"MSE"</span><span class="p">:</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">denoise_clean</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">noisy_image</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))},</span>
-        <span class="p">{</span><span class="s2">"图像"</span><span class="p">:</span> <span class="s2">"denoised output"</span><span class="p">,</span> <span class="s2">"MSE"</span><span class="p">:</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">denoise_clean</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">denoised_image</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))},</span>
+        <span class="p">{</span><span class="s2">"图像"</span><span class="p">:</span> <span class="s2">"带噪输入"</span><span class="p">,</span> <span class="s2">"均方误差"</span><span class="p">:</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">denoise_clean</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">noisy_image</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))},</span>
+        <span class="p">{</span><span class="s2">"图像"</span><span class="p">:</span> <span class="s2">"去噪输出"</span><span class="p">,</span> <span class="s2">"均方误差"</span><span class="p">:</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">denoise_clean</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">denoised_image</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))},</span>
     <span class="p">]</span>
 <span class="p">)</span>
 <span class="n">display</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
     <span class="s2">"图片"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"china.jpg"</span><span class="p">],</span>
-    <span class="s2">"patch 数"</span><span class="p">:</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">patches_clean</span><span class="p">)],</span>
+    <span class="s2">"图块数"</span><span class="p">:</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">patches_clean</span><span class="p">)],</span>
     <span class="s2">"噪声标准差"</span><span class="p">:</span> <span class="p">[</span><span class="n">noise_sigma</span><span class="p">],</span>
 <span class="p">}))</span>
 <span class="n">display</span><span class="p">(</span><span class="n">denoise_summary</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
@@ -7718,7 +7718,7 @@ body.jp-Notebook {
 <tr style="text-align: right;">
 <th></th>
 <th>图片</th>
-<th>patch 数</th>
+<th>图块数</th>
 <th>噪声标准差</th>
 </tr>
 </thead>
@@ -7756,18 +7756,18 @@ body.jp-Notebook {
 <tr style="text-align: right;">
 <th></th>
 <th>图像</th>
-<th>MSE</th>
+<th>均方误差</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <th>0</th>
-<td>noisy input</td>
+<td>带噪输入</td>
 <td>0.0399</td>
 </tr>
 <tr>
 <th>1</th>
-<td>denoised output</td>
+<td>去噪输出</td>
 <td>0.0127</td>
 </tr>
 </tbody>
@@ -7777,7 +7777,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=738a8e04">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8669977c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

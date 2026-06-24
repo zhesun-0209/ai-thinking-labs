@@ -302,7 +302,7 @@ draw_rule_flow(initial_facts, rules, forward_trace, "动物分类专家系统：
 
 
 KG_DATA_CELL = """
-# Wikidata 风格知识图谱：三元组表示为 head-relation-tail。
+# 类 Wikidata 知识图谱：三元组表示为“头实体-关系-尾实体”。
 triples = [
     ("玛丽·居里", "获得", "诺贝尔物理学奖"),
     ("玛丽·居里", "获得", "诺贝尔化学奖"),
@@ -319,7 +319,7 @@ triples = [
 start_entity = "玛丽·居里"
 target_entity = "诺贝尔奖"
 
-kg_df = pd.DataFrame(triples, columns=["head", "relation", "tail"])
+kg_df = pd.DataFrame(triples, columns=["头实体", "关系", "尾实体"])
 display(kg_df)
 """
 
@@ -341,7 +341,7 @@ display(out_edges)
 
 
 GRAPH_REASONING_CELL = """
-# 多跳查询：用队列逐层展开，记录每一步 frontier 和新路径。
+# 多跳查询：用队列逐层展开，记录每一步边界队列和新路径。
 def find_paths(start, target, kg_adj, max_hops=3):
     queue = deque([(start, [])])
     rows = []
@@ -357,7 +357,7 @@ def find_paths(start, target, kg_adj, max_hops=3):
             rows.append({
                 "步骤": step,
                 "展开实体": entity,
-                "frontier": "、".join(frontier_before) or "空",
+                "边界队列": "、".join(frontier_before) or "空",
                 "新增路径": "达到跳数上限",
             })
             continue
@@ -376,7 +376,7 @@ def find_paths(start, target, kg_adj, max_hops=3):
         rows.append({
             "步骤": step,
             "展开实体": entity,
-            "frontier": "、".join(frontier_before) or "空",
+            "边界队列": "、".join(frontier_before) or "空",
             "新增路径": "；".join(new_items) or "无",
         })
 
@@ -407,7 +407,7 @@ def rank_paths(paths):
         relation_bonus = sum(1 for edge in path if edge["relation"] in {"获得", "类型", "关联"})
         score = 1 / hop_count + 0.08 * relation_bonus
         rows.append({
-            "path_id": path_id,
+            "路径编号": path_id,
             "路径": path_to_text(path),
             "跳数": hop_count,
             "关系加分": round(0.08 * relation_bonus, 2),
@@ -488,7 +488,7 @@ def draw_kg_path(triples, best_path):
     plt.show()
 
 
-best_path = paths[int(ranked_paths.loc[0, "path_id"])]
+best_path = paths[int(ranked_paths.loc[0, "路径编号"])]
 draw_kg_path(triples, best_path)
 """
 
@@ -528,11 +528,11 @@ def _graph() -> list:
             ["准备 Wikidata 风格三元组", "运行多跳查询", "展示路径排序与结果图"],
             "../ch6.html",
         ),
-        rs.section("0", "知识图谱", "先看三元组表：head 是起点实体，relation 是关系类型，tail 是指向实体。多跳查询会沿着关系一层层展开。"),
+        rs.section("0", "知识图谱", "先看三元组表：头实体是起点，关系表示边的类型，尾实体是指向对象。多跳查询会沿着关系一层层展开。"),
         rs.code(DEPENDENCIES_CELL),
         rs.code(KG_DATA_CELL),
         rs.code(KG_ADJ_CELL),
-        rs.section("1", "多跳查询", "查询过程会记录 frontier 和新增路径。读者重点看路径是如何从起点实体一步步抵达目标实体的。"),
+        rs.section("1", "多跳查询", "查询过程会记录边界队列和新增路径。读者重点看路径是如何从起点实体一步步抵达目标实体的。"),
         rs.code(GRAPH_REASONING_CELL),
         rs.section("2", "路径排序", "同一个目标可能有多条路径。这里把短路径和语义更贴近的关系排在前面，帮助读者理解为什么要给路径排序。"),
         rs.code(PATH_RANK_CELL),
