@@ -27,7 +27,7 @@ const ch8Config = {
       }],
     },
     compare: { key: "compare", cells: [{
-      prompt: "前向/反向、TransE、Attention 各解决什么问题？请对照下表，各用本页小例子一句话说明适用场景。",
+      prompt: "前向/反向、TransE、注意力各解决什么问题？请对照下表，各用本页小例子一句话说明适用场景。",
       tableKey: "ch8-compare",
       copyPrompt: C.compare,
     }] },
@@ -128,18 +128,18 @@ const ch8Config = {
     attention: {
       key: "attention",
       mentorKey: "ch8-attention",
-      title: "Encoder–Decoder 注意力",
+      title: "编码器-解码器注意力",
       subtitle: "翻译时「该看源句哪几个词」",
       cells: [
         {
-          prompt: "RNN 把源句压成一个向量，长句会丢信息。**Attention 让解码每一步「软查询」Encoder 全部位置**——这是 Transformer 的核心思想之一。",
+          prompt: "RNN 把源句压成一个向量，长句会丢信息。**注意力机制让解码每一步都能软查询编码器里的全部位置**——这是 Transformer 的核心思想之一。",
           architectureKey: "encoder-decoder",
           architectureStep: { highlight: ["enc", "dec", "attn"] },
           vibeTip: "图书馆：Q=你的问题，K=索引卡，V=书页内容。",
           copyPrompt: C.attentionConcept,
         },
         {
-          prompt: "先看架构图里 Attention 桥，再看热力图：解码「日记」为何 heavily attend「写」？",
+          prompt: "先看架构图里的注意力桥，再看热力图：解码「日记」时为什么最关注「写」？",
           demoKey: "attention",
           labTarget: "attention",
           interactive: true,
@@ -240,12 +240,12 @@ const ch8Config = {
     attention: {
       key: "attention",
       architectureKey: "encoder-decoder",
-      stepLabels: ["Q 查询 K", "Softmax", "加权 V"],
+      stepLabels: ["Q 查询 K", "归一化", "加权 V"],
       trace: [
         {
-          title: "Q 查询 Encoder 的 K",
-          summary: "Decoder 当前要生成「日记」，先拿 Q 去问源句每个位置。",
-          reason: "Q 来自 Decoder 当前状态；K/V 来自 Encoder 对「鲁迅 写 日记」的编码。",
+          title: "Q 查询编码器的 K",
+          summary: "解码器当前要生成「日记」，先拿 Q 去问源句每个位置。",
+          reason: "Q 来自解码器当前状态；K/V 来自编码器对「鲁迅 写 日记」的编码。",
           fields: [{ label: "最高分", value: "写：2.1" }],
           mode: "cross",
           phase: "score",
@@ -257,7 +257,7 @@ const ch8Config = {
           architectureStep: { highlight: ["attn"] },
         },
         {
-          title: "Softmax 变权重",
+          title: "Softmax 归一化",
           summary: "分数归一化后，「写」占 0.80，说明当前步主要看谓语位置。",
           reason: "Softmax 后所有权重相加为 1，注意力不是硬选择一个词，而是软分配。",
           fields: [{ label: "权重和", value: "1.00" }, { label: "α(写)", value: "0.80" }],
@@ -272,9 +272,9 @@ const ch8Config = {
         },
         {
           title: "加权 V 得上下文",
-          summary: "按 α 加权各位置 V，得到当前 Decoder 需要的上下文向量。",
+          summary: "按 α 加权各位置 V，得到当前解码器需要的上下文向量。",
           reason: "「写」的 V 贡献最大，因此输出「日记」时保留了动宾关系线索。",
-          fields: [{ label: "context", value: "ΣαᵢVᵢ" }, { label: "最大贡献", value: "写 0.80" }],
+          fields: [{ label: "上下文", value: "ΣαᵢVᵢ" }, { label: "最大贡献", value: "写 0.80" }],
           mode: "cross",
           phase: "context",
           queryToken: "日记",
@@ -292,7 +292,7 @@ const ch8Config = {
     "ch8-compare": `<div class="table-wrap compact"><table class="run-table compact comparison-table"><thead><tr><th>模块</th><th>怎么理解</th><th>适用场景</th></tr></thead><tbody>
       <tr><td>前向/反向</td><td>流水线 + 分责任</td><td>训练任何可微网络</td></tr>
       <tr><td>TransE</td><td>关系=平移</td><td>图谱补全、链接预测</td></tr>
-      <tr><td>Attention</td><td>软查询</td><td>对齐、长依赖</td></tr></tbody></table></div>`,
+      <tr><td>注意力</td><td>软查询</td><td>对齐、长依赖</td></tr></tbody></table></div>`,
   },
   labAlgos: [
     { key: "forward", label: "前向", demo: "forward", desc: "预测下一步哪层点亮 — 对照 MLP 架构图。" },

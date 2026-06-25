@@ -9,10 +9,10 @@ const ch9Config = {
     intro: {
       key: "intro",
       cells: [{
-        prompt: "语言模型 pipeline：分词 → 向量 → 上下文建模 → 生成。固定短句「鲁迅 写 了 狂人 日记」贯穿本章。请先认准 **Transformer Encoder Block** 架构图——现代 LM 的核心积木。",
+        prompt: "语言模型流水线：分词 → 向量 → 上下文建模 → 生成。固定短句「鲁迅 写 了 狂人 日记」贯穿本章。请先认准 **Transformer 编码器块** 架构图——现代语言模型的核心积木。",
         architectureKey: "transformer",
         architectureStep: { highlight: ["attn", "ffn"] },
-        vibeTip: "Self-Attention 在 Encoder 里让每个词「看见」全句；GPT 类 LM 用 Decoder-only 变体（见 LM 模块）。",
+        vibeTip: "自注意力在编码器里让每个词「看见」全句；GPT 类语言模型使用仅解码器变体（见语言模型模块）。",
         copyPrompt: C.intro,
       }],
     },
@@ -29,7 +29,7 @@ const ch9Config = {
     compare: {
       key: "compare",
       cells: [{
-        prompt: "NLP 流水线四阶段：**BPE** 子词切分 → **Skip-gram** 词向量 → **Self-Attention** 上下文建模 → **语言模型** 自回归生成。请对照下表理解各阶段产出。",
+        prompt: "语言智能流水线四阶段：**BPE** 子词切分 → **Skip-gram** 词向量 → **自注意力** 上下文建模 → **语言模型** 自回归生成。请对照下表理解各阶段产出。",
         tableKey: "ch9-compare",
         outputLabel: "对比表",
         copyPrompt: C.compare,
@@ -84,14 +84,14 @@ const ch9Config = {
       title: "自注意力", subtitle: "Q/K/V 来自同一句",
       cells: [
         {
-          prompt: "Self-Attention：句「鲁迅 写 了 狂人 日记」中每个词用 Q 查询全句 K，Softmax 得权重，加权 V。**需位置编码**才有顺序感。",
+          prompt: "自注意力：句「鲁迅 写 了 狂人 日记」中每个词用 Q 查询全句 K，经 Softmax 得到权重，再加权 V。**需位置编码**才有顺序感。",
           architectureKey: "transformer",
           architectureStep: { highlight: ["attn"] },
           vibeTip: "热力图一行 = 一个词「看向」全句哪些位置。",
           copyPrompt: C.selfattnConcept,
         },
         {
-          prompt: "对照 Transformer Block 架构图，再看热力图步进。",
+          prompt: "对照 Transformer 块架构图，再看热力图步进。",
           demoKey: "selfattn", labTarget: "selfattn", interactive: true,
           copyPrompt: C.selfattnDemo,
         },
@@ -106,9 +106,9 @@ const ch9Config = {
       title: "自回归语言模型", subtitle: "下一词预测",
       cells: [
         {
-          prompt: "语言模型：P(w₁…w_n)=Π P(w_i|w_{<i})。前缀「鲁迅」→「写」→「了」… **GPT = 仅 Decoder Block 堆叠**（因果掩码自注意力），自回归接龙生成下一 token。",
+          prompt: "语言模型：P(w₁…w_n)=Π P(w_i|w_{<i})。前缀「鲁迅」→「写」→「了」… **GPT = 仅解码器块堆叠**（因果掩码自注意力），自回归接龙生成下一词元。",
           architectureKey: "decoder-only",
-          vibeTip: "整句概率 = 各步条件概率连乘。Self-Attn 节用的是 Encoder 积木；LM 节用 Decoder-only。",
+          vibeTip: "整句概率 = 各步条件概率连乘。自注意力节用的是编码器积木；语言模型节用仅解码器结构。",
           copyPrompt: C.lmConcept,
         },
         {
@@ -126,10 +126,10 @@ const ch9Config = {
     bpe: {
       key: "bpe", stepLabels: ["字符", "合并日记", "合并狂人", "合并鲁迅"],
       trace: [
-        { tokens: ["鲁","迅","写","了","狂","人","日","记"], pair: ["日","记"], count: 12, title: "字符级输入", summary: "句子先被拆成最小字符 token。", reason: "BPE 从细粒度开始，反复统计相邻 token 对的出现频率。", fields: [{ label: "高频对", value: "日+记" }] },
-        { tokens: ["鲁","迅","写","了","狂","人","日记"], highlight: ["日记"], title: "合并日记", summary: "把最高频相邻对「日+记」合成一个 token。", reason: "常一起出现的片段应作为更稳定的子词单位。", fields: [{ label: "新 token", value: "日记" }] },
+        { tokens: ["鲁","迅","写","了","狂","人","日","记"], pair: ["日","记"], count: 12, title: "字符级输入", summary: "句子先被拆成最小字符词元。", reason: "BPE 从细粒度开始，反复统计相邻词元对的出现频率。", fields: [{ label: "高频对", value: "日+记" }] },
+        { tokens: ["鲁","迅","写","了","狂","人","日记"], highlight: ["日记"], title: "合并日记", summary: "把最高频相邻对「日+记」合成一个词元。", reason: "常一起出现的片段应作为更稳定的子词单位。", fields: [{ label: "新词元", value: "日记" }] },
         { tokens: ["鲁","迅","写","了","狂人","日记"], highlight: ["狂人","日记"], title: "合并狂人", summary: "继续把「狂+人」合成「狂人」。", reason: "每次合并都会减少序列长度，但仍保留可拆分能力。", fields: [{ label: "长度", value: "7→6" }] },
-        { tokens: ["鲁迅","写","了","狂人","日记"], highlight: ["鲁迅","狂人","日记"], title: "形成子词表", summary: "得到「鲁迅 / 写 / 了 / 狂人 / 日记」这些子词 token。", reason: "语言模型后续预测的是 token，不是原始汉字或完整词典词。", fields: [{ label: "输出", value: "子词序列" }] },
+        { tokens: ["鲁迅","写","了","狂人","日记"], highlight: ["鲁迅","狂人","日记"], title: "形成子词表", summary: "得到「鲁迅 / 写 / 了 / 狂人 / 日记」这些子词词元。", reason: "语言模型后续预测的是词元，不是原始汉字或完整词典词。", fields: [{ label: "输出", value: "子词序列" }] },
       ],
       render(v, s) {
         courseShared.renderTokenStrip(v, s.tokens, s.highlight || []);
@@ -151,12 +151,12 @@ const ch9Config = {
     selfattn: {
       key: "selfattn",
       architectureKey: "transformer",
-      stepLabels: ["Q 查询 K", "Softmax", "加权 V"],
+      stepLabels: ["Q 查询 K", "归一化", "加权 V"],
       trace: [
         {
           title: "Q(写) 查询全句 K",
-          summary: "「写」这个位置生成 Q，去看同一句每个 token 的 K。",
-          reason: "Self-Attention 的 Q/K/V 都来自同一句；这里最高分指向主语「鲁迅」。",
+          summary: "「写」这个位置生成 Q，去看同一句每个词元的 K。",
+          reason: "自注意力的 Q/K/V 都来自同一句；这里最高分指向主语「鲁迅」。",
           fields: [{ label: "最高分", value: "鲁迅：1.2" }],
           mode: "self",
           phase: "score",
@@ -168,7 +168,7 @@ const ch9Config = {
           architectureStep: { highlight: ["attn"] },
         },
         {
-          title: "Softmax 变权重",
+          title: "Softmax 归一化",
           summary: "权重显示「写」主要看向「鲁迅」，也保留自身和宾语线索。",
           reason: "这些权重不是人工规则，是 QK 分数归一化后的软分配。",
           fields: [{ label: "α(鲁迅)", value: "0.35" }, { label: "权重和", value: "1.00" }],
@@ -205,7 +205,7 @@ const ch9Config = {
       trace: [
         { title: "第一步", summary: "首词预测：「鲁迅」后最可能是「写」。", prefix: ["鲁迅"], candidates: [{ w: "写", p: 0.64 }, { w: "是", p: 0.12 }, { w: "的", p: 0.08 }] },
         { title: "第二步", summary: "链式扩展：P(了|鲁迅 写)。", prefix: ["鲁迅", "写"], candidates: [{ w: "了", p: 0.58 }, { w: "过", p: 0.21 }, { w: "的", p: 0.09 }] },
-        { title: "第三步", summary: "子词预测：BPE 切分后的下一 token。", prefix: ["鲁迅", "写", "了"], candidates: [{ w: "狂人", p: 0.41 }, { w: "《", p: 0.18 }, { w: "一", p: 0.11 }] },
+        { title: "第三步", summary: "子词预测：BPE 切分后的下一词元。", prefix: ["鲁迅", "写", "了"], candidates: [{ w: "狂人", p: 0.41 }, { w: "《", p: 0.18 }, { w: "一", p: 0.11 }] },
         { title: "整句", summary: "概率连乘 → 困惑度。", prefix: ["鲁迅", "写", "了", "狂人", "日记"], product: "0.64×0.58×0.41×…≈0.064", ppl: "8.2", candidates: [{ w: "（完成）", p: 1.0 }] },
       ],
       render(v, s) { window.courseViz.renderLMChain(v, s); },
@@ -224,7 +224,7 @@ const ch9Config = {
   tables: {
     "ch9-compare": `<div class="table-wrap compact"><table class="run-table compact comparison-table"><thead><tr><th>阶段</th><th>算法</th><th>架构/产出</th></tr></thead><tbody>
       <tr><td>分词</td><td>BPE</td><td>子词词表</td></tr><tr><td>向量</td><td>Skip-gram</td><td>词向量</td></tr>
-      <tr><td>上下文</td><td>Self-Attention</td><td>Transformer Block</td></tr><tr><td>生成</td><td>LM</td><td>下一词分布</td></tr></tbody></table></div>`,
+      <tr><td>上下文</td><td>自注意力</td><td>Transformer 块</td></tr><tr><td>生成</td><td>语言模型</td><td>下一词分布</td></tr></tbody></table></div>`,
   },
   labAlgos: [
     { key: "bpe", label: "BPE", demo: "bpe", desc: "子词合并：人+记→日记→狂人→鲁迅。" },

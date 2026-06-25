@@ -10,7 +10,7 @@ const ch11Config = {
     intro: {
       key: "intro",
       cells: [{
-        prompt: "行动智能 = 智能体与环境循环交互。订机票案例：待搜索→已比价(+1)→已下单(+2)→已确认(+10)，折扣 γ=0.9。请先认准 **MDP 交互环架构图**：Agent 输出动作 a → 环境返回 r,s′ → 更新状态。",
+        prompt: "行动智能 = 智能体与环境循环交互。订机票案例：待搜索→已比价(+1)→已下单(+2)→已确认(+10)，折扣 γ=0.9。请先认准 **MDP 交互环架构图**：智能体输出动作 a → 环境返回 r,s′ → 更新状态。",
         architectureKey: "mdp",
         vibeTip: "π(a|s) 是策略；V(s) 是状态价值；γ 折扣未来奖励。",
         copyPrompt: C.intro,
@@ -53,7 +53,7 @@ const ch11Config = {
       title: "强化学习 · 序贯决策与价值迭代", subtitle: "观测 → 动作 → 奖励",
       cells: [
         {
-          prompt: "订机票：待搜索 → 已比价(+1) → 已下单(+2) → 已确认(+10)。**Agent–Env 环**：每步 s → a → (r, s′)。",
+          prompt: "订机票：待搜索 → 已比价(+1) → 已下单(+2) → 已确认(+10)。**智能体-环境环**：每步 s → a → (r, s′)。",
           architectureKey: "mdp",
           vibeTip: "G = Σ γᵗ r_t；γ<1 才能看长远。",
           copyPrompt: C.mdpConcept,
@@ -137,7 +137,7 @@ const ch11Config = {
       trace: [
         { part: "define", title: "折扣回报 G", summary: "从当前步起，未来奖励按 γ 折扣求和。", reason: "γ<1 让智能体既看眼前也看长远。", fields: [{ label: "例", value: "0+0.9+1.62+…" }] },
         { part: "expect", title: "Bellman 期望方程", summary: "V(s) 等于走一步的期望回报。", reason: "把「长期」拆成「一步 + 未来」— 递归结构。", fields: [{ label: "核心", value: "r + γV(s′)" }] },
-        { part: "optimal", title: "最优 Bellman", summary: "最优策略下选 max_a 的动作。", reason: "动态规划可解，但大状态空间需采样近似。", fields: [{ label: "符号", value: "V*(s)" }] },
+        { part: "optimal", title: "最优 Bellman", summary: "最优策略下选价值最高的动作。", reason: "动态规划可解，但大状态空间需采样近似。", fields: [{ label: "符号", value: "V*(s)" }] },
         { part: "td", title: "TD(0) 自举", summary: "用一步样本 r+γV(s′) 更新 V(s)。", reason: "TD 是 Bellman 方程的随机近似。", fields: [{ label: "更新", value: "V←V+αδ" }] },
       ],
       render(v, s) { window.courseViz.renderBellmanExplainer(v, s); },
@@ -162,7 +162,7 @@ const ch11Config = {
       architectureKey: "mdp",
       stepLabels: ["s₀ 待搜索", "s₁ 已比价", "s₂ 已下单", "s₃ 已确认"],
       trace: [
-        { title: "s₀ 待搜索", summary: "用户打开订票 App，环境处于「待搜索」。Agent 必须选动作「搜索航班」。", reason: "MDP 五元组 (S,A,P,R,γ) 中，这是初始状态 s₀∈S。", state: 0, action: "搜索航班", reward: 0, fields: [{ label: "s", value: "待搜索" }, { label: "a", value: "搜索航班" }, { label: "r", value: "0" }] },
+        { title: "s₀ 待搜索", summary: "用户打开订票 App，环境处于「待搜索」。智能体必须选动作「搜索航班」。", reason: "MDP 五元组 (S,A,P,R,γ) 中，这是初始状态 s₀∈S。", state: 0, action: "搜索航班", reward: 0, fields: [{ label: "s", value: "待搜索" }, { label: "a", value: "搜索航班" }, { label: "r", value: "0" }] },
         { title: "s₁ 已比价", summary: "环境返回航班列表，状态变为「已比价」，即时奖励 +1。", reason: "P(s₁|s₀,搜索)=1；有进展但任务未完成。", state: 1, action: "选择航班", reward: 1, fields: [{ label: "s′", value: "已比价" }, { label: "r", value: "+1" }] },
         { title: "s₂ 已下单", summary: "用户选定航班并下单，奖励 +2（比比价更接近目标）。", reason: "越接近「已确认」，中间奖励可设计得越大。", state: 2, action: "支付", reward: 2, fields: [{ label: "s′", value: "已下单" }, { label: "r", value: "+2" }] },
         { title: "s₃ 已确认", summary: "支付成功、出票确认 — 终止状态，奖励 +10。", reason: "终止后无后续动作；G 会把 +10 折扣传回前面各状态。", state: 3, action: "—", reward: 10, fields: [{ label: "终止", value: "是" }, { label: "G", value: "≈9.8" }] },
@@ -187,7 +187,7 @@ const ch11Config = {
       trace: [
         { title: "旧估计 V(s)", summary: "当前把状态 s 的价值估为 2.00。", reason: "TD 更新从旧价值出发，不需要等整局结束。", fields: [{ label: "V(s)", value: "2.00" }], vOld: 2.0 },
         { title: "观察转移", summary: "执行动作后得到即时奖励 r=1，并到达 s′。", reason: "下一状态已有价值估计 V(s′)=4.00。", fields: [{ label: "r", value: "+1" }, { label: "V(s′)", value: "4.00" }], vOld: 2.0, r: 1, vNext: 4.0, target: 4.6 },
-        { title: "TD 目标", summary: "用 r+γV(s′)=1+0.9×4=4.60 当作学习目标。", reason: "这就是 Bellman 自举：用下一状态估计补足未来回报。", fields: [{ label: "target", value: "4.60" }], vOld: 2.0, r: 1, vNext: 4.0, target: 4.6 },
+        { title: "TD 目标", summary: "用 r+γV(s′)=1+0.9×4=4.60 当作学习目标。", reason: "这就是 Bellman 自举：用下一状态估计补足未来回报。", fields: [{ label: "目标", value: "4.60" }], vOld: 2.0, r: 1, vNext: 4.0, target: 4.6 },
         { title: "更新 V(s)", summary: "按 α=0.2 向目标靠近：2.00→2.52。", reason: "δ=4.60−2.00=2.60，只走一小步避免震荡。", fields: [{ label: "δ", value: "+2.60" }, { label: "V新", value: "2.52" }], vOld: 2.0, vNew: 2.52, r: 1, vNext: 4.0, target: 4.6 },
       ],
       render(v, s) { window.courseViz.renderTDUpdate(v, s); },
@@ -204,8 +204,8 @@ const ch11Config = {
   },
   tables: {
     "ch11-compare": `<div class="table-wrap compact"><table class="run-table compact comparison-table"><thead><tr><th>概念</th><th>架构/公式</th><th>作用</th></tr></thead><tbody>
-      <tr><td>MDP</td><td>Agent–Env 环</td><td>形式化</td></tr><tr><td>Actor-Critic</td><td>π + V</td><td>策略梯度</td></tr>
-      <tr><td>TD(0)</td><td>V←V+αδ</td><td>价值学习</td></tr><tr><td>ε-greedy</td><td>随机/最优</td><td>探索</td></tr></tbody></table></div>`,
+      <tr><td>MDP</td><td>智能体-环境环</td><td>形式化</td></tr><tr><td>Actor-Critic</td><td>π + V</td><td>策略梯度</td></tr>
+      <tr><td>TD(0)</td><td>V←V+αδ</td><td>价值学习</td></tr><tr><td>ε-贪心</td><td>随机/最优</td><td>探索</td></tr></tbody></table></div>`,
   },
   labAlgos: [
     { key: "bellman", label: "Bellman", demo: "bellman", desc: "回报 → Bellman 期望 → 最优 → TD 自举。" },

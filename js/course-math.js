@@ -24,7 +24,7 @@
             <span class="math-frac-den">‖v<sub>I</sub>‖ ‖v<sub>T</sub>‖</span>
           </span>
         </div>
-        <p class="math-note">L2 归一化后 cos 等价于点积，取值范围 [−1, 1]</p>
+        <p class="math-note">L2 归一化后，余弦值等价于点积，取值范围 [−1, 1]</p>
       </div>`,
 
     bellman_expect: `

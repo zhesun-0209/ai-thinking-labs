@@ -47,7 +47,7 @@ const ch12Config = {
           copyPrompt: C.reprConcept,
         },
         {
-          prompt: "请观看 loss 柱形步进：12.4 → 8.1 → 3.2 → 2.3。",
+          prompt: "请观看损失柱形步进：12.4 → 8.1 → 3.2 → 2.3。",
           demoKey: "repr", labTarget: "repr", interactive: true,
           copyPrompt: C.reprDemo,
         },
@@ -62,8 +62,8 @@ const ch12Config = {
       title: "MCTS 四步", subtitle: "增量于第5章 MiniMax",
       cells: [
         {
-          prompt: "MCTS：Selection(UCT) → Expansion → Simulation → Backpropagation。**用采样估计胜率**，不必展开全部子树——与 MiniMax 本质不同。",
-          vibeTip: "UCT 平衡 exploitation(Q/N) 与 exploration(√lnN/N)。",
+          prompt: "MCTS：选择（UCT）→ 扩展 → 模拟 → 回传。**用采样估计胜率**，不必展开全部子树——与 MiniMax 本质不同。",
+          vibeTip: "UCT 平衡利用项（Q/N）与探索项（√lnN/N）。",
           copyPrompt: C.mctsConcept,
         },
         {
@@ -82,7 +82,7 @@ const ch12Config = {
       title: "GAN 对抗训练", subtitle: "G 与 D 零和博弈",
       cells: [
         {
-          prompt: "GAN：**Generator** 造假样本，**Discriminator** 判真假，二者交替训练。G 希望 D(x̂)→1；D 希望辨真辨假。",
+          prompt: "GAN：**生成器**造假样本，**判别器**判真假，二者交替训练。生成器希望 D(x̂)→1；判别器希望辨真辨假。",
           architectureKey: "gan",
           architectureStep: { phase: "both" },
           vibeTip: "造假币者 vs 验钞机，达到纳什均衡。",
@@ -121,10 +121,10 @@ const ch12Config = {
       key: "repr",
       stepLabels: ["代数", "退火", "几何", "收敛"],
       trace: [
-        { loss: 12.4, repr: "代数", annealStep: 0, history: [{ t: 0.28, y: 0.62 }], title: "代数搜索", summary: "直接在代数表达式空间搜索，loss 卡在局部低谷 12.4。", reason: "表征选择会改变优化地形；同一问题在某种坐标下更难。", fields: [{ label: "loss", value: "12.4" }] },
-        { loss: 8.1, repr: "代数", temp: 2.0, acceptBad: true, annealStep: 1, history: [{ t: 0.28, y: 0.62 }, { t: 0.38, y: 0.55 }], title: "模拟退火", summary: "温度 T=2.0：以概率 exp(−ΔE/T) 接受更差解，跳出局部最优到 loss=8.1。", reason: "早期高温多探索，后期降温更贪心。", fields: [{ label: "T", value: "2.0" }, { label: "loss", value: "8.1" }] },
-        { loss: 3.2, repr: "几何", annealStep: 2, history: [{ t: 0.55, y: 0.35 }], title: "换几何表征", summary: "改用几何表征后，相邻候选更平滑，沿缓坡下降到 3.2。", reason: "好的表征把难搜索问题变成更容易优化的问题。", fields: [{ label: "loss", value: "3.2" }] },
-        { loss: 2.3, repr: "几何", annealStep: 3, history: [{ t: 0.68, y: 0.28 }], title: "继续收敛", summary: "在平滑地形上继续下降，得到更好候选解 2.3。", reason: "表征和搜索策略共同决定能否找到高质量解。", fields: [{ label: "loss", value: "2.3" }] },
+        { loss: 12.4, repr: "代数", annealStep: 0, history: [{ t: 0.28, y: 0.62 }], title: "代数搜索", summary: "直接在代数表达式空间搜索，损失卡在局部低谷 12.4。", reason: "表征选择会改变优化地形；同一问题在某种坐标下更难。", fields: [{ label: "损失", value: "12.4" }] },
+        { loss: 8.1, repr: "代数", temp: 2.0, acceptBad: true, annealStep: 1, history: [{ t: 0.28, y: 0.62 }, { t: 0.38, y: 0.55 }], title: "模拟退火", summary: "温度 T=2.0：以概率 exp(−ΔE/T) 接受更差解，跳出局部最优到损失=8.1。", reason: "早期高温多探索，后期降温更贪心。", fields: [{ label: "T", value: "2.0" }, { label: "损失", value: "8.1" }] },
+        { loss: 3.2, repr: "几何", annealStep: 2, history: [{ t: 0.55, y: 0.35 }], title: "换几何表征", summary: "改用几何表征后，相邻候选更平滑，沿缓坡下降到 3.2。", reason: "好的表征把难搜索问题变成更容易优化的问题。", fields: [{ label: "损失", value: "3.2" }] },
+        { loss: 2.3, repr: "几何", annealStep: 3, history: [{ t: 0.68, y: 0.28 }], title: "继续收敛", summary: "在平滑地形上继续下降，得到更好候选解 2.3。", reason: "表征和搜索策略共同决定能否找到高质量解。", fields: [{ label: "损失", value: "2.3" }] },
       ],
       render(v, s) { window.courseViz.renderReprLandscape(v, s); },
     },
@@ -133,12 +133,12 @@ const ch12Config = {
       trace: [
         { phase: "select", active: "b", title: "UCT 选择", summary: "从根节点选 UCT 最大的分支 b。", reason: "UCT 同时看胜率 Q/N 和探索项，避免只盯旧高分。", fields: [{ label: "选择", value: "b" }] },
         { phase: "expand", active: "c", title: "扩展新节点", summary: "在 b 下面添加还没试过的叶节点 c。", reason: "MCTS 不一次展开全树，只在被选中的路径上增长。", fields: [{ label: "新增", value: "c" }] },
-        { phase: "sim", active: "c", title: "随机模拟", summary: "从 c 快速 rollout 到终局，得到一次胜负样本。", reason: "用采样估计局面质量，而不是穷举所有后续。", fields: [{ label: "rollout", value: "胜/负样本" }] },
+        { phase: "sim", active: "c", title: "随机模拟", summary: "从 c 快速模拟到终局，得到一次胜负样本。", reason: "用采样估计局面质量，而不是穷举所有后续。", fields: [{ label: "模拟", value: "胜/负样本" }] },
         { phase: "backup", active: "b", win: 0.62, title: "回传统计", summary: "把模拟结果沿路径回传，更新访问次数 N 和平均胜率 Q/N。", reason: "下一轮选择会基于更新后的统计重新计算 UCT。", fields: [{ label: "b 胜率", value: "0.62" }] },
       ],
       render(v, s) {
         window.courseViz.renderMCTSTree(v, s);
-        v.innerHTML += `<p class="output-caption">${{ select: "Selection: UCT 最大边", expand: "Expansion: 添新子节点", sim: "Simulation: 快速对局", backup: "Backprop: 更新 Q/N" }[s.phase]}</p>`;
+        v.innerHTML += `<p class="output-caption">${{ select: "选择：UCT 最高的边", expand: "扩展：添加新子节点", sim: "模拟：快速对局", backup: "回传：更新 Q/N" }[s.phase]}</p>`;
       },
     },
     gan: {
@@ -146,14 +146,14 @@ const ch12Config = {
       architectureKey: "gan",
       stepLabels: ["G", "D", "G", "均衡"],
       trace: [
-        { title: "G 生成", summary: "噪声 z 经过 Generator 生成假样本 x̂。", reason: "刚开始假样本很粗糙，判别器只给 D(x̂)=0.18。", fields: [{ label: "D(x̂)", value: "0.18" }], architectureStep: { phase: "g" } },
-        { title: "D 训练", summary: "Discriminator 同时看真样本 x 和假样本 x̂。", reason: "D 的目标是 D(x真)→1、D(x̂)→0。", fields: [{ label: "D(x真)", value: "0.92" }, { label: "D(x̂)", value: "0.08" }], architectureStep: { phase: "d" } },
-        { title: "G 对抗", summary: "冻结 D，更新 G，让假样本更像真样本。", reason: "G 的目标是骗过 D，因此希望 D(x̂) 升高。", fields: [{ label: "D(x̂)", value: "0.74" }], architectureStep: { phase: "g" } },
+        { title: "生成器造样本", summary: "噪声 z 经过生成器生成假样本 x̂。", reason: "刚开始假样本很粗糙，判别器只给 D(x̂)=0.18。", fields: [{ label: "D(x̂)", value: "0.18" }], architectureStep: { phase: "g" } },
+        { title: "判别器训练", summary: "判别器同时看真样本 x 和假样本 x̂。", reason: "判别器的目标是 D(x真)→1、D(x̂)→0。", fields: [{ label: "D(x真)", value: "0.92" }, { label: "D(x̂)", value: "0.08" }], architectureStep: { phase: "d" } },
+        { title: "生成器对抗", summary: "冻结判别器，更新生成器，让假样本更像真样本。", reason: "生成器的目标是骗过判别器，因此希望 D(x̂) 升高。", fields: [{ label: "D(x̂)", value: "0.74" }], architectureStep: { phase: "g" } },
         { title: "达到均衡", summary: "真假越来越难分，D(x̂) 接近 0.50。", reason: "0.50 表示判别器几乎只能猜，生成分布逼近真实分布。", fields: [{ label: "D(x̂)", value: "≈0.50" }], architectureStep: { phase: "both" } },
       ],
       render(v, s) {
-        const phase = s.architectureStep?.phase ?? (s.title.includes("D") ? "d" : "g");
-        const stepIdx = ["G 生成", "D 训练", "G 对抗", "达到均衡"].indexOf(s.title);
+        const phase = s.architectureStep?.phase ?? (s.title.includes("判别器") ? "d" : "g");
+        const stepIdx = ["生成器造样本", "判别器训练", "生成器对抗", "达到均衡"].indexOf(s.title);
         v.innerHTML = `<div class="gan-demo-stack"><div class="gan-arch-slot"></div><div class="gan-metrics-slot"></div><div class="gan-formula-slot"></div><div class="gan-canvas-slot"></div><div class="gan-curve-slot"></div></div>`;
         window.courseArch.renderGAN(v.querySelector(".gan-arch-slot"), { phase });
         const metrics = v.querySelector(".gan-metrics-slot");
@@ -180,9 +180,9 @@ const ch12Config = {
       key: "alphafold",
       stepLabels: ["序列", "MSA", "Evoformer", "结构"],
       trace: [
-        { title: "输入序列", summary: "把氨基酸单链编码成模型可处理的 token。", reason: "序列只给出一维顺序，还没有空间距离信息。", phase: 0, fields: [{ label: "输入", value: "Amino acids" }] },
+        { title: "输入序列", summary: "把氨基酸单链编码成模型可处理的词元。", reason: "序列只给出一维顺序，还没有空间距离信息。", phase: 0, fields: [{ label: "输入", value: "氨基酸" }] },
         { title: "MSA 比对", summary: "收集同源序列，观察哪些位置会共同变化。", reason: "共变位置常提示空间上接近或功能相关。", phase: 1, fields: [{ label: "信号", value: "进化共变" }] },
-        { title: "Evoformer", summary: "MSA 表示和 Pair 表示反复交换信息。", reason: "模型在这里同时更新“残基是什么”和“残基两两关系”。", phase: 2, fields: [{ label: "表示", value: "MSA + Pair" }] },
+        { title: "Evoformer", summary: "MSA 表示和位置对表示反复交换信息。", reason: "模型在这里同时更新“残基是什么”和“残基两两关系”。", phase: 2, fields: [{ label: "表示", value: "MSA + 位置对" }] },
         { title: "3D 结构", summary: "输出残基坐标，并给每段结构 pLDDT 置信度。", reason: "pLDDT 低的位置说明模型对局部结构不确定。", phase: 3, fields: [{ label: "输出", value: "坐标 + pLDDT" }] },
       ],
       render(v, s) { window.courseViz.renderAlphaFoldFlow(v, s); },
@@ -207,11 +207,11 @@ const ch12Config = {
   },
   tables: {
     "ch12-compare": `<div class="table-wrap compact"><table class="run-table compact comparison-table"><thead><tr><th>方法</th><th>核心机制</th><th>与第5章搜索</th></tr></thead><tbody>
-      <tr><td>表征+退火</td><td>换坐标系 + 模拟退火跳出局部最优</td><td>类似「换启发式」而非换图</td></tr><tr><td>MCTS</td><td>选择/扩展/模拟/回传，UCT 平衡探索</td><td>增量式 MiniMax + 随机 rollout</td></tr>
+      <tr><td>表征+退火</td><td>换坐标系 + 模拟退火跳出局部最优</td><td>类似「换启发式」而非换图</td></tr><tr><td>MCTS</td><td>选择/扩展/模拟/回传，UCT 平衡探索</td><td>增量式 MiniMax + 随机模拟</td></tr>
       <tr><td>GAN</td><td>G 与 D 对抗，D(x̂)→0.5 均衡</td><td>—</td></tr><tr><td>扩散</td><td>前向加噪 + U-Net 逐步去噪</td><td>—</td></tr></tbody></table></div>`,
   },
   labAlgos: [
-    { key: "repr", label: "表征搜索", demo: "repr", desc: "代数 vs 几何表征 · 退火跳出局部最优。" },
+    { key: "repr", label: "表征搜索", demo: "repr", desc: "代数与几何表征 · 退火跳出局部最优。" },
     { key: "mcts", label: "MCTS", demo: "mcts", desc: "四步循环与 Q/N 回传。" },
     { key: "gan", label: "GAN", demo: "gan", desc: "对照 GAN 架构图看 D(x̂) 变化。" },
     { key: "diffusion", label: "扩散", demo: "diffusion", desc: "对照架构图：前向加噪与 U-Net 反向去噪。" },

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="第10章感知智能：CNN、Patch词元化、MAE与CLIP对比学习。" />
+    <meta name="description" content="第10章感知智能：CNN、图块词元化、MAE与CLIP对比学习。" />
     <meta name="theme-color" content="#0d6b62" />
     <title>视觉模型 · 分步理解</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -13,16 +13,16 @@
     <meta property="og:locale" content="zh_CN" />
     <meta property="og:site_name" content="《AI思维》算法学习页" />
     <meta property="og:title" content="视觉模型 · 卷积到 Transformer" />
-    <meta property="og:description" content="第10章感知智能：CNN、Patch词元化、MAE与CLIP对比学习。" />
+    <meta property="og:description" content="第10章感知智能：CNN、图块词元化、MAE与CLIP对比学习。" />
     <meta property="og:url" content="https://zhesun-0209.github.io/ai-thinking-labs/ch10.html" />
     <meta property="og:image" content="https://zhesun-0209.github.io/ai-thinking-labs/og-image.svg" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="视觉模型 · 卷积到 Transformer" />
-    <meta name="twitter:description" content="第10章感知智能：CNN、Patch词元化、MAE与CLIP对比学习。" />
+    <meta name="twitter:description" content="第10章感知智能：CNN、图块词元化、MAE与CLIP对比学习。" />
     <meta name="twitter:image" content="https://zhesun-0209.github.io/ai-thinking-labs/og-image.svg" />
-    <link rel="stylesheet" href="styles.css?v=p75" />
-    <link rel="stylesheet" href="commercial.css?v=p75" />
-    <link rel="stylesheet" href="course.css?v=p75" />
+    <link rel="stylesheet" href="styles.css?v=p76" />
+    <link rel="stylesheet" href="commercial.css?v=p76" />
+    <link rel="stylesheet" href="course.css?v=p76" />
   </head>
   <body>
     <a class="skip-link" href="#main">跳到主要内容</a>
@@ -49,7 +49,7 @@
       <section id="hero" class="hero-section reveal-section">
         <div class="hero-copy">
           <h2>从像素到语义</h2>
-          <p>CNN 提取局部特征，ViT 用 Patch，MAE 自监督重构，CLIP 对齐图文。</p>
+          <p>CNN 提取局部特征，ViT 用图块建模，MAE 自监督重构，CLIP 对齐图文。</p>
           <p class="hero-formula">读要点 → 看演示 → 对比差异 → 进实验室练习</p>
           <div data-chapter-goals></div>
           <div class="hero-actions"><a class="primary-button hero-cta" href="#m0">从概览开始</a><a class="ghost-button hero-cta" href="#lab">直接进实验室</a><a class="ghost-button hero-cta notebook-cta" href="notebooks/chapter.html?ch=10" target="_blank" rel="noopener noreferrer">Python 代码实验 ↗</a></div>
@@ -64,7 +64,7 @@
         <div class="vibe-notebook-host" data-notebook="cnn"></div>
       </section>
       <section id="m2" class="chapter-section reveal-section">
-        <div class="section-header"><p class="eyebrow">模块 2 · ViT</p><h2>Patch 词元化</h2></div>
+        <div class="section-header"><p class="eyebrow">模块 2 · ViT</p><h2>图块词元化</h2></div>
         <div class="vibe-notebook-host" data-notebook="patch"></div>
       </section>
       <section id="m3" class="chapter-section reveal-section">
@@ -87,13 +87,13 @@
       </section>
     </main>
     <footer class="site-footer"><div class="site-footer-inner"><p class="footer-brand">第10章 · 感知智能</p><p class="footer-copy"><a href="ch9.html">← 上一章</a> · <a href="hub.html">目录</a> · <a href="ch11.html">下一章 →</a></p></div></footer>
-    <script src="js/course-prompts.js?v=p75"></script>
-    <script src="js/course-copy-prompts.js?v=p75"></script>
-    <script src="js/course-pedagogy.js?v=p75"></script>
-    <script src="js/course-architectures.js?v=p75"></script>
-    <script src="js/course-math.js?v=p75"></script>
-    <script src="js/course-viz.js?v=p75"></script>
-    <script src="js/course-shared.js?v=p75"></script>
-    <script src="js/ch10.js?v=p75"></script>
+    <script src="js/course-prompts.js?v=p76"></script>
+    <script src="js/course-copy-prompts.js?v=p76"></script>
+    <script src="js/course-pedagogy.js?v=p76"></script>
+    <script src="js/course-architectures.js?v=p76"></script>
+    <script src="js/course-math.js?v=p76"></script>
+    <script src="js/course-viz.js?v=p76"></script>
+    <script src="js/course-shared.js?v=p76"></script>
+    <script src="js/ch10.js?v=p76"></script>
   </body>
 </html>

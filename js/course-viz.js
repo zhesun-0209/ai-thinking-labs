@@ -181,10 +181,10 @@ function renderAttentionFlow(container, step) {
   };
   const title =
     mode === "self"
-      ? `Self-Attention：Q(${queryToken}) 查询同一句所有 K`
-      : `Cross-Attention：Decoder 的 Q(${queryToken}) 查询 Encoder 的 K/V`;
-  const querySub = mode === "self" ? "Q/K/V 同句" : "Q 来自 Decoder";
-  const memorySub = mode === "self" ? "同一句 token（K,V）" : "Encoder 序列（K,V）";
+      ? `自注意力：Q(${queryToken}) 查询同一句所有 K`
+      : `交叉注意力：解码器的 Q(${queryToken}) 查询编码器的 K/V`;
+  const querySub = mode === "self" ? "Q/K/V 同句" : "Q 来自解码器";
+  const memorySub = mode === "self" ? "同一句词元（K,V）" : "编码器序列（K,V）";
   const resultLabel = mode === "self" ? `新表示：${queryToken}′` : `输出倾向：${sourceTokens[focus]}`;
 
   const encGap = n > 1 ? Math.min(118, (mode === "cross" ? 400 : W - 120) / (n - 1)) : 0;
@@ -227,7 +227,7 @@ function renderAttentionFlow(container, step) {
       const score = scores[i] ?? 0;
       const isQuery = mode === "self" && i === queryIndex;
       const cls = [i === focus ? "is-focus" : "", isQuery ? "is-query" : ""].filter(Boolean).join(" ");
-      const metric = showWeights ? `α=${fmt(weight, 2)}` : `score=${fmt(score, 1)}`;
+      const metric = showWeights ? `α=${fmt(weight, 2)}` : `分数=${fmt(score, 1)}`;
       return `<g class="attention-token ${cls}" transform="translate(${x},${y})">
         <rect x="-34" y="-26" width="68" height="52" rx="10"></rect>
         <text class="attention-token-main" y="-2" text-anchor="middle">${tok}</text>
@@ -265,28 +265,28 @@ function renderAttentionFlow(container, step) {
           <text class="attention-query-sub" y="16" text-anchor="middle">${queryToken}</text>
           <text class="attention-query-hint" y="38" text-anchor="middle">${querySub}</text>
         </g>
-        <text class="attention-section-label" x="${queryPos.x}" y="${queryPos.y - 44}" text-anchor="middle">Decoder</text>`
+        <text class="attention-section-label" x="${queryPos.x}" y="${queryPos.y - 44}" text-anchor="middle">解码器</text>`
       : "";
 
   const selfHintHtml =
     mode === "self"
-      ? `<p class="attention-self-hint-bar">高亮 token 同时充当 Q，向全句 K 发查询</p>`
+      ? `<p class="attention-self-hint-bar">高亮词元同时充当 Q，向全句 K 发查询</p>`
       : "";
 
   container.innerHTML = `
     <div class="attention-flow-wrap">
       ${selfHintHtml}
-      <svg class="attention-flow-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${mode === "self" ? "Self-Attention 步进图" : "Encoder-Decoder Attention 步进图"}">
+      <svg class="attention-flow-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${mode === "self" ? "自注意力步进图" : "编码器-解码器注意力步进图"}">
         <rect class="attention-bg" x="10" y="10" width="760" height="${H - 20}" rx="16"></rect>
         <text class="attention-title" x="28" y="34">${title}</text>
         <text class="attention-caption" x="28" y="54">${phase === "score" ? "第 1 步：用 Q 与每个 K 做点积，得到相似度分数。" : phase === "softmax" ? "第 2 步：Softmax 把分数变成权重，权重和为 1。" : "第 3 步：按权重加权 V，得到当前步需要的上下文信息。"}</text>
         <text class="attention-section-label" x="36" y="76">${memorySub}</text>
-        ${mode === "cross" ? `<text class="attention-section-label" x="36" y="${encY - 44}">Encoder</text>` : ""}
+        ${mode === "cross" ? `<text class="attention-section-label" x="36" y="${encY - 44}">编码器</text>` : ""}
         ${lineMarkup}
         ${sourceMarkup}
         ${crossQueryMarkup}
         ${showContext ? `<g class="attention-context">
-          <text class="attention-section-label" x="390" y="${contextLabelY}" text-anchor="middle">context = Σ αᵢVᵢ</text>
+          <text class="attention-section-label" x="390" y="${contextLabelY}" text-anchor="middle">上下文 = Σ αᵢVᵢ</text>
           ${contextBars}
           <g class="attention-output" transform="translate(36, ${outputY})">
             <rect width="168" height="46" rx="10"></rect>
@@ -986,7 +986,7 @@ function drawConvGrid(ctx, w, h, gridSize, kernelSize, kPos, phase) {
     const fc = (curIdx - 1) % 2;
     status = `卷积核(${kPos[0]},${kPos[1]}) → 特征图[${fr},${fc}] = ${featValues[curIdx - 1].toFixed(2)} · 已填 ${convProgress}/4`;
   } else if (phase === "pool") {
-    status = `MaxPool 2×2 → 1×1，max = ${Math.max(...featValues).toFixed(2)}`;
+    status = `最大池化 2×2 → 1×1，最大值 = ${Math.max(...featValues).toFixed(2)}`;
   }
   if (status) {
     const maxW = w - ox - 16;
@@ -1362,7 +1362,7 @@ function renderTransE(container, step) {
         <text class="transe-score-title" x="18" y="24">训练目标</text>
         ${metricRow(48, "正例距离 d⁺", fmt(state.dPos, 2), "is-pos")}
         ${metricRow(74, "负例距离 d⁻", fmt(state.dNeg, 2), "is-neg")}
-        <text class="transe-loss" x="18" y="102">margin=1.0 · loss=${lossValue}</text>
+        <text class="transe-loss" x="18" y="102">margin=1.0 · 损失=${lossValue}</text>
       </g>
       ${dist != null ? `<text class="transe-current" x="218" y="312" text-anchor="middle">当前：${kind === "neg" ? "||h+r−t′||" : "||h+r−t||"} = ${fmt(dist, 2)}</text>` : ""}
     </svg>`;
@@ -1398,7 +1398,7 @@ function renderLMChain(container, step) {
   container.innerHTML = `
     <div class="lm-chain">
       <div class="token-strip">${prefix.map((t, i) => `<span class="token-chip is-merge">${t}${i < prefix.length - 1 ? "" : ""}</span>`).join('<span class="lm-arrow">→</span>')}</div>
-      <p class="output-caption">${step.product ? "各步条件概率连乘" : "P(下一 token | 上文)"}</p>
+      <p class="output-caption">${step.product ? "各步条件概率连乘" : "P(下一词元 | 上文)"}</p>
       <div class="lm-probs">${candidates.map((c) => `
         <div class="lm-prob-row"><span>${c.w}</span><div class="metric-bar"><i style="width:${(c.p / maxP) * 100}%"></i></div><em>${fmt(c.p)}</em></div>`).join("")}</div>
       ${chainHtml}
@@ -1493,30 +1493,30 @@ function clipArchSvg(clipPhase) {
       <rect width="560" height="188" fill="#f8fafc" rx="8"/>
       <text x="280" y="18" text-anchor="middle" font-size="11" fill="#64748b">${phaseLabel}</text>
       <rect x="12" y="36" width="56" height="36" rx="6" fill="#e0f2fe" stroke="#0d6b62" stroke-width="1.5"/>
-      <text x="40" y="58" text-anchor="middle" font-size="9" fill="#0f172a">Image</text>
+      <text x="40" y="58" text-anchor="middle" font-size="9" fill="#0f172a">图像</text>
       <path d="M 68 54 L 88 54" stroke="#64748b" marker-end="url(#${arr})"/>
       <rect x="88" y="28" width="84" height="52" rx="6" fill="#fff" stroke="#0d6b62" stroke-width="1.5"/>
-      <text x="130" y="48" text-anchor="middle" font-size="9" fill="#0d6b62" font-weight="600">Image Enc</text>
+      <text x="130" y="48" text-anchor="middle" font-size="9" fill="#0d6b62" font-weight="600">图像编码</text>
       <text x="130" y="62" text-anchor="middle" font-size="8" fill="#64748b">ViT / ResNet</text>
       <path d="M 172 54 L 198 54" stroke="${linkOn ? "#0d6b62" : "#94a3b8"}" stroke-width="2" marker-end="url(#${arrG})"/>
       <text x="185" y="48" font-size="8" fill="#64748b">W_I</text>
       <path d="M 198 54 L ${cx - 78} ${cy - 6}" stroke="${linkOn ? "#0d6b62" : "#94a3b8"}" stroke-width="2" fill="none"/>
       <rect x="12" y="118" width="56" height="36" rx="6" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
-      <text x="40" y="140" text-anchor="middle" font-size="9" fill="#0f172a">Text</text>
+      <text x="40" y="140" text-anchor="middle" font-size="9" fill="#0f172a">文本</text>
       <path d="M 68 136 L 88 136" stroke="#64748b" marker-end="url(#${arr})"/>
       <rect x="88" y="110" width="84" height="52" rx="6" fill="#fff" stroke="#c2410c" stroke-width="1.5"/>
-      <text x="130" y="130" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="600">Text Enc</text>
+      <text x="130" y="130" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="600">文本编码</text>
       <text x="130" y="144" text-anchor="middle" font-size="8" fill="#64748b">Transformer</text>
       <path d="M 172 136 L 198 136" stroke="${linkOn ? "#c2410c" : "#94a3b8"}" stroke-width="2" marker-end="url(#${arrR})"/>
       <text x="185" y="130" font-size="8" fill="#64748b">W_T</text>
       <path d="M 198 136 L ${cx - 78} ${cy + 6}" stroke="${linkOn ? "#c2410c" : "#94a3b8"}" stroke-width="2" fill="none"/>
       <ellipse cx="${cx}" cy="${cy}" rx="78" ry="48" fill="#fff" stroke="#0d6b62" stroke-width="2" opacity="${linkOn ? 1 : 0.55}"/>
       <text x="${cx}" y="${cy - 8}" text-anchor="middle" font-size="10" fill="#0d6b62">联合嵌入空间</text>
-      <text x="${cx}" y="${cy + 8}" text-anchor="middle" font-size="8" fill="#64748b">L2 归一化 · cos(v_I,v_T)</text>
+      <text x="${cx}" y="${cy + 8}" text-anchor="middle" font-size="8" fill="#64748b">L2 归一化 · 余弦相似度</text>
       ${linkOn ? `<circle cx="${viX}" cy="${viY}" r="10" fill="#ecfdf5" stroke="#0d6b62" stroke-width="2"/><text x="${viX}" y="${viY + 3}" text-anchor="middle" font-size="8" fill="#0d6b62">v_I</text>` : ""}
       ${linkOn ? `<circle cx="${vtX}" cy="${vtY}" r="10" fill="#fff7ed" stroke="#c2410c" stroke-width="2"/><text x="${vtX}" y="${vtY + 3}" text-anchor="middle" font-size="8" fill="#c2410c">v_T</text>` : ""}
       ${linkOn ? `<line x1="${viX}" y1="${viY + 10}" x2="${vtX}" y2="${vtY - 10}" stroke="${linkColor}" stroke-width="2" stroke-dasharray="${clipPhase === 2 ? "4 3" : "0"}"/>` : ""}
-      ${clipPhase >= 1 ? `<path d="M ${cx + 78} ${cy} L 408 ${cy}" stroke="#64748b" stroke-width="1.5" marker-end="url(#${arr})"/><rect x="408" y="${cy - 28}" width="72" height="56" rx="6" fill="#fff" stroke="#cbd5e1"/><text x="444" y="${cy - 10}" text-anchor="middle" font-size="8" fill="#64748b">batch</text><text x="444" y="${cy + 6}" text-anchor="middle" font-size="9" fill="#0d6b62">N×N cos</text>` : ""}
+      ${clipPhase >= 1 ? `<path d="M ${cx + 78} ${cy} L 408 ${cy}" stroke="#64748b" stroke-width="1.5" marker-end="url(#${arr})"/><rect x="408" y="${cy - 28}" width="72" height="56" rx="6" fill="#fff" stroke="#cbd5e1"/><text x="444" y="${cy - 10}" text-anchor="middle" font-size="8" fill="#64748b">一批样本</text><text x="444" y="${cy + 6}" text-anchor="middle" font-size="9" fill="#0d6b62">N×N 余弦</text>` : ""}
       <defs>
         <marker id="${arr}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#64748b"/></marker>
         <marker id="${arrG}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#0d6b62"/></marker>
@@ -1556,7 +1556,7 @@ function renderCLIPPair(container, step) {
   } else if (clipPhase === 3) {
     meterClass = "is-pos";
     meterLabel = fmt(posSim);
-    meterHint = "最大化正例 logit";
+    meterHint = "最大化正例分数";
   }
 
   const archSvg = clipArchSvg(clipPhase);
@@ -1564,7 +1564,7 @@ function renderCLIPPair(container, step) {
   const matrixHtml =
     clipPhase >= 1
       ? `<div class="clip-sim-matrix ${clipPhase === 0 ? "is-dim" : ""}">
-          <h5>Batch 相似度矩阵（对角为正例）</h5>
+          <h5>批内相似度矩阵（对角为正例）</h5>
           <table class="clip-sim-table">
             <thead><tr><th></th>${Array.from({ length: batchN }, (_, i) => `<th>T${i + 1}</th>`).join("")}</tr></thead>
             <tbody>${simMatrix
@@ -1587,10 +1587,10 @@ function renderCLIPPair(container, step) {
   const batchHtml =
     clipPhase >= 1
       ? `<div class="clip-batch">
-          <div class="clip-row is-pos ${clipPhase === 1 || clipPhase === 3 ? "is-focus" : ""}"><strong>正例</strong><span>${positiveText}</span><em>cos=${fmt(posSim)}</em></div>
-          <div class="clip-row is-neg ${clipPhase === 2 ? "is-focus" : ""}"><strong>负例</strong><span>${negativeText}</span><em>cos=${fmt(negSim)}</em></div>
+          <div class="clip-row is-pos ${clipPhase === 1 || clipPhase === 3 ? "is-focus" : ""}"><strong>正例</strong><span>${positiveText}</span><em>余弦=${fmt(posSim)}</em></div>
+          <div class="clip-row is-neg ${clipPhase === 2 ? "is-focus" : ""}"><strong>负例</strong><span>${negativeText}</span><em>余弦=${fmt(negSim)}</em></div>
         </div>`
-      : `<p class="clip-phase-hint">两路 Encoder 各自输出 d 维向量，下一步在共享空间计算相似度。</p>`;
+      : `<p class="clip-phase-hint">两路编码器各自输出 d 维向量，下一步在共享空间计算相似度。</p>`;
 
   const mathKey = clipPhase === 3 ? "infonce" : clipPhase >= 1 ? "clip_cosine" : null;
   const formulaSlot = mathKey ? `<div class="clip-formula-slot" data-math="${mathKey}"></div>` : "";
@@ -1604,7 +1604,7 @@ function renderCLIPPair(container, step) {
           <span>${imageLabel}</span>
           <code>v_I ∈ ℝᵈ</code>
         </div>
-        <div class="clip-meter ${meterClass}"><span>cos(v_I, v_T)</span><strong>${meterLabel}</strong><em>${meterHint}</em></div>
+        <div class="clip-meter ${meterClass}"><span>余弦相似度</span><strong>${meterLabel}</strong><em>${meterHint}</em></div>
         <div class="clip-tower-card ${clipPhase >= 0 ? "is-on" : ""}">
           <strong>文本塔</strong>
           <span>${activeText}</span>
@@ -1641,7 +1641,7 @@ function renderViTPatches(container, step) {
     const on = phase >= 1;
     return `<div class="vit-patch-tile ${on ? "is-on" : ""} ${extra}"><div class="patch-mini">${mini.join("")}</div><span>P${i + 1}</span></div>`;
   };
-  const encBlocks = [1, 2, 3].map((n) => `<div class="vit-enc-block ${phase >= 4 ? "is-on" : ""}">Self-Attn ${n}</div>`).join("");
+  const encBlocks = [1, 2, 3].map((n) => `<div class="vit-enc-block ${phase >= 4 ? "is-on" : ""}">自注意力 ${n}</div>`).join("");
   container.innerHTML = `
     <div class="vit-paper-flow">
       <div class="vit-paper-row">
@@ -1651,13 +1651,13 @@ function renderViTPatches(container, step) {
         </div>
         <span class="vit-paper-arrow">→</span>
         <div class="vit-paper-panel ${phase >= 1 ? "is-on" : ""}">
-          <h5>② Patchify</h5>
+          <h5>② 图块切分</h5>
           <div class="vit-patch-grid-2">${[0, 1, 2, 3].map((i) => patchCell(i)).join("")}</div>
-          <p class="vit-caption">2×2 patch → 4 个视觉 token</p>
+          <p class="vit-caption">2×2 图块 → 4 个视觉词元</p>
         </div>
         <span class="vit-paper-arrow">→</span>
         <div class="vit-paper-panel ${phase >= 2 ? "is-on" : ""}">
-          <h5>③ Linear 投影</h5>
+          <h5>③ 线性投影</h5>
           <div class="vit-embed-bars">
             ${[0, 1, 2, 3].map((i) => `<div class="vit-embed-row"><span>P${i + 1}</span><div class="vit-bar"><i style="width:${55 + i * 8}%"></i></div><em>d 维</em></div>`).join("")}
           </div>
@@ -1670,19 +1670,19 @@ function renderViTPatches(container, step) {
         </div>
         <span class="vit-paper-arrow">→</span>
         <div class="vit-paper-panel vit-paper-panel--wide ${phase >= 4 ? "is-on" : ""}">
-          <h5>⑤ Transformer Encoder ×L</h5>
+          <h5>⑤ Transformer 编码器 ×L</h5>
           <div class="vit-enc-stack">${encBlocks}</div>
           <svg class="vit-attn-svg" viewBox="0 0 280 80" aria-hidden="true">
             ${phase >= 4 ? [0, 1, 2, 3].map((i) => `<line x1="${40 + i * 60}" y1="20" x2="${40 + ((i + 2) % 4) * 60}" y2="60" stroke="#0d6b62" stroke-width="1.5" opacity="0.45"/>`).join("") : ""}
             ${[0, 1, 2, 3].map((i) => `<circle cx="${40 + i * 60}" cy="${phase >= 4 ? 40 : 40}" r="14" fill="${phase >= 4 ? "#ecfdf5" : "#f1f5f9"}" stroke="#0d6b62"/>`).join("")}
           </svg>
-          <p class="vit-caption">每个 patch token 与全图 patch 做 Self-Attention</p>
+          <p class="vit-caption">每个图块词元与全图图块做自注意力</p>
         </div>
         <span class="vit-paper-arrow">→</span>
         <div class="vit-paper-panel ${phase >= 5 ? "is-on" : ""}">
-          <h5>⑥ MLP Head</h5>
+          <h5>⑥ MLP 分类头</h5>
           <div class="vit-head-out"><strong>猫</strong><em>0.87</em></div>
-          <p class="vit-caption">均值池化 4 个 patch token → 分类</p>
+          <p class="vit-caption">均值池化 4 个图块词元 → 分类</p>
         </div>
       </div>
     </div>`;
@@ -1858,7 +1858,7 @@ function renderMAEFlow(container, step) {
     <div class="mae-paper-flow">
       <div class="mae-paper-row">
         <div class="mae-panel ${phase >= 1 ? "is-on" : ""}">
-          <h5>① 切 patch</h5>
+          <h5>① 切图块</h5>
           <div class="mae-grid">${[0, 1, 2, 3].map((i) => patchTile(i)).join("")}</div>
         </div>
         <span class="mae-arrow">→</span>
@@ -1869,16 +1869,16 @@ function renderMAEFlow(container, step) {
         </div>
         <span class="mae-arrow">→</span>
         <div class="mae-panel ${phase >= 3 ? "is-on" : ""}">
-          <h5>③ Encoder（25%）</h5>
+          <h5>③ 编码器（25%）</h5>
           <div class="mae-enc-box">
             <div class="mae-enc-in">${patchTile(0)}</div>
-            <div class="mae-enc-stack"><div>ViT Encoder</div><div>只看可见 token</div></div>
+            <div class="mae-enc-stack"><div>ViT 编码器</div><div>只看可见词元</div></div>
           </div>
         </div>
       </div>
       <div class="mae-paper-row">
         <div class="mae-panel mae-panel--wide ${phase >= 4 ? "is-on" : ""}">
-          <h5>④ Decoder + 掩码 token 重构全图</h5>
+          <h5>④ 解码器 + 掩码词元重构全图</h5>
           <div class="mae-dec-flow">
             <div class="mae-dec-tokens">
               ${[0, 1, 2, 3].map((i) => `<span class="${i === 0 ? "from-enc" : "mask-token"}">${i === 0 ? "z₁" : `[M${i}]`}</span>`).join("")}
@@ -1886,7 +1886,7 @@ function renderMAEFlow(container, step) {
             <span class="mae-arrow">→</span>
             <div class="mae-grid">${[0, 1, 2, 3].map((i) => patchTile(i)).join("")}</div>
           </div>
-          <p class="mae-caption">损失 = 被遮 patch 的像素 MSE（预训练无标签）</p>
+          <p class="mae-caption">损失 = 被遮图块的像素 MSE（预训练无标签）</p>
         </div>
       </div>
     </div>`;
@@ -1944,7 +1944,7 @@ function drawMaePixelGrid(ctx, w, h, step) {
   }
   ctx.fillStyle = "#334155";
   ctx.font = "12px sans-serif";
-  const cap = step.recon ? "Decoder 重构被遮 patch（蓝色虚线框）" : step.encode ? "Encoder 仅编码 25% 可见 patch" : step.mask ? "随机遮 75% · 仅左上角可见" : "完整 2×2 patch 输入";
+  const cap = step.recon ? "解码器重构被遮图块（蓝色虚线框）" : step.encode ? "编码器仅编码 25% 可见图块" : step.mask ? "随机遮 75% · 仅左上角可见" : "完整 2×2 图块输入";
   ctx.fillText(cap, ox, h - 16);
 }
 
@@ -1998,7 +1998,7 @@ function renderAlphaFoldFlow(container, step) {
       <rect width="480" height="120" fill="#fff" rx="8"/>
       <text x="16" y="24" font-size="12" fill="#64748b">一级序列（7 残基 · 每个字母 = 一种氨基酸）</text>
       ${seq.map((aa, i) => `<g transform="translate(${16 + i * 58}, 36)"><rect width="48" height="48" rx="6" fill="${colors[i]}" opacity="0.85"/><text x="24" y="30" text-anchor="middle" fill="#fff" font-weight="600">${aa}</text><text x="24" y="44" text-anchor="middle" fill="#fff" font-size="9">${i + 1}</text></g>`).join("")}
-      <text x="16" y="108" font-size="11" fill="#334155">→ one-hot / embedding → 残基特征向量</text>
+      <text x="16" y="108" font-size="11" fill="#334155">→ 独热编码 / 向量表示 → 残基特征向量</text>
     </svg>`;
   } else if (phase === 1) {
     const colW = 34;
@@ -2013,13 +2013,13 @@ function renderAlphaFoldFlow(container, step) {
     mainViz = `<svg class="alphafold-detail-svg" viewBox="0 0 520 170" role="img" aria-label="Evoformer">
       <rect width="520" height="170" fill="#fff" rx="8"/>
       <defs><marker id="evo-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#0d6b62"/></marker></defs>
-      <text x="16" y="22" font-size="12" fill="#64748b">Evoformer：MSA 轨 ↔ Pair 轨 双向更新</text>
+      <text x="16" y="22" font-size="12" fill="#64748b">Evoformer：MSA 轨 ↔ 位置对轨 双向更新</text>
       <rect x="24" y="36" width="130" height="44" rx="6" fill="#e0f2fe" stroke="#0d6b62"/><text x="89" y="62" text-anchor="middle" font-size="11">MSA 表示</text>
-      <rect x="24" y="92" width="130" height="44" rx="6" fill="#fef3c7" stroke="#c2410c"/><text x="89" y="118" text-anchor="middle" font-size="11">Pair (i,j)</text>
+      <rect x="24" y="92" width="130" height="44" rx="6" fill="#fef3c7" stroke="#c2410c"/><text x="89" y="118" text-anchor="middle" font-size="11">位置对 (i,j)</text>
       <path d="M 158 58 L 198 58" fill="none" stroke="#0d6b62" stroke-width="2" marker-end="url(#evo-arr)"/>
       <path d="M 198 114 L 158 114" fill="none" stroke="#c2410c" stroke-width="2" marker-end="url(#evo-arr)"/>
-      <text x="178" y="52" text-anchor="middle" font-size="9" fill="#0d6b62">MSA→Pair</text>
-      <text x="178" y="128" text-anchor="middle" font-size="9" fill="#c2410c">Pair→MSA</text>
+      <text x="178" y="52" text-anchor="middle" font-size="9" fill="#0d6b62">MSA→位置对</text>
+      <text x="178" y="128" text-anchor="middle" font-size="9" fill="#c2410c">位置对→MSA</text>
       <rect x="210" y="52" width="96" height="72" rx="6" fill="#ecfdf5" stroke="#0d6b62" stroke-width="2"/><text x="258" y="82" text-anchor="middle" font-size="10">Evoformer</text><text x="258" y="98" text-anchor="middle" font-size="9">× 48 块</text>
       <path d="M 310 88 L 350 88" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#evo-arr)"/>
       <rect x="358" y="68" width="110" height="52" rx="6" fill="#f1f5f9" stroke="#64748b"/><text x="413" y="98" text-anchor="middle" font-size="10">结构模块</text>
@@ -2033,9 +2033,9 @@ function renderAlphaFoldFlow(container, step) {
     </svg>`;
   }
   const blocks = [
-    { id: "seq", label: "氨基酸序列", sub: "残基 embedding" },
+    { id: "seq", label: "氨基酸序列", sub: "残基向量表示" },
     { id: "msa", label: "MSA 比对", sub: "进化共变" },
-    { id: "evo", label: "Evoformer", sub: "MSA + Pair" },
+    { id: "evo", label: "Evoformer", sub: "MSA + 位置对" },
     { id: "struct", label: "3D 结构", sub: "pLDDT" },
   ];
   container.innerHTML = `
@@ -2153,7 +2153,7 @@ function drawGanTrainingCurve(ctx, w, h, stepIdx) {
   ctx.save();
   ctx.translate(14, h / 2);
   ctx.rotate(-Math.PI / 2);
-  ctx.fillText("Loss", 0, 0);
+  ctx.fillText("损失", 0, 0);
   ctx.restore();
   ctx.save();
   ctx.translate(w - 10, h / 2);
@@ -2163,13 +2163,13 @@ function drawGanTrainingCurve(ctx, w, h, stepIdx) {
 
   const legY = pad.t - 18;
   [
-    ["#c2410c", "D loss"],
-    ["#2563eb", "G loss"],
+    ["#c2410c", "判别器损失"],
+    ["#2563eb", "生成器损失"],
     ["#0d6b62", "D(x̂)"],
-    ["rgba(37,99,235,0.25)", "G 步"],
-    ["rgba(194,65,12,0.25)", "D 步"],
+    ["rgba(37,99,235,0.25)", "生成器步"],
+    ["rgba(194,65,12,0.25)", "判别器步"],
   ].forEach(([c, label], i) => {
-    const lx = pad.l + i * 72;
+    const lx = pad.l + i * 90;
     ctx.fillStyle = c;
     if (i < 3) ctx.fillRect(lx, legY - 8, 14, 3);
     else ctx.fillRect(lx, legY - 10, 14, 10);
@@ -2182,9 +2182,9 @@ function drawGanTrainingCurve(ctx, w, h, stepIdx) {
   const phase = phases[cur];
   const phaseNote =
     phase === "G"
-      ? "G 步：生成器占优 → G loss 常反弹，D(x̂)↑（假样本更像真）"
+      ? "生成器步：生成器占优 → 生成器损失常反弹，D(x̂)↑（假样本更像真）"
       : phase === "D"
-        ? "D 步：判别器占优 → D loss↓，D(x̂)↓（识破假样本）"
+        ? "判别器步：判别器占优 → 判别器损失↓，D(x̂)↓（识破假样本）"
         : "均衡：拉锯减弱，D(x̂)→0.5";
   ctx.fillStyle = "#0f172a";
   ctx.font = "bold 10px ui-sans-serif,sans-serif";
@@ -2192,15 +2192,15 @@ function drawGanTrainingCurve(ctx, w, h, stepIdx) {
   ctx.fillText(`当前 ${phase === "≈" ? "均衡" : phase + " 更新"}：D=${dLoss[cur].toFixed(2)} · G=${gLoss[cur].toFixed(2)} · D(x̂)=${dFake[cur].toFixed(2)}`, pad.l, h - 28);
   ctx.fillStyle = "#64748b";
   ctx.font = "10px ui-sans-serif,sans-serif";
-  ctx.fillText(`${phaseNote} · 经典 GAN loss 呈震荡拉锯，而非像分类器那样单调下降`, pad.l, h - 12);
+  ctx.fillText(`${phaseNote} · 经典 GAN 损失呈震荡拉锯，而非像分类器那样单调下降`, pad.l, h - 12);
 }
 
 function ganCurveCaption(stepIdx) {
   const notes = [
-    "起步 G 很弱：D(x̂) 低，但 G loss 高；接下来 D/G 会交替更新，曲线开始震荡。",
-    "D 刚训练完：D loss 骤降、D(x̂) 被压到很低 — 这是 D 步的典型特征，不代表 G 已收敛。",
-    "G 反击成功：D(x̂) 明显回升，G loss 先升后降 — 两条 loss 此消彼长，是零和博弈的正常现象。",
-    "长期训练后振幅缩小：D(x̂) 围绕 0.5 波动，表示真假难分；若某一方 loss 持续单边下降，反而要警惕模式崩塌。",
+    "起步时生成器很弱：D(x̂) 低，但生成器损失高；接下来生成器和判别器会交替更新，曲线开始震荡。",
+    "判别器刚训练完：判别器损失骤降、D(x̂) 被压到很低，这是判别器步的典型特征，不代表生成器已收敛。",
+    "生成器反击成功：D(x̂) 明显回升，生成器损失先升后降；两条损失此消彼长，是零和博弈的正常现象。",
+    "长期训练后振幅缩小：D(x̂) 围绕 0.5 波动，表示真假难分；若某一方损失持续单边下降，反而要警惕模式崩塌。",
   ];
   return notes[Math.min(Math.max(0, stepIdx), notes.length - 1)] ?? notes[0];
 }
@@ -2325,7 +2325,7 @@ function renderReprLandscape(container, step) {
       <text x="${ox + 12}" y="36" class="repr-panel-title">${title}</text>
       <path d="M ${pts.join(" L ")}" fill="none" stroke="${jagged ? "#94a3b8" : "#60a5fa"}" stroke-width="2.5" stroke-linecap="round"/>
       ${pathHistory.map((h, i) => `<circle cx="${toX(h.t)}" cy="${toY(h.y)}" r="4" fill="#cbd5e1" opacity="${0.4 + i * 0.15}"/>`).join("")}
-      ${active ? `<circle cx="${bx}" cy="${by}" r="9" fill="#c2410c" stroke="#fff" stroke-width="2"/><text x="${Math.min(bx + 14, ox + pw - 48)}" y="${lossTagY}" class="repr-loss-tag">loss=${loss}</text>` : ""}
+      ${active ? `<circle cx="${bx}" cy="${by}" r="9" fill="#c2410c" stroke="#fff" stroke-width="2"/><text x="${Math.min(bx + 14, ox + pw - 48)}" y="${lossTagY}" class="repr-loss-tag">损失=${loss}</text>` : ""}
       ${active && step.acceptBad ? `<text x="${bx + 12}" y="${by + 18}" font-size="10" fill="#0d6b62">接受差解 ↑</text>` : ""}
     </g>`;
   };
@@ -2342,7 +2342,7 @@ function renderReprLandscape(container, step) {
       </svg>
       ${tempBar}
       ${formula}
-      <p class="output-caption">${repr === "代数" ? "直接搜索卡在局部低谷 loss=12.4" : temp ? "退火允许上坡跳出 · 换几何后地形更平滑" : "换表征后沿缓坡继续下降到 loss=2.3"}</p>
+      <p class="output-caption">${repr === "代数" ? "直接搜索卡在局部低谷，损失=12.4" : temp ? "退火允许上坡跳出 · 换几何后地形更平滑" : "换表征后沿缓坡继续下降，损失=2.3"}</p>
     </div>`;
   if (temp && window.courseMath?.mountMath) {
     window.courseMath.mountMath(container.querySelector(".repr-formula-slot"), "anneal");
@@ -2400,7 +2400,7 @@ function renderMDPBooking(container, step) {
     <div class="mdp-booking-viz">
       <svg class="mdp-booking-svg" viewBox="0 0 560 200" role="img" aria-label="订机票 MDP 状态图">
         <defs><marker id="mdp-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#94a3b8"/></marker></defs>
-        <text x="16" y="24" font-size="12" fill="#64748b">Agent（订票 App）↔ 环境（航班系统）· γ=${gamma}</text>
+        <text x="16" y="24" font-size="12" fill="#64748b">智能体（订票应用）↔ 环境（航班系统）· γ=${gamma}</text>
         ${edgeSvg}
         ${nodesSvg}
         <g transform="translate(16, 128)">
