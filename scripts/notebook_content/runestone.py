@@ -151,8 +151,17 @@ for module, package in [
 ]:
     if importlib.util.find_spec(module) is None:
         missing.append(package)
-if missing:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+
+def install_packages(packages):
+    if not packages:
+        return
+    command = [sys.executable, "-m", "pip", "install", "--quiet", "--disable-pip-version-check", *packages]
+    try:
+        subprocess.check_call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError("依赖安装失败，请检查网络后重新运行本单元。") from exc
+
+install_packages(missing)
 
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -162,7 +171,6 @@ import matplotlib.pyplot as plt
 from common.mpl_setup import configure_matplotlib
 configure_matplotlib()
 from IPython.display import display, Image
-print("ready")
 """.strip()
     return base + ("\n" + imports.strip() if imports.strip() else "")
 

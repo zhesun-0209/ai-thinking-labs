@@ -7681,7 +7681,7 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=10">Python 代码实验</a><a href="../../ch10.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch10_clip_infonce.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e6680fda">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=bb66360c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7698,7 +7698,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f9661af7">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7a34cf19">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7708,7 +7708,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=23b9f04d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d48a1f01">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7718,8 +7718,9 @@ body.jp-Notebook {
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 真实图片与文本提示：计算每张图片更匹配哪一句描述。</span>
 <span class="n">model_id</span> <span class="o">=</span> <span class="s2">"openai/clip-vit-base-patch32"</span>
-<span class="n">processor</span> <span class="o">=</span> <span class="n">CLIPProcessor</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_id</span><span class="p">,</span> <span class="n">use_fast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">clip_model</span> <span class="o">=</span> <span class="n">CLIPModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_id</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stdout</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()),</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stderr</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()):</span>
+    <span class="n">processor</span> <span class="o">=</span> <span class="n">CLIPProcessor</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_id</span><span class="p">,</span> <span class="n">use_fast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">clip_model</span> <span class="o">=</span> <span class="n">CLIPModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_id</span><span class="p">)</span>
 <span class="n">clip_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
 <span class="n">clip_images</span> <span class="o">=</span> <span class="p">[</span>
@@ -7813,7 +7814,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ab74c5b8">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e6aa4e33">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

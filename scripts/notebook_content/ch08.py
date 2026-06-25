@@ -9,8 +9,11 @@ from notebook_content.runestone import flatten
 DEPENDENCIES_CELL = """
 # 载入本页会用到的数据集、模型和绘图工具。
 import importlib.util
+import contextlib
+import io
 import logging
 import math
+import os
 import subprocess
 import sys
 import warnings
@@ -25,8 +28,21 @@ required_packages = {
     "sklearn": "scikit-learn>=1.3",
 }
 missing = [package for module, package in required_packages.items() if importlib.util.find_spec(module) is None]
-if missing:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+
+os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
+os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
+os.environ.setdefault("DIFFUSERS_VERBOSITY", "error")
+
+def install_packages(packages):
+    if not packages:
+        return
+    command = [sys.executable, "-m", "pip", "install", "--quiet", "--disable-pip-version-check", *packages]
+    try:
+        subprocess.check_call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError("依赖安装失败，请检查网络后重新运行本单元。") from exc
+
+install_packages(missing)
 
 import numpy as np
 import pandas as pd
@@ -63,6 +79,9 @@ for path in font_paths:
         break
 
 logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
+logging.getLogger("transformers").setLevel(logging.ERROR)
+logging.getLogger("diffusers").setLevel(logging.ERROR)
+logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 warnings.filterwarnings("ignore")
 plt.rcParams.update({
     "figure.dpi": 110,
@@ -956,14 +975,14 @@ mae_error = ""
 try:
     mae_packages = {"torch": "torch>=2.2", "transformers": "transformers>=4.40"}
     missing = [package for module, package in mae_packages.items() if importlib.util.find_spec(module) is None]
-    if missing:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+    install_packages(missing)
 
     import torch
     from transformers import AutoImageProcessor, ViTMAEForPreTraining
 
-    mae_processor = AutoImageProcessor.from_pretrained(mae_model_name)
-    mae_model = ViTMAEForPreTraining.from_pretrained(mae_model_name)
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        mae_processor = AutoImageProcessor.from_pretrained(mae_model_name)
+        mae_model = ViTMAEForPreTraining.from_pretrained(mae_model_name)
     mae_model.eval()
     mae_inputs = mae_processor(images=Image.fromarray(raw_photo).resize((224, 224)), return_tensors="pt")
     torch.manual_seed(4)
@@ -1073,8 +1092,7 @@ clip_packages = {
     "socksio": "socksio>=1.0",
 }
 missing = [package for module, package in clip_packages.items() if importlib.util.find_spec(module) is None]
-if missing:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+install_packages(missing)
 
 import torch
 import torch.nn.functional as F
@@ -1088,8 +1106,9 @@ hf_logging.set_verbosity_error()
 CLIP_CELL = """
 # 真实图片与文本提示：计算每张图片更匹配哪一句描述。
 model_id = "openai/clip-vit-base-patch32"
-processor = CLIPProcessor.from_pretrained(model_id, use_fast=True)
-clip_model = CLIPModel.from_pretrained(model_id)
+with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+    processor = CLIPProcessor.from_pretrained(model_id, use_fast=True)
+    clip_model = CLIPModel.from_pretrained(model_id)
 clip_model.eval()
 
 clip_images = [
@@ -1155,7 +1174,7 @@ plt.show()
 GYM_SETUP_CELL = """
 # 载入强化学习经典环境。
 if importlib.util.find_spec("gymnasium") is None:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "gymnasium>=0.29"])
+    install_packages(["gymnasium>=0.29"])
 
 import gymnasium as gym
 """
@@ -2239,11 +2258,14 @@ diffusion_packages = {
     "accelerate": "accelerate>=0.30",
 }
 missing = [package for module, package in diffusion_packages.items() if importlib.util.find_spec(module) is None]
-if missing:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+install_packages(missing)
 
 import torch
 from diffusers import DDPMScheduler, DDPMPipeline
+from diffusers.utils import logging as diffusers_logging
+
+diffusers_logging.set_verbosity_error()
+diffusers_logging.disable_progress_bar()
 """
 
 
@@ -2389,13 +2411,17 @@ ddpm_error = ""
 try:
     diffusion_packages = {"torch": "torch>=2.2", "diffusers": "diffusers>=0.30", "accelerate": "accelerate>=0.30"}
     missing = [package for module, package in diffusion_packages.items() if importlib.util.find_spec(module) is None]
-    if missing:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+    install_packages(missing)
 
     import torch
     from diffusers import DDPMPipeline
+    from diffusers.utils import logging as diffusers_logging
 
-    ddpm_pipe = DDPMPipeline.from_pretrained(ddpm_model_name)
+    diffusers_logging.set_verbosity_error()
+    diffusers_logging.disable_progress_bar()
+
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        ddpm_pipe = DDPMPipeline.from_pretrained(ddpm_model_name, use_safetensors=False)
     ddpm_pipe.set_progress_bar_config(disable=True)
     ddpm_pipe.to("cpu")
     ddpm_pipe.unet.eval()
@@ -2474,8 +2500,7 @@ GAN_SETUP_CELL = """
 # 安装并导入 GAN 需要的公开库。
 gan_packages = {"torch": "torch>=2.2"}
 missing = [package for module, package in gan_packages.items() if importlib.util.find_spec(module) is None]
-if missing:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+install_packages(missing)
 
 import torch
 from torch import nn

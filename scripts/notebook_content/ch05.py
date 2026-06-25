@@ -22,8 +22,17 @@ required_packages = {
     "matplotlib": "matplotlib>=3.7",
 }
 missing = [package for module, package in required_packages.items() if importlib.util.find_spec(module) is None]
-if missing:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+
+def install_packages(packages):
+    if not packages:
+        return
+    command = [sys.executable, "-m", "pip", "install", "--quiet", "--disable-pip-version-check", *packages]
+    try:
+        subprocess.check_call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError("依赖安装失败，请检查网络后重新运行本单元。") from exc
+
+install_packages(missing)
 
 import pandas as pd
 import matplotlib.pyplot as plt

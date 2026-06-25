@@ -7681,7 +7681,7 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=10">Python 代码实验</a><a href="../../ch10.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch10_mae_masking.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=646ea63e">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0726aeef">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7698,7 +7698,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=dd01e00f">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6b1f8917">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7708,7 +7708,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b1f991ef">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2d47a4b6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7921,7 +7921,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=75e0d05a">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=07b0dc3c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7931,7 +7931,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cceec447">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a889a308">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7957,14 +7957,14 @@ body.jp-Notebook {
 <span class="k">try</span><span class="p">:</span>
     <span class="n">mae_packages</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"torch"</span><span class="p">:</span> <span class="s2">"torch&gt;=2.2"</span><span class="p">,</span> <span class="s2">"transformers"</span><span class="p">:</span> <span class="s2">"transformers&gt;=4.40"</span><span class="p">}</span>
     <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">package</span> <span class="k">for</span> <span class="n">module</span><span class="p">,</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">mae_packages</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
-        <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">([</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="o">*</span><span class="n">missing</span><span class="p">])</span>
+    <span class="n">install_packages</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span>
 
     <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoImageProcessor</span><span class="p">,</span> <span class="n">ViTMAEForPreTraining</span>
 
-    <span class="n">mae_processor</span> <span class="o">=</span> <span class="n">AutoImageProcessor</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">mae_model_name</span><span class="p">)</span>
-    <span class="n">mae_model</span> <span class="o">=</span> <span class="n">ViTMAEForPreTraining</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">mae_model_name</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stdout</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()),</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stderr</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()):</span>
+        <span class="n">mae_processor</span> <span class="o">=</span> <span class="n">AutoImageProcessor</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">mae_model_name</span><span class="p">)</span>
+        <span class="n">mae_model</span> <span class="o">=</span> <span class="n">ViTMAEForPreTraining</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">mae_model_name</span><span class="p">)</span>
     <span class="n">mae_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
     <span class="n">mae_inputs</span> <span class="o">=</span> <span class="n">mae_processor</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">raw_photo</span><span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)),</span> <span class="n">return_tensors</span><span class="o">=</span><span class="s2">"pt"</span><span class="p">)</span>
     <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
@@ -8050,13 +8050,6 @@ body.jp-Notebook {
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>Fast image processor class &lt;class 'transformers.models.vit.image_processing_vit_fast.ViTImageProcessorFast'&gt; is available for this model. Using slow image processor class. To use the fast image processor class set `use_fast=True`.
-</pre>
-</div>
-</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
@@ -8229,7 +8222,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=6b562571">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=02105376">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

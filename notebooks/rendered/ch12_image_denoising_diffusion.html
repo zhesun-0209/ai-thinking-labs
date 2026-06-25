@@ -5,35 +5,7 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>第 12 章 · 真实图片扩散去噪代码实验 · AI思维 Notebook</title>
 <meta name="description" content="第 12 章 · 真实图片扩散去噪代码实验，AI思维配套 Jupyter 预渲染代码实验。"/>
-<link rel="icon" href="../../favicon.svg" type="image/svg+xml"/><script>
-(function() {
-  function addWidgetsRenderer() {
-    var mimeElement = document.querySelector('script[type="application/vnd.jupyter.widget-view+json"]');
-    var scriptElement = document.createElement('script');
-
-    var widgetRendererSrc = 'https://unpkg.com/@jupyter-widgets/html-manager@*/dist/embed-amd.js';
-
-    var widgetState;
-
-    // Fallback for older version:
-    try {
-      widgetState = mimeElement && JSON.parse(mimeElement.innerHTML);
-
-      if (widgetState && (widgetState.version_major < 2 || !widgetState.version_major)) {
-
-        var widgetRendererSrc = 'https://unpkg.com/@jupyter-js-widgets@*/dist/embed.js';
-
-      }
-    } catch(e) {}
-
-    scriptElement.src = widgetRendererSrc;
-    document.body.appendChild(scriptElement);
-  }
-
-  document.addEventListener('DOMContentLoaded', addWidgetsRenderer);
-}());
-</script>
-<style type="text/css">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml"/><style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
 span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7709,7 +7681,7 @@ body.jp-Notebook {
 <nav id="ai-labs-chrome" aria-label="Notebook 导航"><a href="../chapter.html?ch=12">Python 代码实验</a><a href="../../ch12.html">章节网页</a><a href="../../hub.html">章节目录</a><a href="../ch12_image_denoising_diffusion.ipynb" download>下载 .ipynb</a><span>阅读进度</span></nav>
 <button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e232bdf1">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=08521e23">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7726,7 +7698,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3691e77d">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=eedc1435">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7736,7 +7708,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=31a1766d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=417d611b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7815,7 +7787,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8365458c">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4003d17d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7825,7 +7797,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=98efc0ed">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5a960d02">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7915,7 +7887,7 @@ body.jp-Notebook {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e8b15bcd">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d080c5cb">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7975,13 +7947,17 @@ body.jp-Notebook {
 <span class="k">try</span><span class="p">:</span>
     <span class="n">diffusion_packages</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"torch"</span><span class="p">:</span> <span class="s2">"torch&gt;=2.2"</span><span class="p">,</span> <span class="s2">"diffusers"</span><span class="p">:</span> <span class="s2">"diffusers&gt;=0.30"</span><span class="p">,</span> <span class="s2">"accelerate"</span><span class="p">:</span> <span class="s2">"accelerate&gt;=0.30"</span><span class="p">}</span>
     <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">package</span> <span class="k">for</span> <span class="n">module</span><span class="p">,</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">diffusion_packages</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
-        <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">([</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="o">*</span><span class="n">missing</span><span class="p">])</span>
+    <span class="n">install_packages</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span>
 
     <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">diffusers</span><span class="w"> </span><span class="kn">import</span> <span class="n">DDPMPipeline</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">diffusers.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">logging</span> <span class="k">as</span> <span class="n">diffusers_logging</span>
 
-    <span class="n">ddpm_pipe</span> <span class="o">=</span> <span class="n">DDPMPipeline</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">ddpm_model_name</span><span class="p">)</span>
+    <span class="n">diffusers_logging</span><span class="o">.</span><span class="n">set_verbosity_error</span><span class="p">()</span>
+    <span class="n">diffusers_logging</span><span class="o">.</span><span class="n">disable_progress_bar</span><span class="p">()</span>
+
+    <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stdout</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()),</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stderr</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()):</span>
+        <span class="n">ddpm_pipe</span> <span class="o">=</span> <span class="n">DDPMPipeline</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">ddpm_model_name</span><span class="p">,</span> <span class="n">use_safetensors</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">ddpm_pipe</span><span class="o">.</span><span class="n">set_progress_bar_config</span><span class="p">(</span><span class="n">disable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">ddpm_pipe</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">"cpu"</span><span class="p">)</span>
     <span class="n">ddpm_pipe</span><span class="o">.</span><span class="n">unet</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
@@ -8117,31 +8093,6 @@ body.jp-Notebook {
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jupyter-widgets jp-OutputArea-output" id="4e020159-1ebb-479c-a487-b5c3241c28a1" tabindex="0">
-<script type="text/javascript">
-var element = document.getElementById('4e020159-1ebb-479c-a487-b5c3241c28a1');
-</script>
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "e63051ae0bbc4bd7bbb04a3ec230f6bd", "version_major": 2, "version_minor": 0}
-</script>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>An error occurred while trying to fetch /Users/zhesun/.cache/huggingface/hub/models--google--ddpm-cifar10-32/snapshots/267b167dc01f0e4e61923ea244e8b988f84deb80: Error no file named diffusion_pytorch_model.safetensors found in directory /Users/zhesun/.cache/huggingface/hub/models--google--ddpm-cifar10-32/snapshots/267b167dc01f0e4e61923ea244e8b988f84deb80.
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>Defaulting to unsafe serialization. Pass `allow_pickle=False` to raise an error instead.
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
 <div>
 <style scoped="">
@@ -8180,7 +8131,7 @@ var element = document.getElementById('4e020159-1ebb-479c-a487-b5c3241c28a1');
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ee98ccf1">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=71ecfe8d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8261,7 +8212,4 @@ var element = document.getElementById('4e020159-1ebb-479c-a487-b5c3241c28a1');
 })();
 </script>
 </body>
-<script type="application/vnd.jupyter.widget-state+json">
-{"state": {"1fa11784f3774a34bb856a840e715a2d": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "5de6192a092e461ca02ade2d82145f9b": {"model_module": "@jupyter-widgets\/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets\/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_1fa11784f3774a34bb856a840e715a2d", "max": 2.0, "min": 0.0, "orientation": "horizontal", "style": "IPY_MODEL_f2218176b9294cc09e55526464db67d3", "tabbable": null, "tooltip": null, "value": 2.0}}, "7034a71d9eac40f38b3fbb205abdf45b": {"model_module": "@jupyter-widgets\/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets\/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "834ddc95a7d24440aa548c3e0e96a467": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "9d856dc09d114709b9769fc965f2b94e": {"model_module": "@jupyter-widgets\/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets\/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_fc6180aaffa94d31980b27d9db3b3674", "placeholder": "\u200b", "style": "IPY_MODEL_d225e12a34fb4597a3cea4bd411ddf1c", "tabbable": null, "tooltip": null, "value": "\u20072\/2\u2007[00:00&lt;00:00,\u200719.48it\/s]"}}, "c89a44e52c05450ea4dcf8867c38b772": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "d225e12a34fb4597a3cea4bd411ddf1c": {"model_module": "@jupyter-widgets\/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets\/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "d30a17485cf14553b5c9a0b8f5f7d23d": {"model_module": "@jupyter-widgets\/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets\/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_834ddc95a7d24440aa548c3e0e96a467", "placeholder": "\u200b", "style": "IPY_MODEL_7034a71d9eac40f38b3fbb205abdf45b", "tabbable": null, "tooltip": null, "value": "Loading\u2007pipeline\u2007components...:\u2007100%"}}, "e63051ae0bbc4bd7bbb04a3ec230f6bd": {"model_module": "@jupyter-widgets\/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets\/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_d30a17485cf14553b5c9a0b8f5f7d23d", "IPY_MODEL_5de6192a092e461ca02ade2d82145f9b", "IPY_MODEL_9d856dc09d114709b9769fc965f2b94e"], "layout": "IPY_MODEL_c89a44e52c05450ea4dcf8867c38b772", "tabbable": null, "tooltip": null}}, "f2218176b9294cc09e55526464db67d3": {"model_module": "@jupyter-widgets\/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets\/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "fc6180aaffa94d31980b27d9db3b3674": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}}, "version_major": 2, "version_minor": 0}
-</script>
 </html>
