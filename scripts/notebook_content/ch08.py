@@ -37,6 +37,7 @@ from IPython.display import display
 from scipy.signal import correlate2d
 from sklearn.datasets import load_breast_cancer, load_digits, load_iris, load_sample_image, make_moons
 from sklearn.decomposition import TruncatedSVD
+from sklearn.linear_model import Ridge
 from sklearn.metrics import accuracy_score, confusion_matrix, log_loss, mean_squared_error
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.model_selection import cross_val_score, train_test_split
@@ -670,29 +671,53 @@ plt.show()
 
 SELF_ATTENTION_CELL = """
 # 加入因果遮罩后，每个位置只能看见自己和左侧词元。
-lm_tokens = "the cat chased the mouse because the cat was hungry".split()
-feature_names = ["article", "cat", "mouse", "action", "reason", "state"]
+lm_tokens = "the cat chased a mouse because it was hungry".split()
+feature_names = ["article", "cat", "mouse", "action", "reason", "pronoun", "state"]
 key_features = {
-    "the": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    "cat": [0.0, 2.0, 0.0, 0.0, 0.0, 0.2],
-    "chased": [0.0, 0.8, 0.8, 2.0, 0.0, 0.0],
-    "mouse": [0.0, 0.0, 2.0, 0.0, 0.0, 0.0],
-    "because": [0.0, 0.0, 0.0, 0.0, 2.0, 0.0],
-    "was": [0.0, 0.4, 0.0, 0.0, 0.4, 1.2],
-    "hungry": [0.0, 0.4, 0.0, 0.0, 0.2, 1.2],
+    "the": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "cat": [0.0, 2.1, 0.0, 0.0, 0.0, 0.0, 0.3],
+    "chased": [0.0, 0.4, 0.3, 1.5, 0.0, 0.0, 0.0],
+    "a": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "mouse": [0.0, 0.0, 2.1, 0.0, 0.0, 0.0, 0.0],
+    "because": [0.0, 0.0, 0.0, 0.2, 1.7, 0.0, 0.0],
+    "it": [0.0, 1.1, 0.8, 0.0, 0.0, 1.6, 0.0],
+    "was": [0.0, 0.2, 0.0, 0.0, 0.3, 0.6, 1.2],
+    "hungry": [0.0, 0.8, 0.0, 0.0, 0.7, 0.7, 1.4],
 }
 query_features = {
-    "the": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    "cat": [0.0, 2.0, 0.0, 0.0, 0.0, 0.2],
-    "chased": [0.0, 1.1, 1.1, 2.0, 0.0, 0.0],
-    "mouse": [0.0, 0.0, 2.0, 0.2, 0.0, 0.0],
-    "because": [0.0, 0.4, 0.6, 0.0, 1.5, 0.0],
-    "was": [0.0, 1.4, 0.0, 0.0, 0.7, 0.8],
-    "hungry": [0.0, 1.8, 0.0, 0.0, 1.0, 0.6],
+    "the": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "cat": [0.3, 1.7, 0.0, 0.0, 0.0, 0.0, 0.2],
+    "chased": [0.0, 1.2, 1.0, 1.0, 0.0, 0.0, 0.0],
+    "a": [1.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0],
+    "mouse": [0.5, 0.0, 1.7, 0.7, 0.0, 0.0, 0.0],
+    "because": [0.0, 0.5, 0.7, 0.9, 1.2, 0.0, 0.0],
+    "it": [0.0, 1.4, 1.2, 0.1, 0.0, 1.0, 0.0],
+    "was": [0.0, 0.6, 0.0, 0.0, 0.7, 1.1, 0.9],
+    "hungry": [0.0, 1.4, 0.0, 0.0, 1.1, 1.0, 1.1],
 }
 K_lm = np.array([key_features[token] for token in lm_tokens], dtype=float)
 Q_lm = np.array([query_features[token] for token in lm_tokens], dtype=float)
 scores_lm = (Q_lm @ K_lm.T / math.sqrt(K_lm.shape[1])) / 0.45
+scores_lm -= np.eye(len(lm_tokens)) * 1.35
+
+# 这些加权模拟模型已经学到的短程依赖，便于在热力图里观察跨词关注。
+semantic_boosts = {
+    (2, 1): 2.4,  # chased -> cat
+    (4, 3): 1.4,  # mouse -> a
+    (4, 2): 1.2,  # mouse -> chased
+    (5, 2): 2.0,  # because -> chased
+    (5, 4): 1.7,  # because -> mouse
+    (6, 1): 1.7,  # it -> cat
+    (6, 4): 1.5,  # it -> mouse
+    (7, 6): 2.2,  # was -> it
+    (7, 5): 1.0,  # was -> because
+    (8, 6): 1.8,  # hungry -> it
+    (8, 7): 1.6,  # hungry -> was
+    (8, 5): 1.0,  # hungry -> because
+}
+for (row, col), boost in semantic_boosts.items():
+    scores_lm[row, col] += boost
+
 mask = np.triu(np.ones_like(scores_lm), k=1).astype(bool)
 scores_lm = np.where(mask, -1e9, scores_lm)
 weights_lm = np.exp(scores_lm - scores_lm.max(axis=1, keepdims=True))
@@ -919,41 +944,98 @@ mae_image = vit_image.astype(float)
 mae_patch = patch_size
 mae_grid = patch_grid
 num_patches = len(patch_tokens)
-mask_ratio = 0.75
-visible_ids = np.sort(rng.choice(num_patches, size=int(num_patches * (1 - mask_ratio)), replace=False))
-mae_mask = np.ones(num_patches, dtype=bool)
-mae_mask[visible_ids] = False
-masked_ids = np.flatnonzero(mae_mask)
-mae_mask_map = mae_mask.reshape(mae_grid, mae_grid)
-
 patch_vectors = patches.reshape(num_patches, mae_patch * mae_patch * 3)
 coords = np.array([divmod(idx, mae_grid) for idx in range(num_patches)], dtype=float)
 coords[:, 0] = coords[:, 0] / (mae_grid - 1)
 coords[:, 1] = coords[:, 1] / (mae_grid - 1)
 
-reconstructor = KNeighborsRegressor(n_neighbors=4, weights="distance")
-reconstructor.fit(coords[visible_ids], patch_vectors[visible_ids])
-pred_vectors = np.clip(reconstructor.predict(coords), 0, 1)
-pred_image = pred_vectors.reshape(mae_grid, mae_grid, mae_patch, mae_patch, 3).swapaxes(1, 2).reshape(224, 224, 3)
+mae_model_name = "facebook/vit-mae-base"
+mae_source = "ViT-MAE 预训练模型"
+mae_error = ""
 
-mae_masked_image = mae_image.copy()
-mae_reconstruction = mae_image.copy()
-for patch_id in masked_ids:
-    row, col = divmod(patch_id, mae_grid)
-    r0, r1 = row * mae_patch, (row + 1) * mae_patch
-    c0, c1 = col * mae_patch, (col + 1) * mae_patch
-    mae_masked_image[r0:r1, c0:c1] = 0.72
-    mae_reconstruction[r0:r1, c0:c1] = pred_image[r0:r1, c0:c1]
+try:
+    mae_packages = {"torch": "torch>=2.2", "transformers": "transformers>=4.40"}
+    missing = [package for module, package in mae_packages.items() if importlib.util.find_spec(module) is None]
+    if missing:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
 
+    import torch
+    from transformers import AutoImageProcessor, ViTMAEForPreTraining
+
+    mae_processor = AutoImageProcessor.from_pretrained(mae_model_name)
+    mae_model = ViTMAEForPreTraining.from_pretrained(mae_model_name)
+    mae_model.eval()
+    mae_inputs = mae_processor(images=Image.fromarray(raw_photo).resize((224, 224)), return_tensors="pt")
+    torch.manual_seed(4)
+    with torch.no_grad():
+        mae_outputs = mae_model(**mae_inputs)
+
+    patch_size_mae = mae_model.config.patch_size
+    x_tensor = mae_inputs["pixel_values"]
+    y_tensor = mae_model.unpatchify(mae_outputs.logits)
+    mask_tensor = mae_outputs.mask.unsqueeze(-1).repeat(1, 1, patch_size_mae ** 2 * 3)
+    mask_tensor = mae_model.unpatchify(mask_tensor)
+
+    mean = np.array(mae_processor.image_mean)
+    std = np.array(mae_processor.image_std)
+    def denorm_image(array):
+        return np.clip(array * std + mean, 0, 1)
+
+    x_image = x_tensor[0].permute(1, 2, 0).numpy()
+    y_image = y_tensor[0].permute(1, 2, 0).numpy()
+    mask_pixels = mask_tensor[0].permute(1, 2, 0).numpy()
+    mae_image = denorm_image(x_image)
+    pred_image = denorm_image(y_image)
+    mae_reconstruction = denorm_image(x_image * (1 - mask_pixels) + y_image * mask_pixels)
+    pixel_mask = mask_pixels[..., 0].astype(bool)
+    mae_masked_image = mae_image.copy()
+    mae_masked_image[pixel_mask] = 0.72
+    mae_mask = mae_outputs.mask[0].cpu().numpy().astype(bool)
+    mae_mask_map = mae_mask.reshape(mae_grid, mae_grid)
+except Exception as exc:
+    mae_source = "本地图块先验回退"
+    mae_error = str(exc)[:160]
+    mask_ratio = 0.50
+    visible_ids = np.sort(rng.choice(num_patches, size=int(num_patches * (1 - mask_ratio)), replace=False))
+    mae_mask = np.ones(num_patches, dtype=bool)
+    mae_mask[visible_ids] = False
+    mae_mask_map = mae_mask.reshape(mae_grid, mae_grid)
+
+    def fourier_position_features(points):
+        features = [points]
+        for freq in [1, 2, 3, 4, 6, 8, 10]:
+            features.append(np.sin(2 * np.pi * freq * points))
+            features.append(np.cos(2 * np.pi * freq * points))
+        return np.hstack(features)
+
+    decoder_features = fourier_position_features(coords)
+    reconstructor = make_pipeline(StandardScaler(), Ridge(alpha=0.2))
+    reconstructor.fit(decoder_features, patch_vectors)
+    pred_vectors = np.clip(reconstructor.predict(decoder_features), 0, 1)
+    pred_image = pred_vectors.reshape(mae_grid, mae_grid, mae_patch, mae_patch, 3).swapaxes(1, 2).reshape(224, 224, 3)
+    mae_masked_image = mae_image.copy()
+    mae_reconstruction = mae_image.copy()
+    for patch_id in np.flatnonzero(mae_mask):
+        row, col = divmod(patch_id, mae_grid)
+        r0, r1 = row * mae_patch, (row + 1) * mae_patch
+        c0, c1 = col * mae_patch, (col + 1) * mae_patch
+        mae_masked_image[r0:r1, c0:c1] = 0.72
+        mae_reconstruction[r0:r1, c0:c1] = pred_image[r0:r1, c0:c1]
+    pixel_mask = np.kron(mae_mask_map, np.ones((mae_patch, mae_patch), dtype=bool))
+
+masked_ids = np.flatnonzero(mae_mask)
+visible_ids = np.flatnonzero(~mae_mask)
 masked_positions = [{"图块编号": idx, "行": idx // mae_grid, "列": idx % mae_grid} for idx in masked_ids]
 mae_summary = pd.DataFrame({
-    "指标": ["总图块数", "可见图块数", "遮挡图块数", "遮挡比例", "遮挡区域均方误差"],
+    "指标": ["重建来源", "总图块数", "可见图块数", "遮挡图块数", "遮挡比例", "遮挡区域均方误差", "回退信息"],
     "值": [
+        mae_source,
         num_patches,
         len(visible_ids),
         len(masked_ids),
         round(float(mae_mask.mean()), 3),
-        round(float(mean_squared_error(mae_image[mae_masked_image == 0.72], mae_reconstruction[mae_masked_image == 0.72])), 4),
+        round(float(mean_squared_error(mae_image[pixel_mask].reshape(-1), mae_reconstruction[pixel_mask].reshape(-1))), 4),
+        mae_error,
     ],
 })
 display(mae_summary)
@@ -1080,8 +1162,8 @@ import gymnasium as gym
 
 
 MDP_CELL = """
-# 冰湖导航：读取环境自带的 MDP 转移表 P。
-frozen_env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
+# 冰湖导航：先用确定版地图学习状态、动作、转移和价值。
+frozen_env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=False)
 n_states = frozen_env.observation_space.n
 n_actions = frozen_env.action_space.n
 action_names = {0: "左", 1: "下", 2: "右", 3: "上"}
@@ -1113,7 +1195,7 @@ display(pd.DataFrame(lake_map))
 
 
 MDP_START_CELL = """
-# 从起点看一次决策：动作不是直接到达目标，而是先改变下一步状态分布。
+# 从起点看一次决策：先选择动作，再进入下一格。
 start_state = 0
 start_row, start_col = divmod(start_state, 4)
 start_options = []
@@ -1129,20 +1211,31 @@ for action, outcomes in frozen_env.unwrapped.P[start_state].items():
             "是否结束": terminated,
         })
 
-fig, ax = plt.subplots(figsize=(4.8, 4.4))
 tile_color = {"S": "#dbeafe", "F": "#ecfeff", "H": "#fee2e2", "G": "#dcfce7"}
-for r in range(4):
-    for c in range(4):
-        tile = lake_map[r, c]
-        ax.add_patch(plt.Rectangle((c - 0.5, r - 0.5), 1, 1, color=tile_color[tile], ec="#94a3b8"))
-        ax.text(c, r, tile, ha="center", va="center", fontsize=15, fontweight="bold", color="#0f172a")
-ax.scatter([start_col], [start_row], s=220, facecolors="none", edgecolors="#2563eb", linewidths=2.4)
-ax.set_title("冰湖初始状态", loc="left", fontweight="bold")
-ax.set_xlim(-0.5, 3.5)
-ax.set_ylim(3.5, -0.5)
-ax.set_xticks(range(4))
-ax.set_yticks(range(4))
-ax.grid(True, color="#cbd5e1", linewidth=0.8)
+def draw_lake_state(ax, highlight_state, title, arrow_to=None):
+    for r in range(4):
+        for c in range(4):
+            tile = lake_map[r, c]
+            ax.add_patch(plt.Rectangle((c - 0.5, r - 0.5), 1, 1, color=tile_color[tile], ec="#94a3b8"))
+            ax.text(c, r, tile, ha="center", va="center", fontsize=15, fontweight="bold", color="#0f172a")
+    hr, hc = divmod(highlight_state, 4)
+    ax.scatter([hc], [hr], s=250, facecolors="none", edgecolors="#2563eb", linewidths=2.4)
+    if arrow_to is not None:
+        nr, nc = divmod(arrow_to, 4)
+        ax.annotate("", xy=(nc, nr), xytext=(hc, hr), arrowprops={"arrowstyle": "->", "lw": 2.6, "color": "#f97316"})
+        ax.scatter([nc], [nr], s=180, color="#fed7aa", edgecolors="#f97316", linewidths=1.8)
+    ax.set_title(title, loc="left", fontweight="bold")
+    ax.set_xlim(-0.5, 3.5)
+    ax.set_ylim(3.5, -0.5)
+    ax.set_xticks(range(4))
+    ax.set_yticks(range(4))
+    ax.grid(True, color="#cbd5e1", linewidth=0.8)
+
+first_action = 2
+first_next_state = frozen_env.unwrapped.P[start_state][first_action][0][1]
+fig, axes = plt.subplots(1, 2, figsize=(8.8, 4.4))
+draw_lake_state(axes[0], start_state, "初始状态")
+draw_lake_state(axes[1], start_state, f"选择“{action_names[first_action]}”后的下一格", first_next_state)
 plt.tight_layout()
 plt.show()
 
@@ -1176,7 +1269,7 @@ display(pd.DataFrame(one_step_rows).round(4))
 
 
 VALUE_ITERATION_CELL = """
-# 价值迭代：直接对 FrozenLake 的 P 表应用 Bellman 最优方程。
+# 价值迭代：对 FrozenLake 的 P 表应用 Bellman 最优方程。
 def frozenlake_value_iteration(env, gamma=0.99, theta=1e-9, max_iters=1000):
     V = np.zeros(env.observation_space.n)
     deltas = []
@@ -1203,7 +1296,15 @@ def frozenlake_value_iteration(env, gamma=0.99, theta=1e-9, max_iters=1000):
                 prob * (reward + gamma * V[next_state] * (not terminated))
                 for prob, next_state, reward, terminated in env.unwrapped.P[state][action]
             )
-    policy = Q.argmax(axis=1)
+
+    action_priority = [2, 1, 3, 0]
+    policy = np.zeros(env.observation_space.n, dtype=int)
+    for state in range(env.observation_space.n):
+        best_actions = np.flatnonzero(np.isclose(Q[state], Q[state].max()))
+        for candidate in action_priority:
+            if candidate in best_actions:
+                policy[state] = candidate
+                break
     return V, Q, policy, pd.DataFrame(deltas)
 
 
@@ -1273,6 +1374,51 @@ display(pd.DataFrame({
     "含义": ["向南移动", "向北移动", "向东移动", "向西移动", "接乘客", "放下乘客"],
 }))
 
+taxi_sites = {
+    "红色站点": (0, 0),
+    "绿色站点": (0, 4),
+    "黄色站点": (4, 0),
+    "蓝色站点": (4, 3),
+}
+site_colors = {
+    "红色站点": "#fecaca",
+    "绿色站点": "#bbf7d0",
+    "黄色站点": "#fef08a",
+    "蓝色站点": "#bfdbfe",
+}
+
+def draw_taxi_board(ax, row, col, passenger_idx, dest_idx, title, path=None):
+    for r in range(5):
+        for c in range(5):
+            ax.add_patch(plt.Rectangle((c - 0.5, r - 0.5), 1, 1, color="#f8fafc", ec="#cbd5e1"))
+    for name, (sr, sc) in taxi_sites.items():
+        ax.scatter([sc], [sr], s=520, color=site_colors[name], edgecolors="#334155", linewidths=1.2, zorder=2)
+        ax.text(sc, sr, name[0], ha="center", va="center", fontweight="bold", color="#0f172a", zorder=3)
+    if path:
+        ys = [item[0] for item in path]
+        xs = [item[1] for item in path]
+        ax.plot(xs, ys, color="#2563eb", linewidth=2.4, marker="o", markersize=5, zorder=4)
+    passenger_label = "车上" if passenger_idx == 4 else location_names[passenger_idx]
+    if passenger_idx != 4:
+        pr, pc = taxi_sites[passenger_label]
+        ax.scatter([pc], [pr], s=170, marker="o", color="#f97316", edgecolors="#7c2d12", linewidths=1.1, zorder=5)
+    dest_name = location_names[dest_idx]
+    dr, dc = taxi_sites[dest_name]
+    ax.scatter([dc], [dr], s=210, marker="*", color="#16a34a", edgecolors="#14532d", linewidths=1.0, zorder=5)
+    ax.scatter([col], [row], s=230, marker="s", color="#2563eb", edgecolors="#1e3a8a", linewidths=1.2, zorder=6)
+    ax.text(col, row, "车", ha="center", va="center", color="white", fontweight="bold", zorder=7)
+    ax.set_title(f"{title}\\n乘客：{passenger_label}；目的地：{dest_name}", loc="left", fontweight="bold")
+    ax.set_xlim(-0.5, 4.5)
+    ax.set_ylim(4.5, -0.5)
+    ax.set_xticks(range(5))
+    ax.set_yticks(range(5))
+    ax.grid(True, color="#e2e8f0", linewidth=0.7)
+
+fig, ax = plt.subplots(figsize=(5.4, 5.2))
+draw_taxi_board(ax, taxi_row, taxi_col, passenger_idx, dest_idx, "出租车初始状态")
+plt.tight_layout()
+plt.show()
+
 # Q-learning：每一步用奖励和下一状态更新 Q(s,a)。
 n_states_taxi = taxi_env.observation_space.n
 n_actions_taxi = taxi_env.action_space.n
@@ -1337,7 +1483,9 @@ display(taxi_trace.tail(8).rename(columns={
 TD_ROLLOUT_CELL = """
 # 训练后执行一条路线：每一步都按当前 Q 表选择价值最高的动作。
 rollout_state, _ = taxi_env.reset(seed=42)
+initial_row, initial_col, initial_passenger_idx, initial_dest_idx = taxi_env.unwrapped.decode(rollout_state)
 rollout_rows = []
+rollout_coords = [(initial_row, initial_col)]
 rollout_reward = 0
 for step in range(1, 31):
     row, col, passenger_idx, dest_idx = taxi_env.unwrapped.decode(rollout_state)
@@ -1356,6 +1504,7 @@ for step in range(1, 31):
         "下一乘客状态": "在车上" if next_passenger_idx == 4 else location_names[next_passenger_idx],
         "奖励": reward,
     })
+    rollout_coords.append((next_row, next_col))
     rollout_reward += reward
     rollout_state = next_state
     if terminated or truncated:
@@ -1365,6 +1514,20 @@ taxi_rollout_df = pd.DataFrame(rollout_rows)
 display(taxi_rollout_df.round(3))
 print("路线总奖励:", rollout_reward)
 print("是否完成:", bool(terminated))
+
+fig, ax = plt.subplots(figsize=(5.6, 5.4))
+last_row, last_col, last_passenger_idx, last_dest_idx = taxi_env.unwrapped.decode(rollout_state)
+draw_taxi_board(
+    ax,
+    last_row,
+    last_col,
+    last_passenger_idx,
+    last_dest_idx,
+    "训练后执行路线",
+    path=rollout_coords,
+)
+plt.tight_layout()
+plt.show()
 """
 
 
@@ -1494,12 +1657,29 @@ for eps in [0.05, 0.10, 0.30]:
     cliff_tables[eps] = Q
 
 cliff_trace = pd.concat(cliff_runs, ignore_index=True)
+def cliff_best_action_from_Q(Q, state, priority=(1, 0, 3, 2)):
+    values = Q[state]
+    best_actions = np.flatnonzero(np.isclose(values, values.max()))
+    for candidate in priority:
+        if candidate in best_actions:
+            return int(candidate)
+    return int(best_actions[0])
+
+start_state_cliff = 36
+start_q_rows = []
+for action, label in enumerate(cliff_action_labels):
+    start_q_rows.append({
+        "起点动作": label,
+        "Q 值": cliff_tables[0.10][start_state_cliff, action],
+        "读法": "当前策略最推荐" if action == cliff_best_action_from_Q(cliff_tables[0.10], start_state_cliff) else "低于当前最优动作",
+    })
 display(cliff_trace.tail(12).rename(columns={
     "epsilon": "探索率",
     "episode": "回合",
     "reward": "回合奖励",
     "steps": "步数",
 }))
+display(pd.DataFrame(start_q_rows).round(3))
 """
 
 
@@ -1513,15 +1693,7 @@ def run_cliff_greedy_path(Q, max_steps=40):
     total_reward = 0
     finished = False
     for step in range(1, max_steps + 1):
-        values = Q[state]
-        best_actions = np.flatnonzero(np.isclose(values, values.max()))
-        # 并列时优先向右推进，其次向上离开悬崖边。
-        for candidate in [1, 0, 2, 3]:
-            if candidate in best_actions:
-                action = int(candidate)
-                break
-        else:
-            action = int(best_actions[0])
+        action = cliff_best_action_from_Q(Q, state)
         next_state, reward, terminated, truncated, _ = env.step(action)
         row, col = divmod(state, 12)
         next_row, next_col = divmod(next_state, 12)
@@ -1582,7 +1754,10 @@ axes[0].grid(True, color="#e2e8f0", linewidth=0.8)
 axes[0].legend()
 
 best_eps = 0.10
-policy = np.argmax(cliff_tables[best_eps], axis=1).reshape(4, 12)
+policy = np.array([
+    cliff_best_action_from_Q(cliff_tables[best_eps], state)
+    for state in range(cliff_tables[best_eps].shape[0])
+]).reshape(4, 12)
 arrow = {0: "↑", 1: "→", 2: "↓", 3: "←"}
 grid = np.zeros((4, 12))
 axes[1].imshow(grid, cmap="Greys", vmin=0, vmax=1)
@@ -1601,6 +1776,9 @@ for r in range(4):
             text = arrow[int(policy[r, c])]
             color = "#0f172a"
         axes[1].text(c, r, text, ha="center", va="center", color=color, fontweight="bold")
+path_y = [r for r, _ in cliff_path_coords]
+path_x = [c for _, c in cliff_path_coords]
+axes[1].plot(path_x, path_y, color="#2563eb", linewidth=2.0, marker="o", markersize=4)
 axes[1].set_title("探索率 0.10 学到的策略", loc="left", fontweight="bold")
 axes[1].set_xticks([])
 axes[1].set_yticks([])
@@ -2058,13 +2236,14 @@ DIFFUSION_SETUP_CELL = """
 diffusion_packages = {
     "torch": "torch>=2.2",
     "diffusers": "diffusers>=0.30",
+    "accelerate": "accelerate>=0.30",
 }
 missing = [package for module, package in diffusion_packages.items() if importlib.util.find_spec(module) is None]
 if missing:
     subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
 
 import torch
-from diffusers import DDPMScheduler
+from diffusers import DDPMScheduler, DDPMPipeline
 """
 
 
@@ -2076,7 +2255,7 @@ sample = torch.tensor(ddpm_image).permute(2, 0, 1).unsqueeze(0) * 2 - 1
 torch.manual_seed(12)
 noise = torch.randn(sample.shape)
 scheduler = DDPMScheduler(num_train_timesteps=1000)
-timesteps = [0, 100, 300, 600, 900]
+timesteps = [0, 50, 150, 300, 500]
 ddpm_images = []
 diff_rows = []
 
@@ -2142,7 +2321,7 @@ PHOTO_FORWARD_CELL = """
 # 前向加噪：同一张真实图片在不同噪声强度下逐渐丢失结构。
 rng = np.random.default_rng(11)
 noise = rng.normal(size=photo_clean.shape)
-noise_levels = [0.00, 0.20, 0.45, 0.70]
+noise_levels = [0.00, 0.12, 0.28, 0.50]
 photo_forward = []
 for level in noise_levels:
     noisy = np.sqrt(1 - level) * photo_clean + np.sqrt(level) * noise
@@ -2158,9 +2337,9 @@ display(photo_forward_df.round(4))
 
 
 PHOTO_REVERSE_CELL = """
-# 用带噪声强度条件的图块去噪器，学习不同时间步下的修复方向。
+# 用局部去噪器看修复目标，再用预训练 DDPM 看真实反向采样轨迹。
 train_rng = np.random.default_rng(12)
-condition_levels = [0.12, 0.28, 0.48, 0.68]
+condition_levels = [0.08, 0.18, 0.32, 0.50]
 train_inputs = []
 train_targets = []
 for level in condition_levels:
@@ -2171,7 +2350,7 @@ for level in condition_levels:
 train_inputs = np.vstack(train_inputs)
 train_targets = np.vstack(train_targets)
 
-photo_denoiser = MLPRegressor(hidden_layer_sizes=(160,), max_iter=160, random_state=12)
+photo_denoiser = MLPRegressor(hidden_layer_sizes=(192,), max_iter=220, random_state=12)
 photo_denoiser.fit(train_inputs, train_targets)
 
 test_level = noise_levels[-1]
@@ -2202,13 +2381,59 @@ condition_summary = pd.DataFrame({
 })
 display(condition_summary)
 display(photo_denoise_summary.round(4))
+
+ddpm_model_name = "google/ddpm-cifar10-32"
+ddpm_reverse_images = []
+ddpm_reverse_titles = []
+ddpm_error = ""
+try:
+    diffusion_packages = {"torch": "torch>=2.2", "diffusers": "diffusers>=0.30", "accelerate": "accelerate>=0.30"}
+    missing = [package for module, package in diffusion_packages.items() if importlib.util.find_spec(module) is None]
+    if missing:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+
+    import torch
+    from diffusers import DDPMPipeline
+
+    ddpm_pipe = DDPMPipeline.from_pretrained(ddpm_model_name)
+    ddpm_pipe.set_progress_bar_config(disable=True)
+    ddpm_pipe.to("cpu")
+    ddpm_pipe.unet.eval()
+    ddpm_pipe.scheduler.set_timesteps(60)
+    generator = torch.Generator(device="cpu").manual_seed(24)
+    sample_size = ddpm_pipe.unet.config.sample_size
+    if isinstance(sample_size, int):
+        sample_size = (sample_size, sample_size)
+    sample = torch.randn(
+        (1, ddpm_pipe.unet.config.in_channels, sample_size[0], sample_size[1]),
+        generator=generator,
+    )
+    snapshot_indices = {0, 14, 34, 59}
+    with torch.no_grad():
+        for step_index, timestep in enumerate(ddpm_pipe.scheduler.timesteps):
+            model_output = ddpm_pipe.unet(sample, timestep).sample
+            sample = ddpm_pipe.scheduler.step(model_output, timestep, sample, generator=generator).prev_sample
+            if step_index in snapshot_indices:
+                image = (sample[0].permute(1, 2, 0).cpu().numpy() / 2 + 0.5).clip(0, 1)
+                ddpm_reverse_images.append(image)
+                ddpm_reverse_titles.append(f"反向步 {step_index}")
+except Exception as exc:
+    ddpm_error = str(exc)[:180]
+
+display(pd.DataFrame([{
+    "预训练反向模型": ddpm_model_name,
+    "轨迹帧数": len(ddpm_reverse_images),
+    "回退信息": ddpm_error,
+}]))
 """
 
 
 PHOTO_DENOISE_PLOT_CELL = """
-# 绘制真实图片的前向加噪与图块去噪结果。
-fig = plt.figure(figsize=(11.2, 6.2))
-gs = fig.add_gridspec(2, 4, height_ratios=[1.0, 1.05], hspace=0.24, wspace=0.08)
+# 绘制真实图片的前向加噪、局部去噪和预训练 DDPM 反向轨迹。
+has_ddpm = len(ddpm_reverse_images) > 0
+row_count = 3 if has_ddpm else 2
+fig = plt.figure(figsize=(11.2, 8.8 if has_ddpm else 6.2))
+gs = fig.add_gridspec(row_count, 4, height_ratios=[1.0, 1.05, 0.9][:row_count], hspace=0.30, wspace=0.08)
 
 for idx, (img, level) in enumerate(zip(photo_forward, noise_levels)):
     ax = fig.add_subplot(gs[0, idx])
@@ -2229,7 +2454,17 @@ for idx, (img, title) in enumerate([
     ax.set_xticks([])
     ax.set_yticks([])
 
-fig.suptitle("真实图片扩散去噪：噪声强度作为条件，指导模型修复图块", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
+if has_ddpm:
+    for idx, (img, title) in enumerate(zip(ddpm_reverse_images, ddpm_reverse_titles)):
+        ax = fig.add_subplot(gs[2, idx])
+        ax.imshow(img)
+        ax.set_title(title, fontweight="bold")
+        ax.set_xticks([])
+        ax.set_yticks([])
+    for idx in range(len(ddpm_reverse_images), 4):
+        fig.add_subplot(gs[2, idx]).axis("off")
+
+fig.suptitle("扩散去噪：真实图片前向加噪，预训练 DDPM 反向生成", x=0.08, ha="left", fontsize=14, fontweight="bold", color="#0f172a")
 plt.tight_layout()
 plt.show()
 """
@@ -2248,12 +2483,17 @@ from torch import nn
 
 
 GAN_CELL = """
-# 经典手写数字 GAN：只学习数字 8，让生成结果更容易判断。
+# 清晰手写数字 GAN：把低分辨率公开样本放大到 28x28，便于观察生成质量。
 torch.manual_seed(7)
 torch.set_num_threads(1)
 digits = load_digits()
 target_digit = 8
-real_digit_np = digits.images[digits.target == target_digit].astype("float32") / 16.0
+digit_images = []
+for image, label in zip(digits.images, digits.target):
+    if label == target_digit:
+        pil_image = Image.fromarray((image / 16.0 * 255).astype("uint8")).resize((28, 28), Image.Resampling.BICUBIC)
+        digit_images.append(np.asarray(pil_image).astype("float32") / 255.0)
+real_digit_np = np.array(digit_images)
 real_digits = torch.tensor(real_digit_np.reshape(len(real_digit_np), -1) * 2 - 1, dtype=torch.float32)
 
 latent_dim = 16
@@ -2261,34 +2501,34 @@ image_dim = real_digits.shape[1]
 batch_size = 64
 
 generator = nn.Sequential(
-    nn.Linear(latent_dim, 64),
+    nn.Linear(latent_dim, 128),
     nn.LeakyReLU(0.2),
-    nn.Linear(64, 128),
+    nn.Linear(128, 256),
     nn.LeakyReLU(0.2),
-    nn.Linear(128, image_dim),
+    nn.Linear(256, image_dim),
     nn.Tanh(),
 )
 discriminator = nn.Sequential(
-    nn.Linear(image_dim, 128),
+    nn.Linear(image_dim, 256),
     nn.LeakyReLU(0.2),
-    nn.Linear(128, 64),
+    nn.Linear(256, 128),
     nn.LeakyReLU(0.2),
-    nn.Linear(64, 1),
+    nn.Linear(128, 1),
 )
 loss_fn = nn.BCEWithLogitsLoss()
-opt_g = torch.optim.Adam(generator.parameters(), lr=0.0012, betas=(0.5, 0.999))
-opt_d = torch.optim.Adam(discriminator.parameters(), lr=0.0012, betas=(0.5, 0.999))
+opt_g = torch.optim.Adam(generator.parameters(), lr=0.0005, betas=(0.5, 0.999))
+opt_d = torch.optim.Adam(discriminator.parameters(), lr=0.0005, betas=(0.5, 0.999))
 gan_rows = []
 
-for step in range(1, 1201):
+for step in range(1, 2601):
     idx = torch.randint(0, len(real_digits), (batch_size,))
     real_batch = real_digits[idx]
     z = torch.randn(batch_size, latent_dim)
-    fake_batch = generator(z).detach()
+    fake_batch = generator(z).detach() + 0.03 * torch.randn_like(real_batch)
 
-    real_logits = discriminator(real_batch)
+    real_logits = discriminator(real_batch + 0.03 * torch.randn_like(real_batch))
     fake_logits = discriminator(fake_batch)
-    d_loss = loss_fn(real_logits, torch.ones_like(real_logits)) + loss_fn(fake_logits, torch.zeros_like(fake_logits))
+    d_loss = loss_fn(real_logits, torch.full_like(real_logits, 0.9)) + loss_fn(fake_logits, torch.full_like(fake_logits, 0.1))
     opt_d.zero_grad()
     d_loss.backward()
     opt_d.step()
@@ -2296,12 +2536,13 @@ for step in range(1, 1201):
     z = torch.randn(batch_size, latent_dim)
     generated = generator(z)
     g_logits = discriminator(generated)
-    g_loss = loss_fn(g_logits, torch.ones_like(g_logits))
+    anchor = real_digits[torch.randint(0, len(real_digits), (batch_size,))]
+    g_loss = loss_fn(g_logits, torch.ones_like(g_logits)) + 0.04 * ((generated - anchor) ** 2).mean()
     opt_g.zero_grad()
     g_loss.backward()
     opt_g.step()
 
-    if step % 150 == 0:
+    if step % 400 == 0:
         with torch.no_grad():
             gan_rows.append({
                 "训练步": step,
@@ -2313,13 +2554,13 @@ for step in range(1, 1201):
 
 with torch.no_grad():
     z_fixed = torch.randn(16, latent_dim)
-    gan_samples = generator(z_fixed).reshape(16, 8, 8).numpy()
+    gan_samples = generator(z_fixed).reshape(16, 28, 28).numpy()
 gan_trace = pd.DataFrame(gan_rows)
 display(pd.DataFrame({
-    "数据集": ["sklearn digits"],
+    "数据集": ["sklearn 手写数字"],
     "目标数字": [target_digit],
     "真实样本数": [len(real_digits)],
-    "图像尺寸": ["8x8"],
+    "图像尺寸": ["28x28"],
     "生成向量维度": [image_dim],
 }))
 display(gan_trace.round(3))
@@ -2344,20 +2585,24 @@ ax_score.set_title("判别器输出", loc="left", fontweight="bold")
 ax_score.grid(True, color="#e2e8f0", linewidth=0.8)
 ax_score.legend()
 
-def digit_tile(images, grid=4):
-    rows = [
-        np.concatenate([images[i * grid + j] for j in range(grid)], axis=1)
-        for i in range(grid)
-    ]
-    return np.concatenate(rows, axis=0)
+def digit_tile(images, grid=4, pad=4):
+    h, w = images[0].shape
+    canvas = np.ones((grid * h + (grid - 1) * pad, grid * w + (grid - 1) * pad), dtype=float)
+    for i in range(grid):
+        for j in range(grid):
+            r0 = i * (h + pad)
+            c0 = j * (w + pad)
+            canvas[r0:r0 + h, c0:c0 + w] = images[i * grid + j]
+    return canvas
 
-real_tile = digit_tile(real_digit_np[:16])
+real_ids = np.linspace(0, len(real_digit_np) - 1, 16, dtype=int)
+real_tile = digit_tile(real_digit_np[real_ids])
 fake_tile = digit_tile(((gan_samples[:16] + 1) / 2).clip(0, 1))
 ax_real = fig.add_subplot(gs[1, :2])
 ax_fake = fig.add_subplot(gs[1, 2:])
-ax_real.imshow(real_tile, cmap="gray_r", interpolation="nearest")
+ax_real.imshow(real_tile, cmap="gray_r", vmin=0, vmax=1)
 ax_real.set_title("真实数字 8", loc="left", fontweight="bold")
-ax_fake.imshow(fake_tile, cmap="gray_r", interpolation="nearest")
+ax_fake.imshow(fake_tile, cmap="gray_r", vmin=0, vmax=1)
 ax_fake.set_title("生成数字 8", loc="left", fontweight="bold")
 for ax in (ax_real, ax_fake):
     ax.set_xticks([])
@@ -2382,9 +2627,9 @@ for row in range(0, denoise_clean.shape[0] - denoise_patch_size + 1, denoise_str
 patches_clean = np.array(patches_clean)
 
 rng = np.random.default_rng(19)
-noise_sigma = 0.24
+noise_sigma = 0.18
 patches_noisy = np.clip(patches_clean + rng.normal(0, noise_sigma, patches_clean.shape), 0, 1)
-patch_denoiser = MLPRegressor(hidden_layer_sizes=(128,), max_iter=140, random_state=19)
+patch_denoiser = MLPRegressor(hidden_layer_sizes=(160,), max_iter=180, random_state=19)
 patch_denoiser.fit(patches_noisy, patches_clean)
 
 noisy_image = np.clip(denoise_clean + rng.normal(0, noise_sigma, denoise_clean.shape), 0, 1)
@@ -2660,7 +2905,7 @@ def _ch10() -> dict[str, list]:
                 ["查看图块遮挡", "根据可见图块重建", "绘制预测图块和重建结果"],
                 "../ch10.html",
             ),
-            rs.section("0", "遮挡重建目标", "先复用上一页的图块切分方式，再随机遮住图块。重建器只能利用可见图块的位置和内容去补全遮挡区域。"),
+            rs.section("0", "遮挡重建目标", "先复用上一页的图块切分方式，再随机遮住图块。预训练 MAE 根据可见图块和图像先验补全遮挡区域。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(PATCHIFY_CELL),
             rs.section("1", "遮挡与重建", "遮挡图说明哪些图块被隐藏。重建图把模型预测填回遮挡位置，帮助读者对比原图、可见输入和预测输出。"),
@@ -2688,11 +2933,11 @@ def _ch11() -> dict[str, list]:
         "ch11_mdp_value_iteration.ipynb": flatten([
             rs.chapter_link(
                 "第 11 章 · 冰湖导航价值迭代代码实验",
-                "本页把冰湖导航看成一个 MDP：每个格子是状态，每个方向是动作，滑倒会让转移带有不确定性。读者重点看价值如何从终点向外传播。",
-                ["读取冰湖环境转移表", "执行价值迭代", "绘制价值与策略"],
+                "本页把冰湖导航看成一个 MDP：每个格子是状态，每个方向是动作。先用确定版地图观察起点选择、下一步状态和价值如何从终点向外传播。",
+                ["查看起点与下一步", "执行价值迭代", "绘制价值与策略"],
                 "../ch11.html",
             ),
-            rs.section("0", "冰湖环境", "先看地图和转移表。S 是起点，F 是安全冰面，H 是洞，G 是终点；同一个动作可能因为滑动转到不同格子。"),
+            rs.section("0", "冰湖环境", "先看地图、转移表和起点动作。S 是起点，F 是安全冰面，H 是洞，G 是终点；确定版地图能先把状态转移看清楚。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(GYM_SETUP_CELL),
             rs.code(MDP_CELL),
@@ -2779,26 +3024,26 @@ def _ch12() -> dict[str, list]:
         "ch12_image_denoising_diffusion.ipynb": flatten([
             rs.chapter_link(
                 "第 12 章 · 真实图片扩散去噪代码实验",
-                "本页用真实花朵照片看扩散任务的直觉：前向过程把图像逐渐变成噪声，去噪器接收噪声强度条件后学习修复图块。",
-                ["加载真实图片图块", "绘制前向加噪", "训练条件去噪器"],
+                "本页用真实花朵照片看前向加噪，再用公开预训练 DDPM 展示反向采样轨迹。读者可以把“加噪”和“去噪生成”放在同一张图里对照。",
+                ["加载真实图片图块", "绘制前向加噪", "运行预训练 DDPM 反向轨迹"],
                 "../ch12.html",
             ),
             rs.section("0", "真实图片图块", "先把一张照片切成可训练的局部图块。干净图像用于对照，后面的噪声图像和去噪图像都要和它比较。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(PHOTO_DENOISE_DATA_CELL),
-            rs.section("1", "加噪与条件去噪", "第一行展示噪声增强后图像结构如何被破坏；第二行比较原图、高噪声输入、条件去噪输出和误差。这个实验聚焦局部去噪目标，帮助理解反向扩散每一步要学习什么。"),
+            rs.section("1", "加噪与反向采样", "第一行展示噪声增强后图像结构如何被破坏；第二行比较局部去噪目标；第三行用预训练 DDPM 展示模型从噪声逐步形成图像的过程。"),
             rs.code(PHOTO_FORWARD_CELL),
             rs.code(PHOTO_REVERSE_CELL),
             rs.code(PHOTO_DENOISE_PLOT_CELL),
         ]),
         "ch12_image_patch_gan.ipynb": flatten([
             rs.chapter_link(
-                "第 12 章 · 经典手写数字 GAN 代码实验",
-                "本页用经典手写数字数据训练一个小型生成对抗网络。读者同时看真实数字、生成数字、判别器分数和损失曲线。",
-                ["加载经典手写数字", "训练生成器和判别器", "绘制生成数字"],
+                "第 12 章 · 28×28 手写数字 GAN 代码实验",
+                "本页用清晰放大的公开手写数字训练一个小型生成对抗网络。读者同时看真实数字、生成数字、判别器分数和损失曲线。",
+                ["加载清晰手写数字", "训练生成器和判别器", "绘制生成数字"],
                 "../ch12.html",
             ),
-            rs.section("0", "数字生成", "判别器学习区分真实数字和生成数字，生成器学习骗过判别器。这里固定生成数字 8，让读者更容易判断生成质量；完整 GAN 可以扩展到多个类别。"),
+            rs.section("0", "数字生成", "判别器学习区分真实数字和生成数字，生成器学习骗过判别器。这里固定生成数字 8，并把图像放大到 28×28，让生成质量更容易判断。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(GAN_SETUP_CELL),
             rs.code(GAN_CELL),
