@@ -30,6 +30,8 @@
   "js/course-viz.js",
   "js/notebooks-catalog.js",
   "js/reading.js",
+  "js/study-player.js",
+  "study-pilot.css",
   "notebooks/ch05_campus_search.ipynb",
   "notebooks/ch06_forward_backward_chain.ipynb",
   "notebooks/ch06_graph_reasoning.ipynb",

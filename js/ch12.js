@@ -151,13 +151,12 @@ const ch12Config = {
         { title: "生成器对抗", summary: "冻结判别器，更新生成器，让假样本更像真样本。", reason: "生成器的目标是骗过判别器，因此希望 D(x̂) 升高。", fields: [{ label: "D(x̂)", value: "0.74" }], architectureStep: { phase: "g" } },
         { title: "理想均衡", summary: "理想情况下，生成分布与真实分布相同，最优判别器输出 0.50。", reason: "反过来，单看 D(x̂)≈0.50 不能证明生成质量好，也可能是判别器尚未学会区分。", fields: [{ label: "D(x̂)，理想情况", value: "≈0.50" }], architectureStep: { phase: "both" } },
       ],
-      render(v, s) {
+      render: function renderGanDemo(v, s) {
         const phase = s.architectureStep?.phase ?? (s.title.includes("判别器") ? "d" : "g");
         const stepIdx = ["生成器造样本", "判别器训练", "生成器对抗", "理想均衡"].indexOf(s.title);
-        v.innerHTML = `<div class="gan-demo-stack"><div class="gan-arch-slot"></div><div class="gan-metrics-slot"></div><div class="gan-formula-slot"></div><div class="gan-canvas-slot"></div><div class="gan-curve-slot"></div></div>`;
+        const view = v.dataset.ganSelection || "model";
+        v.innerHTML = `<div class="study-view-tabs" role="group" aria-label="图示内容"><button type="button" data-gan-view="model" aria-pressed="${view === "model"}">生成与判别</button><button type="button" data-gan-view="curve" aria-pressed="${view === "curve"}">训练曲线</button></div><div class="gan-demo-stack"><div class="gan-model-view" ${view !== "model" ? "hidden" : ""}><div class="gan-arch-slot"></div><div class="gan-canvas-slot"></div></div><div class="gan-training-view" ${view !== "curve" ? "hidden" : ""}><div class="gan-formula-slot"></div><div class="gan-curve-slot"></div></div></div>`;
         window.courseArch.renderGAN(v.querySelector(".gan-arch-slot"), { phase });
-        const metrics = v.querySelector(".gan-metrics-slot");
-        metrics.innerHTML = `<div class="repr-table four-elements">${(s.fields || []).map((f) => `<div class="repr-row"><strong>${f.label}</strong><span>${f.value}</span></div>`).join("")}</div>`;
         const formulaSlot = v.querySelector(".gan-formula-slot");
         if (formulaSlot && window.courseMath?.mountMath) {
           const key = stepIdx === 1 ? "gan_d" : stepIdx >= 0 ? "gan_g" : "gan_g";
@@ -167,13 +166,21 @@ const ch12Config = {
         const canvasSlot = v.querySelector(".gan-canvas-slot");
         window.courseViz.renderGanSamples(canvasSlot, stepIdx >= 0 ? stepIdx : 0);
         const curveSlot = v.querySelector(".gan-curve-slot");
-        courseShared.renderCanvasDemo(curveSlot, { ...s, _curve: true, canvasAspect: 300 / 560 }, (ctx, w, h) => {
-          window.courseViz.drawGanTrainingCurve(ctx, w, h, stepIdx >= 0 ? stepIdx : 0);
-        });
+        if (view === "curve") {
+          courseShared.renderCanvasDemo(curveSlot, { ...s, _curve: true, canvasAspect: 300 / 560 }, (ctx, w, h) => {
+            window.courseViz.drawGanTrainingCurve(ctx, w, h, stepIdx >= 0 ? stepIdx : 0);
+          });
+        }
         const note = document.createElement("p");
         note.className = "output-caption gan-curve-note";
-        note.textContent = window.courseViz.ganCurveCaption(stepIdx >= 0 ? stepIdx : 0);
+        note.textContent = "示意轨迹，非模型实测结果。" + window.courseViz.ganCurveCaption(stepIdx >= 0 ? stepIdx : 0);
         curveSlot.appendChild(note);
+        v.querySelectorAll("[data-gan-view]").forEach(button => button.addEventListener("click", () => {
+          v.dataset.ganSelection = button.dataset.ganView;
+          renderGanDemo(v, s);
+          v.dispatchEvent(new Event("course:layout", { bubbles: true }));
+          v.querySelector(`[data-gan-view="${v.dataset.ganSelection}"]`)?.focus({ preventScroll: true });
+        }));
       },
     },
     alphafold: {

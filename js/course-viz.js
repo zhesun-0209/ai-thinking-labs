@@ -1535,99 +1535,26 @@ function clipArchSvg(clipPhase) {
 }
 
 function renderCLIPPair(container, step) {
-  const clipPhase =
-    step.clipPhase ??
-    (step.loss ? 3 : step.sim != null && step.pos === false ? 2 : step.sim != null ? 1 : 0);
-  const imageLabel = step.imageLabel || "图像：猫在沙发上";
-  const positiveText = step.positiveText || "文本：一只猫在沙发上";
-  const negativeText = step.negativeText || "文本：一辆车在马路上";
-  const activeText = clipPhase === 2 ? negativeText : positiveText;
-  const posSim = step.posSim ?? 0.91;
-  const negSim = step.negSim ?? 0.08;
-  const batchN = 3;
-  const simMatrix = [
-    [0.91, 0.12, 0.08],
-    [0.15, 0.88, 0.11],
-    [0.09, 0.14, 0.86],
-  ];
-
-  let meterClass = "is-neutral";
-  let meterLabel = "编码中";
-  let meterHint = "分别得到 v_I、v_T";
-  if (clipPhase === 1) {
-    meterClass = "is-pos";
-    meterLabel = fmt(posSim);
-    meterHint = "匹配对拉近 ↑";
-  } else if (clipPhase === 2) {
-    meterClass = "is-neg";
-    meterLabel = fmt(negSim);
-    meterHint = "非匹配推远 ↓";
-  } else if (clipPhase === 3) {
-    meterClass = "is-pos";
-    meterLabel = fmt(posSim);
-    meterHint = "最大化正例分数";
-  }
-
-  const archSvg = clipArchSvg(clipPhase);
-
-  const matrixHtml =
-    clipPhase >= 1
-      ? `<div class="clip-sim-matrix ${clipPhase === 0 ? "is-dim" : ""}">
-          <h5>批内相似度矩阵（对角为正例）</h5>
-          <table class="clip-sim-table">
-            <thead><tr><th></th>${Array.from({ length: batchN }, (_, i) => `<th>T${i + 1}</th>`).join("")}</tr></thead>
-            <tbody>${simMatrix
-              .map((row, i) => {
-                const rowOn = (clipPhase === 1 || clipPhase === 3) && i === 0;
-                return `<tr class="${rowOn ? "is-focus" : ""}"><th>I${i + 1}</th>${row
-                  .map((v, j) => {
-                    const cellOn = rowOn && i === j;
-                    const cellNeg = clipPhase === 2 && i === 0 && j === 2;
-                    const cls = cellOn ? "is-pos" : cellNeg ? "is-neg" : "";
-                    return `<td class="${cls}">${fmt(v)}</td>`;
-                  })
-                  .join("")}</tr>`;
-              })
-              .join("")}</tbody>
-          </table>
-        </div>`
-      : "";
-
-  const batchHtml =
-    clipPhase >= 1
-      ? `<div class="clip-batch">
-          <div class="clip-row is-pos ${clipPhase === 1 || clipPhase === 3 ? "is-focus" : ""}"><strong>正例</strong><span>${positiveText}</span><em>余弦=${fmt(posSim)}</em></div>
-          <div class="clip-row is-neg ${clipPhase === 2 ? "is-focus" : ""}"><strong>负例</strong><span>${negativeText}</span><em>余弦=${fmt(negSim)}</em></div>
-        </div>`
-      : `<p class="clip-phase-hint">两路编码器各自输出 d 维向量，下一步在共享空间计算相似度。</p>`;
-
-  const mathKey = clipPhase === 3 ? "infonce" : clipPhase >= 1 ? "clip_cosine" : null;
-  const formulaSlot = mathKey ? `<div class="clip-formula-slot" data-math="${mathKey}"></div>` : "";
-
-  container.innerHTML = `
-    <div class="clip-contrast-viz clip-phase-${clipPhase}">
-      ${archSvg}
-      <div class="clip-two-tower">
-        <div class="clip-tower-card ${clipPhase >= 0 ? "is-on" : ""}">
-          <strong>图像塔</strong>
-          <span>${imageLabel}</span>
-          <code>v_I ∈ ℝᵈ</code>
-        </div>
-        <div class="clip-meter ${meterClass}"><span>余弦相似度</span><strong>${meterLabel}</strong><em>${meterHint}</em></div>
-        <div class="clip-tower-card ${clipPhase >= 0 ? "is-on" : ""}">
-          <strong>文本塔</strong>
-          <span>${activeText}</span>
-          <code>v_T ∈ ℝᵈ</code>
-        </div>
-      </div>
-      ${batchHtml}
-      ${matrixHtml}
-      ${formulaSlot}
-    </div>`;
-
-  if (mathKey && window.courseMath?.mountMath) {
-    window.courseMath.mountMath(container.querySelector(".clip-formula-slot"), mathKey);
-  }
+  const phase = step.clipPhase ?? 0;
+  const matrix = [[0.91, 0.12, 0.08], [0.15, 0.88, 0.11], [0.09, 0.14, 0.86]];
+  const names = ["猫", "狗", "车"];
+  const rows = matrix.map((row, i) => `<tr><th scope="row">${names[i]}图</th>${row.map((value, j) => {
+    const positive = (phase === 1 && i === 0 && j === 0) || (phase === 3 && i === j);
+    const negative = phase === 2 && i === 0 && j === 2;
+    return `<td class="${positive ? "is-positive" : negative ? "is-negative" : ""}">${phase === 0 ? "—" : fmt(value)}</td>`;
+  }).join("")}</tr>`).join("");
+  container.innerHTML = `<div class="study-clip">
+    <div class="study-clip-flow">
+      <div class="study-clip-lane"><div class="study-clip-input">图像 · 猫、狗、车</div><div class="study-clip-arrow" aria-hidden="true">↓</div><div class="study-clip-encoder">图像编码器</div><div>图像向量</div></div>
+      <div class="study-clip-lane"><div class="study-clip-input">文字 · 对应的描述</div><div class="study-clip-arrow" aria-hidden="true">↓</div><div class="study-clip-encoder">文本编码器</div><div>文本向量</div></div>
+    </div>
+    <table class="study-clip-matrix">
+      <caption>每张图像与每段文字的余弦相似度</caption>
+      <thead><tr><th scope="col">图像 / 文字</th>${names.map(name => `<th scope="col">${name}的描述</th>`).join("")}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="study-clip-caption">对角线是匹配的图文对，其余是本批次的非匹配对。数值用于说明计算关系，不代表真实模型的测量结果。</p>
+  </div>`;
 }
 
 function renderViTPatches(container, step) {
@@ -2003,7 +1930,7 @@ function renderAlphaFoldFlow(container, step) {
   };
   let mainViz = "";
   if (phase === 0) {
-    mainViz = `<svg class="alphafold-detail-svg" viewBox="0 0 480 120" role="img" aria-label="氨基酸序列编码">
+    mainViz = `<svg class="alphafold-detail-svg" viewBox="0 0 520 240" role="img" aria-label="氨基酸序列编码">
       <rect width="480" height="120" fill="#fff" rx="8"/>
       <text x="16" y="24" font-size="12" fill="#64748b">一级序列（7 残基 · 每个字母 = 一种氨基酸）</text>
       ${seq.map((aa, i) => `<g transform="translate(${16 + i * 58}, 36)"><rect width="48" height="48" rx="6" fill="${colors[i]}" opacity="0.85"/><text x="24" y="30" text-anchor="middle" fill="#fff" font-weight="600">${aa}</text><text x="24" y="44" text-anchor="middle" fill="#fff" font-size="9">${i + 1}</text></g>`).join("")}
@@ -2011,7 +1938,7 @@ function renderAlphaFoldFlow(container, step) {
     </svg>`;
   } else if (phase === 1) {
     const colW = 34;
-    mainViz = `<svg class="alphafold-detail-svg" viewBox="0 0 520 220" role="img" aria-label="多序列比对 MSA">
+    mainViz = `<svg class="alphafold-detail-svg" viewBox="0 0 520 240" role="img" aria-label="多序列比对 MSA">
       <rect width="520" height="220" fill="#fff" rx="8"/>
       <text x="16" y="22" font-size="12" fill="#64748b">MSA：7 条同源序列 × 7 列 · 纵向对齐看共变</text>
       ${seq.map((aa, ci) => `<text x="${16 + ci * colW + 15}" y="38" text-anchor="middle" font-size="9" fill="#64748b">${ci + 1}</text>`).join("")}
@@ -2019,7 +1946,7 @@ function renderAlphaFoldFlow(container, step) {
       <text x="16" y="208" font-size="11" fill="#334155">共变列（如第 4 列 A/V）→ 可能空间上靠近</text>
     </svg>`;
   } else if (phase === 2) {
-    mainViz = `<svg class="alphafold-detail-svg" viewBox="0 0 520 170" role="img" aria-label="Evoformer">
+    mainViz = `<svg class="alphafold-detail-svg" viewBox="0 0 520 240" role="img" aria-label="Evoformer">
       <rect width="520" height="170" fill="#fff" rx="8"/>
       <defs><marker id="evo-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#0d6b62"/></marker></defs>
       <text x="16" y="22" font-size="12" fill="#64748b">Evoformer：MSA 轨 ↔ 位置对轨 双向更新</text>
@@ -2034,7 +1961,7 @@ function renderAlphaFoldFlow(container, step) {
       <rect x="358" y="68" width="110" height="52" rx="6" fill="#f1f5f9" stroke="#64748b"/><text x="413" y="98" text-anchor="middle" font-size="10">结构模块</text>
     </svg>`;
   } else {
-    mainViz = `<svg class="alphafold-struct-svg" viewBox="0 0 400 160" role="img" aria-label="蛋白质三维结构">
+    mainViz = `<svg class="alphafold-struct-svg" viewBox="0 0 520 240" role="img" aria-label="蛋白质三维结构">
       <path d="M 40 120 Q 100 40, 160 80 T 280 60 T 360 100" fill="none" stroke="#0d6b62" stroke-width="3"/>
       <circle cx="40" cy="120" r="6" fill="#22c55e"/><circle cx="160" cy="80" r="6" fill="#eab308"/>
       <circle cx="280" cy="60" r="6" fill="#22c55e"/><circle cx="360" cy="100" r="6" fill="#ef4444"/>
@@ -2072,9 +1999,9 @@ function drawGanTrainingCurve(ctx, w, h, stepIdx) {
   const phases = ["G", "D", "G", "D", "G", "D", "G", "D", "G", "D", "G", "D", "G", "D", "G", "≈"];
   const dLoss = [0.69, 0.41, 0.62, 0.38, 0.55, 0.33, 0.49, 0.31, 0.44, 0.29, 0.40, 0.27, 0.37, 0.26, 0.34, 0.32];
   const gLoss = [1.92, 2.08, 1.52, 1.88, 1.22, 1.68, 0.98, 1.48, 0.88, 1.32, 0.78, 1.18, 0.74, 1.08, 0.71, 0.68];
-  const dFake = [0.16, 0.07, 0.38, 0.06, 0.55, 0.08, 0.72, 0.10, 0.65, 0.12, 0.58, 0.14, 0.54, 0.16, 0.51, 0.50];
+  const dFake = [0.18, 0.07, 0.38, 0.06, 0.55, 0.08, 0.74, 0.10, 0.65, 0.12, 0.58, 0.14, 0.54, 0.16, 0.51, 0.50];
   const n = dLoss.length;
-  const demoIdx = [1, 4, 9, 15];
+  const demoIdx = [0, 5, 6, 15];
   const cur = demoIdx[Math.min(Math.max(0, stepIdx), demoIdx.length - 1)] ?? 0;
 
   ctx.fillStyle = "#fff";
@@ -2191,7 +2118,7 @@ function drawGanTrainingCurve(ctx, w, h, stepIdx) {
   const phase = phases[cur];
   const phaseNote =
     phase === "G"
-      ? "生成器步：生成器占优 → 生成器损失常反弹，D(x̂)↑（假样本更像真）"
+      ? "生成器步：更新生成器 → 生成器损失下降，D(x̂)↑（假样本更像真）"
       : phase === "D"
         ? "判别器步：判别器占优 → 判别器损失↓，D(x̂)↓（识破假样本）"
         : "均衡：拉锯减弱，D(x̂)→0.5";
@@ -2499,7 +2426,7 @@ function renderBellmanExplainer(container, step) {
     </div>`;
   container.querySelectorAll("[data-bellman-step]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      container.dispatchEvent(new CustomEvent("course:demo-jump", { detail: { index: Number(btn.dataset.bellmanStep) } }));
+      container.dispatchEvent(new CustomEvent("course:demo-jump", { bubbles: true, detail: { index: Number(btn.dataset.bellmanStep) } }));
     });
   });
   if (window.courseMath?.mountMath) {

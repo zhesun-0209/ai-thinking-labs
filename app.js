@@ -785,9 +785,9 @@ const vibeModules = {
   graph: {
     cells: [
       {
-        prompt: `把校园路线画成一张搜索图：圆圈代表地点，连线代表可走的路（线上数字是代价），目标是到达操场 c1。\n\n请理解下面五个概念——\n· 待探索：还没展开、但已在候选名单里的地点\n· 已访问：已经展开过的地点\n· 路径来源：记录「这个地点是从哪里来的」，方便回溯整条路\n\n${CAMPUS_GRAPH_SPEC}`,
+        prompt: `把校园路线画成一张搜索图：节点代表地点，连线代表可走的路（线上数字是代价），目标是到达操场 c1。\n\n搜索时还需要记录：\n· 待探索：还没展开、但已在候选名单里的地点\n· 已访问：已经展开过的地点\n· 路径来源：记录「这个地点是从哪里来的」，方便回溯整条路\n\n${CAMPUS_GRAPH_SPEC}`,
         copyPrompt: C5.graphIntro,
-        vibeTip: "先认准地图上的七个地点和连线，再记五个概念。不必背英文术语。",
+        vibeTip: "先认准地图上的七个地点和连线，再观察待探索列表与已访问地点的变化。",
         output: { type: "graph-static" },
       },
       {
@@ -829,7 +829,7 @@ const vibeNotebooks = {
         output: { type: "worked-map", algo: "dfs", withPseudo: true },
       },
       {
-        prompt: "深度优先用栈存放待探索地点：新发现的邻居总是加在栈顶，下一步也从栈顶取。动画里「栈顶」高亮的就是即将展开的那个。",
+        prompt: "深度优先用栈存放待探索地点：新发现的邻居总是加在栈顶，下一步也从栈顶取。待探索列表按取出顺序排列，第一项就是下一步要处理的地点。",
         copyPrompt: C5.dfsStack,
         vibeTip: "只要记住：栈 = 后进先出 = 最近加入的最先被处理。",
         labAlgo: "dfs",
@@ -1197,6 +1197,10 @@ function isOptimalRun(key, run) {
 function renderCampusMap(step, options = {}) {
   const container = options.container || dom.campusMap;
   if (!container) return;
+  if (document.body.classList.contains("study-pilot")) {
+    renderStudyCampusMap(container, step || {}, "dfs", options.finalPath || []);
+    return;
+  }
   container.classList.add("map-canvas");
 
   const visited = new Set(step?.visited || []);
@@ -1590,7 +1594,15 @@ function buildVibeCellPair(cell, instanceId, index, notebookKey = "") {
 
   const promptEl = document.createElement("div");
   promptEl.className = "vibe-cell vibe-prompt";
-  const promptLabel = "要点";
+  const lessonTitles = {
+    dfs: ["沿路探索", "观察栈的顺序", "比较路径"],
+    bfs: ["逐层探索", "展开与到达", "比较搜索策略"],
+    ucs: ["比较累计代价", "观察优先队列", "步数与代价"],
+    greedy: ["利用距离估计", "走入死胡同", "比较选择依据"],
+    astar: ["综合距离与代价", "第一次如何选择", "比较最终路径"],
+    minimax: ["双方轮流选择", "考虑对手应对", "剪去无效分支", "两类搜索问题"],
+  };
+  const promptLabel = lessonTitles[notebookKey]?.[index - 1] || "问题与思路";
   const copyText = resolveCh5CopyText(cell);
   promptEl.innerHTML = `
     <div class="cell-header">
@@ -1726,17 +1738,17 @@ function mountOutputCell(container, output, instanceId, notebookKey) {
       break;
     }
     case "worked-map": {
-      if (output.withPseudo) {
-        const pre = document.createElement("pre");
-        pre.className = "pseudo-compact notebook-pseudo";
-        pre.innerHTML = `<code>${escapeHtml(algorithms[output.algo]?.pseudocode || "")}</code>`;
-        container.appendChild(pre);
-      }
       const slot = document.createElement("div");
       slot.className = "worked-visual notebook-worked";
       slot.dataset.workedRun = output.algo;
       slot.dataset.workedInstance = instanceId;
       container.appendChild(slot);
+      if (output.withPseudo) {
+        const details = document.createElement("details");
+        details.className = "study-code";
+        details.innerHTML = `<summary>算法伪代码</summary><pre class="pseudo-compact notebook-pseudo"><code>${escapeHtml(algorithms[output.algo]?.pseudocode || "")}</code></pre>`;
+        container.appendChild(details);
+      }
       break;
     }
     case "frontier-focus": {
@@ -1784,6 +1796,10 @@ function mountOutputCell(container, output, instanceId, notebookKey) {
       break;
     }
     case "minimax-tree": {
+      if (window.studyPlayer) {
+        mountStudyMinimax(container, `study-minimax-${instanceId}`, output.step ?? 0);
+        break;
+      }
       const wrap = document.createElement("div");
       wrap.className = "minimax-notebook-wrap";
       wrap.dataset.minimaxNotebook = instanceId;
@@ -1845,6 +1861,23 @@ function buildComparePairTable(algoKeys) {
 }
 
 const notebookMinimaxState = {};
+
+function mountStudyMinimax(container, id, initialStep = 0, onChange) {
+  const controller = window.studyPlayer.mount(container, {
+    id, kind: "lesson", title: "极小极大与剪枝", measure: true,
+    labels: MINIMAX_STEPS.map(step => step.title),
+    renderVisual(target, index) {
+      target.innerHTML = `<div class="study-viz-scroll" tabindex="0" role="region" aria-label="博弈树"><div class="study-viz-content">${buildGameTreeSvg(MINIMAX_STEPS[index])}</div></div>`;
+    },
+    renderDetail(target, index) {
+      const step = MINIMAX_STEPS[index];
+      target.innerHTML = `<div class="study-lesson-detail"><h4 data-study-slot="title">${step.title}</h4><p data-study-slot="summary" class="study-explanation">${step.narrative}</p><div class="study-detail-block"><span class="study-detail-label">选择原则</span><p class="study-explanation">我方选择较大值，对手选择较小值。先看对手可能的回应，再比较各条分支。</p></div></div>`;
+    },
+    onChange,
+  });
+  controller.go(initialStep);
+  return controller;
+}
 
 function initNotebookMinimax(wrap, initialStep) {
   const id = wrap.dataset.minimaxNotebook;
@@ -1946,97 +1979,88 @@ function renderFrontierChip(key, step) {
 }
 
 function renderWorkedRun(container, key, instanceKey) {
+  if (container.studyController) {
+    container.studyController.go(workedState[instanceKey] || 0);
+    return;
+  }
   const run = workedRuns[key];
   const trace = traces[key];
-  const index = Math.max(0, Math.min(workedState[instanceKey] ?? 0, trace.length - 1));
-  workedState[instanceKey] = index;
-  const step = trace[index];
-  const pathLabel = run.finalPath.map((id) => CAMPUS_NODES[id].name).join(" → ");
-  const isFocus = container.dataset.frontierFocus === "1";
   const meta = workedRunMeta[key];
-  const rangeId = `worked-range-${instanceKey.replace(/[^a-z0-9-]/gi, "-")}`;
-
-  container.innerHTML = "";
-  const layout = document.createElement("div");
-  layout.className = isFocus ? "notebook-focus-layout worked-player" : "worked-player";
-
-  const mainline = document.createElement("div");
-  mainline.className = "worked-player-main";
-
-  if (isFocus) {
-    mainline.innerHTML = `
-      <p class="focus-label"><strong>${meta.structureName}</strong> · ${meta.choiceRule}</p>
-      <div class="worked-map-slot" data-worked-map="${instanceKey}"></div>
-      <div class="frontier-focus-slot" data-frontier-focus="${instanceKey}"></div>
-      <div class="worked-controls-inline worked-controls-bar">
-        <button type="button" class="step-btn" data-worked-action="prev" ${index === 0 ? "disabled" : ""} aria-label="上一步">‹ 上一步</button>
-        <label class="range-label worked-range" for="${rangeId}">
-          <span class="worked-range-label">步骤 ${index} / ${trace.length - 1}</span>
-          <input id="${rangeId}" type="range" min="0" max="${trace.length - 1}" value="${index}" aria-label="${escapeAttr(`步骤进度：${meta.structureName || key}`)}" aria-valuemin="0" aria-valuemax="${trace.length - 1}" aria-valuenow="${index}" aria-valuetext="步骤 ${index} / ${trace.length - 1}" />
-        </label>
-        <button type="button" class="step-btn" data-worked-action="next" ${index === trace.length - 1 ? "disabled" : ""} aria-label="下一步">下一步 ›</button>
-      </div>
-      <p class="step-narrative">${step.narrative || ""}</p>
-      ${renderFrontierChip(key, step)}`;
-  } else {
-    mainline.innerHTML = `
-      <div class="worked-result-badge ${isOptimalRun(key, run) ? "is-optimal" : ""}">
-        <span class="badge-label">最终结果</span>
-        <strong>${pathLabel}</strong>
-        <em>${formatResultMetric(key, run)}</em>
-      </div>
-      <div class="worked-map-slot" data-worked-map="${instanceKey}"></div>
-      <div class="worked-controls-inline worked-controls-bar">
-        <button type="button" class="step-btn" data-worked-action="prev" ${index === 0 ? "disabled" : ""} aria-label="上一步">‹ 上一步</button>
-        <button type="button" class="ghost-button" data-worked-action="play">${workedPlayState[instanceKey] ? "⏸ 暂停" : "▶ 播放"}</button>
-        <label class="range-label worked-range" for="${rangeId}">
-          <span class="worked-range-label">步骤 ${index} / ${trace.length - 1}</span>
-          <input id="${rangeId}" type="range" min="0" max="${trace.length - 1}" value="${index}" aria-label="${escapeAttr(`步骤进度：${meta.structureName || key}`)}" aria-valuemin="0" aria-valuemax="${trace.length - 1}" aria-valuenow="${index}" aria-valuetext="步骤 ${index} / ${trace.length - 1}" />
-        </label>
-        <button type="button" class="step-btn" data-worked-action="next" ${index === trace.length - 1 ? "disabled" : ""} aria-label="下一步">下一步 ›</button>
-      </div>
-      <p class="step-narrative">${step.narrative || ""}</p>
-      ${renderFrontierChip(key, step)}
-      ${renderWorkedStepDetail(run, key, instanceKey, index, step, trace)}`;
-  }
-
-  layout.append(mainline);
-  container.append(layout);
-
-  const mapSlot = container.querySelector(`[data-worked-map="${instanceKey}"]`);
-  renderCampusMap(step, {
-    container: mapSlot,
-    finalPath: index === trace.length - 1 && step.current?.id === GOAL_ID ? run.finalPath : [],
-    metricMode: metricModeForAlgorithm(key),
-    showH: key === "greedy" || key === "astar",
+  const isFocus = container.dataset.frontierFocus === "1";
+  container.studyController = window.studyPlayer.mount(container, {
+    id: `study-${instanceKey.replace(/[^a-zA-Z0-9_-]/g, "-")}`,
+    kind: "search",
+    title: isFocus ? meta.structureName + "与搜索顺序" : algorithms[key].title,
+    labels: trace.map((step, i) => stepNavLabel(step, i)),
+    onChange(index) {
+      workedState[instanceKey] = index;
+      if (container.id === "studySearchLab") state.stepIndex = index;
+    },
+    renderVisual(target, index) {
+      renderStudyCampusMap(target, trace[index], key, index === trace.length - 1 ? run.finalPath : []);
+    },
+    renderDetail(target, index) {
+      const step = trace[index];
+      const reason = step.selectionReason || step.narrative;
+      const names = (entries) => entries.map((entry, i) =>
+        '<li class="' + (i === 0 ? "is-next" : "") + '">' +
+        (i + 1) + ". " + escapeHtml(CAMPUS_NODES[entry.id].name) +
+        (key === "ucs" ? " · g=" + entry.g : key === "greedy" ? " · h=" + entry.h :
+          key === "astar" ? " · f=" + entry.f : "") + "</li>").join("");
+      target.innerHTML = `
+        <div class="study-search-detail">
+          <h4>${escapeHtml(step.title || "准备出发")}</h4>
+          <p class="study-explanation">${escapeHtml(reason)}</p>
+          <div class="study-detail-block">
+            <span class="study-detail-label">待探索 · ${escapeHtml(meta.choiceRule)}</span>
+            <ol class="study-detail-list">${names(step.frontier || []) || '<li class="study-empty">暂无候选</li>'}</ol>
+          </div>
+          <div class="study-detail-block">
+            <span class="study-detail-label">已访问</span>
+            <p class="study-visited">${(step.visited || []).map(id => escapeHtml(CAMPUS_NODES[id].name)).join("、") || "尚未展开地点"}</p>
+          </div>
+          <p class="study-search-result">${index === trace.length - 1
+            ? escapeHtml(run.finalPath.map(id => CAMPUS_NODES[id].name).join(" → ")) + " · " + escapeHtml(formatResultMetric(key, run))
+            : "起点：校门口　目标：操场"}</p>
+        </div>`;
+    },
   });
-
-  if (isFocus) {
-    const focusSlot = container.querySelector(`[data-frontier-focus="${instanceKey}"]`);
-    if (focusSlot) renderFrontierFocusInto(focusSlot, step, key);
-  }
-
-  container.querySelectorAll("[data-worked-action]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      if (btn.dataset.workedAction === "prev") setWorkedStep(container, key, instanceKey, index - 1);
-      if (btn.dataset.workedAction === "next") setWorkedStep(container, key, instanceKey, index + 1);
-      if (btn.dataset.workedAction === "play") toggleWorkedPlay(container, key, instanceKey);
-    });
-  });
-
-  const range = container.querySelector(`#${rangeId}`);
-  range?.addEventListener("input", (e) => setWorkedStep(container, key, instanceKey, Number(e.target.value)));
-
-  container.querySelectorAll(`[data-step-nav="${instanceKey}"] .step-nav-btn`).forEach((btn) => {
-    btn.addEventListener("click", () => setWorkedStep(container, key, instanceKey, Number(btn.dataset.step)));
-  });
-
-  scrollActiveStepNav(container, instanceKey);
 }
 
-function scrollActiveStepNav(container, instanceKey) {
-  const active = container.querySelector(`[data-step-nav="${instanceKey}"] .step-nav-btn.is-active`);
-  active?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+function renderStudyCampusMap(target, step, key, finalPath) {
+  const compact = target.clientWidth < 560;
+  const positions = compact
+    ? { x: [48, 252], c2: [48, 54], j: [162, 54], s2: [282, 54], s1: [162, 252], t: [282, 252], c1: [282, 152] }
+    : { x: [64, 268], c2: [64, 64], j: [252, 64], s2: [438, 64], s1: [252, 268], t: [438, 268], c1: [586, 166] };
+  const width = compact ? 330 : 650;
+  const height = compact ? 322 : 344;
+  const halfW = compact ? 32 : 40;
+  const halfH = 23;
+  const routeContains = (route, a, b) => route?.some((id, i) =>
+    (id === a && route[i + 1] === b) || (id === b && route[i + 1] === a));
+  const edges = CAMPUS_EDGES.map(({ from, to, cost }) => {
+    const [ax, ay] = positions[from], [bx, by] = positions[to];
+    const dx = bx - ax, dy = by - ay;
+    const t = Math.min(halfW / Math.abs(dx || 0.001), halfH / Math.abs(dy || 0.001));
+    const length = Math.hypot(dx, dy);
+    const lx = (ax + bx) / 2 - dy / length * 12;
+    const ly = (ay + by) / 2 + dx / length * 12;
+    const cls = routeContains(finalPath, from, to) ? "is-final" : routeContains(step.path, from, to) ? "is-path" : "";
+    return `<line class="${cls}" x1="${ax + dx * t}" y1="${ay + dy * t}" x2="${bx - dx * t}" y2="${by - dy * t}"/>
+      <g class="study-edge-label" transform="translate(${lx} ${ly})"><rect x="-10" y="-10" width="20" height="20" rx="3"/><text text-anchor="middle" dominant-baseline="central">${cost}</text></g>`;
+  }).join("");
+  const nodes = Object.entries(positions).map(([id, [x, y]]) => {
+    const entry = step.current?.id === id ? step.current : step.frontier?.find(item => item.id === id);
+    const metric = entry ? key === "ucs" ? "g=" + entry.g : key === "greedy" ? "h=" + entry.h : key === "astar" ? "f=" + entry.f : "" : "";
+    const cls = [step.visited?.includes(id) ? "is-visited" : "", step.frontier?.some(e => e.id === id) ? "is-frontier" : "",
+      step.current?.id === id ? "is-current" : "", finalPath.includes(id) ? "is-final" : ""].join(" ");
+    return `<g class="study-node ${cls}" transform="translate(${x} ${y})"><title>${CAMPUS_NODES[id].name} ${metric}</title>
+      <rect x="-${halfW}" y="-${halfH}" width="${halfW * 2}" height="${halfH * 2}" rx="5"/>
+      <text class="study-node-name" text-anchor="middle" y="-2">${CAMPUS_NODES[id].name}</text>
+      <text class="${metric ? "study-metric" : "study-node-id"}" text-anchor="middle" y="15">${metric || id}</text></g>`;
+  }).join("");
+  target.innerHTML = `<svg class="study-map ${compact ? "is-compact" : ""}" viewBox="0 0 ${width} ${height}" role="img" aria-label="校园搜索图，当前地点：${step.current ? CAMPUS_NODES[step.current.id].name : "尚未出发"}">${edges}${nodes}</svg>
+    <div class="study-legend"><span><i class="current"></i>当前</span><span><i class="candidate"></i>待探索</span><span><i></i>已访问</span><span><i class="route"></i>最终路径</span></div>`;
 }
 
 function renderFrontierFocusInto(slot, step, algorithmKey) {
@@ -2088,6 +2112,7 @@ function toggleWorkedPlay(container, key, instanceKey) {
 }
 
 function stopAllWorkedPlay() {
+  document.querySelectorAll(".study-player").forEach(player => player.dispatchEvent(new Event("course:pause")));
   Object.keys(workedTimers).forEach((key) => {
     if (workedTimers[key]) {
       window.clearInterval(workedTimers[key]);
@@ -2228,6 +2253,7 @@ function wireEvents() {
   wireJumpAlgoButtons(document);
 
   document.addEventListener("keydown", (e) => {
+    if (e.target.closest(".study-player")) return;
     if (!isLabFocused()) return;
     if (e.key === "ArrowLeft") {
       e.preventDefault();
@@ -2316,6 +2342,33 @@ function render() {
     tab.classList.toggle("is-active", isCurrent);
     tab.setAttribute("aria-selected", String(isCurrent));
   });
+
+  const shell = document.querySelector("#lab .app-shell");
+  if (shell && document.body.classList.contains("study-pilot")) {
+    shell.classList.add("study-search-active");
+    let slot = document.getElementById("studySearchLab");
+    if (!slot) {
+      slot = document.createElement("div");
+      slot.id = "studySearchLab";
+      shell.querySelector(".visual-workspace").append(slot);
+    }
+    if (slot.dataset.algorithm !== key) {
+      slot.querySelector(".study-player")?.dispatchEvent(new Event("course:demo-dispose"));
+      slot.replaceChildren();
+      slot.studyController = null;
+      slot.dataset.algorithm = key;
+    }
+    slot.hidden = false;
+    if (key === "minimax") {
+      if (!slot.studyController) slot.studyController = mountStudyMinimax(slot, "study-lab-minimax", state.minimaxStep, i => { state.minimaxStep = i; });
+      return;
+    } else {
+      const instanceKey = `lab-${key}`;
+      workedState[instanceKey] = state.stepIndex;
+      renderWorkedRun(slot, key, instanceKey);
+      return;
+    }
+  }
 
   if (key === "minimax") {
     renderMinimaxLab(algo);

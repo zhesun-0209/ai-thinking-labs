@@ -348,7 +348,7 @@ function buildCellPair(cell, instanceId, index, notebookArchKey) {
 
   const promptEl = document.createElement("div");
   promptEl.className = "vibe-cell vibe-prompt";
-  const promptLabel = "要点";
+  const promptLabel = cell.promptLabel || "要点";
   promptEl.innerHTML = `
     <div class="cell-header">
       <span class="cell-index">步骤 ${index}</span>
@@ -445,6 +445,75 @@ const stepDemoState = {};
 let stepDemoSequence = 0;
 
 function mountStepDemo(container, demo) {
+  if (window.studyPlayer && demo.presentation !== "study") {
+    const labTabId = container.closest(".lab-panel")?.getAttribute("aria-labelledby");
+    const title = demo.title || container.closest(".algo-notebook")?.querySelector("h3")?.textContent || document.getElementById(labTabId)?.textContent || {
+      logic: "逻辑与规则", "kg-static": "文学知识图谱", forward: "前向推理", backward: "后向推理",
+      multihop: "多跳查询", pathrank: "证据路径排序", tree: "决策树", gd: "梯度下降",
+      perceptron: "感知机", kmeans: "K-均值聚类", metrics: "分类评估", activations: "激活函数",
+      transe: "知识表示", attention: "注意力", bpe: "字节对合并", w2v: "词向量",
+      selfattn: "自注意力", lm: "语言模型", workflow: "推理与训练", cnn: "卷积与池化",
+      patch: "视觉图块", mae: "遮罩与重建", bellman: "回报与价值", hierarchy: "分层行动",
+      mdp: "状态与行动", actor: "策略与价值", td: "时序差分", epsilon: "探索与利用",
+      repr: "表征与搜索", mcts: "蒙特卡洛树搜索", gan: "生成对抗网络",
+      alphafold: "蛋白质结构预测", diffusion: "扩散与去噪",
+    }[demo.key] || "算法演示";
+    const id = `study-${demo.key}-${++stepDemoSequence}`;
+    const controller = window.studyPlayer.mount(container, {
+      id, kind: "lesson", title, measure: true,
+      labels: demo.stepLabels || traceDefaultLabels(demo.trace.length),
+      renderVisual(target, index) {
+        let content = target.querySelector(".study-viz-content");
+        if (!content) {
+          target.innerHTML = '<div class="study-viz-scroll" tabindex="0" role="region" aria-label="算法图示"><div class="study-viz-content"></div></div>';
+          content = target.querySelector(".study-viz-content");
+        }
+        (demo.render || defaultStepRender)(content, demo.trace[index], index, demo);
+      },
+      renderDetail(target, index) {
+        const step = demo.trace[index];
+        target.innerHTML = `<div class="study-lesson-detail">
+          <h4 data-study-slot="title">${escapeHtml(step.title || `第 ${index + 1} 步`)}</h4>
+          <p data-study-slot="summary" class="study-explanation">${formatRichText(step.summary || "")}</p>
+          <dl data-study-slot="fields" class="study-fields">${(step.fields || []).map(f => `<div><dt>${escapeHtml(f.label)}</dt><dd>${f.html || escapeHtml(f.value ?? "—")}</dd></div>`).join("")}</dl>
+          <div data-study-slot="reason" class="study-detail-block">${step.reason ? `<span class="study-detail-label">为什么这样做</span><p class="study-explanation">${formatRichText(step.reason)}</p>` : ""}</div>
+        </div>`;
+      },
+      onChange(index) { syncArchitectureForStep(container, demo.trace[index], demo); },
+    });
+    controller.root.addEventListener("course:demo-jump", e => {
+      if (e.detail?.index != null) controller.go(Number(e.detail.index));
+    });
+    controller.root.addEventListener("course:demo-dispose", () => {
+      controller.root.querySelectorAll(".study-viz-content").forEach(content => kgResizeObservers.get(content)?.disconnect());
+    }, { once: true });
+    return;
+  }
+  if (demo.presentation === "study" && window.studyPlayer) {
+    window.studyPlayer.mount(container, {
+      id: container.closest(".lab-panel") ? "study-clip-lab" : "study-clip-lesson",
+      kind: "clip",
+      title: demo.title,
+      labels: demo.stepLabels,
+      renderVisual(target, index) { demo.render(target, demo.trace[index], index, demo); },
+      renderDetail(target, index) {
+        const step = demo.trace[index];
+        const equations = [
+          "图像编码器 → 图像向量<br>文本编码器 → 文本向量",
+          "图像：猫在沙发上<br>文字：一只猫在沙发上<br><strong>余弦相似度 0.91</strong>",
+          "图像：猫在沙发上<br>文字：一辆车在马路上<br><strong>余弦相似度 0.08</strong>",
+          "匹配概率 = 正例的指数分数 ÷ 所有候选的指数分数之和<br>损失 = −log(匹配概率)",
+        ];
+        target.innerHTML = `<div class="study-clip-detail">
+          <h4>${escapeHtml(step.title)}</h4>
+          <p class="study-explanation">${formatRichText(step.summary)}</p>
+          <div class="study-detail-block"><span class="study-detail-label">为什么这样做</span><p class="study-explanation">${formatRichText(step.reason)}</p></div>
+          <div class="study-detail-block"><span class="study-detail-label">${index === 3 ? "计算关系" : "本步对应"}</span><p class="study-clip-equation">${equations[index]}</p></div>
+        </div>`;
+      },
+    });
+    return;
+  }
   // The lesson and lab can display the same algorithm at different steps.
   const id = `${demo.key}-${++stepDemoSequence}`;
   stepDemoState[id] = { index: 0, playing: false, timer: null };
@@ -782,9 +851,9 @@ function wireLabKeyboard() {
     if (target.closest("input, textarea, select, button, a, [contenteditable], [role='tab']")) return;
     const wrap = target.closest(".worked-player");
     if (!wrap) return;
-    const prev = wrap.querySelector(".demo-prev");
-    const next = wrap.querySelector(".demo-next");
-    const play = wrap.querySelector(".demo-play");
+    const prev = wrap.querySelector('[data-action="prev"], .demo-prev');
+    const next = wrap.querySelector('[data-action="next"], .demo-next');
+    const play = wrap.querySelector('[data-action="play"], .demo-play');
     if (e.key === "ArrowLeft") {
       e.preventDefault();
       prev?.click();
@@ -829,7 +898,8 @@ function renderCanvasDemo(container, step, drawFn) {
   const paint = () => {
     const availableW = Math.max(wrap.clientWidth - 24, 280);
     const isLab = Boolean(container.closest("#lab"));
-    const maxH = isLab ? Math.min(window.innerHeight * 0.26, 220) : Math.min(window.innerHeight * 0.5, 420);
+    const isStudy = Boolean(container.closest(".study-player"));
+    const maxH = isStudy ? Infinity : isLab ? Math.min(window.innerHeight * 0.26, 220) : Math.min(window.innerHeight * 0.5, 420);
     const minH = isLab ? 150 : step.canvasAspect ? 200 : 180;
     let cssW = availableW;
     let cssH = Math.round(cssW * aspect);
@@ -852,8 +922,17 @@ function renderCanvasDemo(container, step, drawFn) {
 
   paint();
   if (typeof ResizeObserver !== "undefined") {
-    const ro = new ResizeObserver(() => paint());
+    const player = container.closest(".study-player");
+    const dispose = () => {
+      ro.disconnect();
+      player?.removeEventListener("course:demo-dispose", dispose);
+    };
+    const ro = new ResizeObserver(() => {
+      if (!wrap.isConnected) { dispose(); return; }
+      paint();
+    });
     ro.observe(wrap);
+    player?.addEventListener("course:demo-dispose", dispose, { once: true });
   }
 }
 
