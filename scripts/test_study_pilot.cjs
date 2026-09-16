@@ -135,6 +135,13 @@ async function checkSteps(player) {
     await page.waitForTimeout(200);
     const toolbar = await tree.locator('.study-toolbar').boundingBox();
     assert.ok(toolbar.y > 100 && toolbar.y < 240, "Mobile playback controls are not pinned below navigation");
+    await open(page, 12);
+    const diagram = page.locator('.study-viz-scroll').first();
+    await diagram.focus();
+    await diagram.press('ArrowRight');
+    await page.waitForTimeout(300);
+    assert.ok(await diagram.evaluate(el => el.scrollLeft > 0), "Diagram cannot be scrolled with the keyboard");
+    assert.equal(await page.locator('.study-player input').first().inputValue(), "0", "Diagram scrolling changed the algorithm step");
     assert.deepEqual(errors, []);
     console.log(`PASS: ${players} responsive player runs across eight chapters; playback, focus, zoom and lab switching`);
   } finally {

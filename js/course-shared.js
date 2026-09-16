@@ -849,6 +849,7 @@ function wireLabKeyboard() {
     if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
     const target = e.target;
     if (target.closest("input, textarea, select, button, a, [contenteditable], [role='tab']")) return;
+    if (target.closest(".study-viz-scroll")) return;
     const wrap = target.closest(".worked-player");
     if (!wrap) return;
     const prev = wrap.querySelector('[data-action="prev"], .demo-prev');
