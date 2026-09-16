@@ -29,7 +29,7 @@ const ch10Config = {
     cnn: {
       key: "cnn",
       mentorKey: "ch10-cnn",
-      title: "视觉模型 · 卷积到 Transformer", subtitle: "局部特征提取",
+      title: "CNN 卷积与池化", subtitle: "局部特征提取",
       cells: [
         {
           prompt: "CNN 的归纳偏置：**局部连接 + 权值共享**。同一卷积核扫全图，提取可复用的局部模式。",
@@ -155,7 +155,7 @@ const ch10Config = {
         { clipPhase: 0, sim: null, title: "双塔编码", summary: "图像和文本分别进入不同编码器，得到 v_I、v_T。", reason: "CLIP 先把两种模态投到同一个向量空间。", fields: [{ label: "图像", value: "v_I" }, { label: "文本", value: "v_T" }], architectureStep: { phase: "both" } },
         { clipPhase: 1, sim: 0.91, pos: true, title: "正例拉近", summary: "同一语义的图文向量夹角变小，余弦相似度=0.91。", reason: "匹配图文应该在共享空间里靠近。", fields: [{ label: "正例", value: "猫图 ↔ 猫文本" }, { label: "目标", value: "相似度 ↑" }] },
         { clipPhase: 2, sim: 0.08, pos: false, title: "负例推远", summary: "猫图配车辆文本是负例，余弦相似度=0.08。", reason: "同一批样本里的其它文本都是干扰项，模型要把它们推远。", fields: [{ label: "负例", value: "猫图 ↔ 车文本" }, { label: "目标", value: "相似度 ↓" }] },
-        { clipPhase: 3, title: "InfoNCE", summary: "正例分数进分子，同一批样本内所有负例进分母。", reason: "损失降低时，正例相似度上升，负例下降。", fields: [{ label: "损失", value: "InfoNCE" }], sim: 0.91, pos: true, loss: true },
+        { clipPhase: 3, title: "InfoNCE", summary: "固定一张图像：正例的指数分数进分子，正例与全部候选负例的指数分数之和进分母。", reason: "CLIP 对图像到文本、文本到图像两个方向取平均，并用温度缩放相似度。", fields: [{ label: "损失", value: "双向对比损失" }], sim: 0.91, pos: true, loss: true },
       ],
       render(v, s) { window.courseViz.renderCLIPPair(v, s); },
     },

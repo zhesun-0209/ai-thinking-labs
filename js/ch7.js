@@ -8,24 +8,38 @@ const C = window.courseCopyPrompts?.ch7 || {};
 const GD_POINTS = [
   [50, 98], [70, 112], [90, 132], [110, 145], [130, 160], [150, 178], [170, 195], [190, 210],
 ];
-const GD_LINES = [
-  [50, 80, 190, 130, 8420],
-  [50, 88, 190, 160, 5200],
-  [50, 92, 190, 185, 3100],
-  [50, 96, 190, 205, 1800],
-  [50, 100, 190, 215, 920],
-];
+const GD_ETA = 0.00002;
+const GD_LINES = [];
+let gdW = 50 / 140;
+let gdB = 80 - gdW * 50;
+for (let i = 0; i < 5; i++) {
+  const errors = GD_POINTS.map(([x, y]) => gdW * x + gdB - y);
+  const loss = errors.reduce((sum, e) => sum + e * e, 0) / GD_POINTS.length;
+  GD_LINES.push([50, gdW * 50 + gdB, 190, gdW * 190 + gdB, loss]);
+  const dw = 2 * errors.reduce((sum, e, j) => sum + e * GD_POINTS[j][0], 0) / GD_POINTS.length;
+  const db = 2 * errors.reduce((sum, e) => sum + e, 0) / GD_POINTS.length;
+  gdW -= GD_ETA * dw;
+  gdB -= GD_ETA * db;
+}
 
 const PERCEPTRON_PTS = [
   [22, 88, 1], [46, 74, 1], [64, 96, 1], [86, 82, 1],
   [92, 28, -1], [116, 12, -1], [136, 44, -1], [160, 24, -1],
 ];
-const PERCEPTRON_STEPS = [
-  { wx: -0.10, wy: 1, b: -88 },
-  { wx: -0.10, wy: 1, b: -78 },
-  { wx: -0.10, wy: 1, b: -72 },
-  { wx: -0.10, wy: 1, b: -66 },
-];
+const PERCEPTRON_ETA = 0.001;
+const PERCEPTRON_STEPS = [{ wx: -0.10, wy: 1, b: -88 }];
+for (let i = 0; i < 100; i++) {
+  const model = PERCEPTRON_STEPS.at(-1);
+  const pointIndex = perceptronMistakes(model)[0];
+  if (pointIndex === undefined) break;
+  const [x, y, label] = PERCEPTRON_PTS[pointIndex];
+  PERCEPTRON_STEPS.push({
+    wx: model.wx + PERCEPTRON_ETA * label * x,
+    wy: model.wy + PERCEPTRON_ETA * label * y,
+    b: model.b + PERCEPTRON_ETA * label,
+    updatedPoint: pointIndex,
+  });
+}
 
 function perceptronMistakes(model) {
   return PERCEPTRON_PTS.flatMap(([x, y, label], i) => (label * (model.wx * x + model.wy * y + model.b) <= 0 ? [i] : []));
@@ -63,8 +77,8 @@ const ERROR_TREE = {
   no: {
     id: "split-concept",
     question: "是否概念/定义题？",
-    entropy: 0.99,
-    gain: 0.17,
+    entropy: entropy([0, 18, 12]),
+    gain: gainConcept,
     yes: { id: "leaf-concept", leaf: true, label: "叶节点", count: 18, prediction: "概念混淆" },
     no: { id: "leaf-careless", leaf: true, label: "叶节点", count: 12, prediction: "粗心" },
   },
@@ -75,7 +89,7 @@ const ch7Config = {
     intro: {
       key: "intro",
       cells: [{
-        prompt: "学习 = 用更短的描述（树、直线、簇中心）压缩数据。请先认准 **决策树架构图**，再记五个算法各自「压缩成什么」。",
+        prompt: "可以把学习理解为从数据中概括规律，用树、直线或簇中心表示。先看 **决策树架构图**，再比较四种学习算法与一组评估指标。",
         architectureKey: "decision-tree",
         vibeTip: "内层优化损失（MSE、熵）；外层优化指标（P/R/F1）。",
         copyPrompt: C.intro,
@@ -94,7 +108,7 @@ const ch7Config = {
     tree: {
       key: "tree",
       mentorKey: "ch7-tree",
-      title: "学习算法 · 错题诊断与模型训练",
+      title: "决策树与信息增益",
       subtitle: "50 道错题 · 熵 → 增益 → 分裂",
       cells: [
         {
@@ -128,7 +142,7 @@ const ch7Config = {
           copyPrompt: C.gdConcept,
         },
         {
-          prompt: "观察拟合直线与损失同步下降的 5 步迭代。η 过大震荡，过小收敛慢。",
+          prompt: "观察初始直线及 4 次梯度更新，损失由实际散点计算。学习率 η 过大可能震荡或发散，过小则收敛慢。",
           demoKey: "gd",
           interactive: true,
           labTarget: "gd",
@@ -192,8 +206,8 @@ const ch7Config = {
       subtitle: "外层评估 · 调阈值",
       cells: [
         {
-          prompt: "同一模型输出概率，阈值 τ 不同 → TP/FP/FN/TN 变化 → P、R、F1 此消彼长。这是**外层优化**，与内层损失分开。",
-          vibeTip: "抓逃犯：严门槛少误抓（P↑）但漏抓多（R↓）。",
+          prompt: "同一模型的分类阈值 τ 改变，TP/FP/FN/TN 及 P、R、F1 也会改变。应在验证集上选择阈值，再用独立测试集评估泛化。",
+          vibeTip: "提高阈值会减少判正样本，召回率不会上升；精确率不保证单调，F1 也需实际计算。",
           copyPrompt: C.metricsConcept,
         },
         {
@@ -216,7 +230,7 @@ const ch7Config = {
       trace: [
         {
           title: "根节点 · 计算熵",
-          summary: "50 题三类错因，分布均匀-ish，熵较高。",
+          summary: "50 题分属三类错因，数量较接近，熵较高。",
           reason: "H(S) = −Σ p_k log₂ p_k，三类占比 20/50、18/50、12/50。",
           fields: [
             { label: "样本", value: "50 题" },
@@ -227,12 +241,12 @@ const ch7Config = {
         },
         {
           title: "比较信息增益",
-          summary: "「含分数」分裂增益明显更大。",
-          reason: "ΔH = H(父) − Σ (|S_v|/|S|) H(S_v)。含分数使左子树纯为计算错误。",
+          summary: "「含分数」的信息增益约 0.97，略高于「概念题」的 0.94。",
+          reason: "本例设含分数分成 [20,0,0]/[0,18,12]；概念题分成 [0,18,0]/[20,0,12]。每次分裂都覆盖全部 50 题。",
           fields: [
             { label: "H(父)", value: fmt(entropy(parentCounts)) },
             { label: "ΔH(含分数)", value: fmt(gainScore) },
-            { label: "ΔH(概念题@根)", value: fmt(infoGain(parentCounts, [{ counts: [0, 18, 12] }])) + "（较小）" },
+            { label: "ΔH(概念题，根节点)", value: fmt(infoGain(parentCounts, [{ counts: [0, 18, 0] }, { counts: [20, 0, 12] }])) },
           ],
           highlight: ["root"],
         },
@@ -271,14 +285,14 @@ const ch7Config = {
     },
     gd: {
       key: "gd",
-      stepLabels: ["t=0", "t=1", "t=2", "t=3", "收敛"],
+      stepLabels: ["t=0", "t=1", "t=2", "t=3", "t=4"],
       trace: GD_LINES.map(([x0, y0, x1, y1, loss], i) => ({
-        title: i === 0 ? "随机初始化 w,b" : i === GD_LINES.length - 1 ? "损失趋稳" : `梯度下降第 ${i} 步`,
-        summary: i === 0 ? "直线偏离数据，MSE 很高。" : `MSE 降至 ${loss}。`,
-        reason: i === 0 ? "随机 w,b 给出较差拟合。" : "沿 −∇MSE 更新参数，直线向数据靠拢。",
+        title: i === 0 ? "初始化 w,b" : `梯度下降第 ${i} 步`,
+        summary: i === 0 ? `初始直线偏离数据，MSE=${fmt(loss)}。` : `MSE 降至 ${fmt(loss)}。`,
+        reason: i === 0 ? "从 w=50/140、b=80−50w 出发。" : "用全部 8 个样本计算 MSE 梯度，同时更新 w 和 b；4 次更新不代表已收敛。",
         fields: [
-          { label: "MSE", value: String(loss) },
-          { label: "η", value: "0.01" },
+          { label: "MSE", value: fmt(loss) },
+          { label: "η", value: String(GD_ETA) },
         ],
         lineIdx: i,
       })),
@@ -294,7 +308,7 @@ const ch7Config = {
             loss,
             w: slope,
             b: intercept,
-            eta: "0.01",
+            eta: String(GD_ETA),
             step: s.lineIdx,
           });
         });
@@ -302,13 +316,13 @@ const ch7Config = {
     },
     perceptron: {
       key: "perceptron",
-      stepLabels: ["初", "更新1", "更新2", "收敛"],
+      stepLabels: PERCEPTRON_STEPS.map((_, i) => i === 0 ? "初始" : `更新${i}`),
       trace: PERCEPTRON_STEPS.map((model, i) => {
         const wrongCount = perceptronMistakes(model).length;
         return {
-          title: i === 0 ? "初始随机边界" : wrongCount === 0 ? "线性可分 · 全部分对" : `错分驱动更新 ${i}`,
+          title: i === 0 ? "初始边界" : wrongCount === 0 ? "线性可分 · 全部分对" : `错分驱动更新 ${i}`,
           summary: wrongCount === 0 ? "没有样本被错分，边界收敛。" : `蓝色空心圈标出当前真实错分的 ${wrongCount} 个样本。`,
-          reason: "感知机更新：若 y·(⟨w,x⟩+b)≤0，则 w←w+ηyx，b←b+ηy。",
+          reason: model.updatedPoint === undefined ? "每次按给定顺序选第一个错分点，η=0.001。" : `第 ${model.updatedPoint + 1} 个样本触发更新：w←w+ηyx，b←b+ηy，η=0.001。`,
           fields: [
             { label: "步数", value: String(i) },
             { label: "错分", value: `${wrongCount} 个` },

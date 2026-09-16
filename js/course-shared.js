@@ -114,7 +114,9 @@ function getLabScrollTarget(section) {
 
 function scrollToHashAfterRender() {
   if (!location.hash) return;
-  const id = decodeURIComponent(location.hash.slice(1));
+  let id;
+  try { id = decodeURIComponent(location.hash.slice(1)); }
+  catch { return; }
   if (!id) return;
   const applyHashTarget = () => {
     const section = document.getElementById(id);
@@ -127,9 +129,6 @@ function scrollToHashAfterRender() {
   requestAnimationFrame(() => {
     requestAnimationFrame(applyHashTarget);
   });
-  window.setTimeout(applyHashTarget, 120);
-  window.setTimeout(applyHashTarget, 500);
-  window.addEventListener("load", () => window.setTimeout(applyHashTarget, 0), { once: true });
 }
 
 function initCoursePage(config) {
@@ -174,7 +173,7 @@ function renderSectionNav(sections) {
     .map((s) => `<a class="section-link" href="#${s.id}" data-section="${s.id}">${escapeHtml(s.label)}</a>`)
     .join("");
   const pythonLink = currentChapterNum
-    ? `<a class="section-link section-link--notebook" href="notebooks/chapter.html?ch=${currentChapterNum}" target="_blank" rel="noopener noreferrer">Python</a>`
+    ? `<a class="section-link section-link--notebook" href="notebooks/chapter.html?ch=${currentChapterNum}" aria-label="第${currentChapterNum}章Python代码实验">Python</a>`
     : "";
   nav.innerHTML = `${sectionLinks}${pythonLink}`;
   nav.addEventListener("click", (e) => {
@@ -196,7 +195,10 @@ function renderSectionNav(sections) {
 
 function setActiveSectionLink(id) {
   document.querySelectorAll(".section-link[data-section]").forEach((link) => {
-    link.classList.toggle("is-active", link.dataset.section === id);
+    const active = link.dataset.section === id;
+    link.classList.toggle("is-active", active);
+    if (active) link.setAttribute("aria-current", "location");
+    else link.removeAttribute("aria-current");
   });
 }
 
@@ -358,7 +360,7 @@ function buildCellPair(cell, instanceId, index, notebookArchKey) {
     </div>
     ${tip ? `<p class="vibe-tip"><span class="vibe-tip-label">学习提示</span>${escapeHtml(tip)}</p>` : ""}
     <div class="prompt-actions">
-      ${copyText ? `<div class="copy-teach"><span>向 AI 提问练习</span><button type="button" class="primary-button copy-prompt-btn" data-copy="${escapeAttr(copyText)}" aria-label="复制${escapeAttr(cell.outputLabel || promptLabel)}提问模板">复制提问模板</button></div>` : ""}
+      ${copyText ? `<div class="copy-teach"><button type="button" class="primary-button copy-prompt-btn" data-copy="${escapeAttr(copyText)}" aria-label="复制${escapeAttr(cell.outputLabel || promptLabel)}提问模板">复制提问模板</button></div>` : ""}
       ${cell.labTarget || cell.labAlgo ? `<button type="button" class="ghost-button" data-jump-lab="${cell.labTarget || cell.labAlgo}">在实验室打开</button>` : ""}
     </div>`;
 
@@ -440,10 +442,12 @@ function wireJumpLab() {
 /* Generic step player */
 
 const stepDemoState = {};
+let stepDemoSequence = 0;
 
 function mountStepDemo(container, demo) {
-  const id = container.dataset.stepDemo || demo.key;
-  if (!stepDemoState[id]) stepDemoState[id] = { index: 0, playing: false, timer: null };
+  // The lesson and lab can display the same algorithm at different steps.
+  const id = `${demo.key}-${++stepDemoSequence}`;
+  stepDemoState[id] = { index: 0, playing: false, timer: null };
 
   const trace = demo.trace;
   const render = demo.render || defaultStepRender;
@@ -457,7 +461,7 @@ function mountStepDemo(container, demo) {
       <div class="worked-controls-bar worked-controls-inline">
         <button type="button" class="step-btn demo-prev">‹ 上一步</button>
         <button type="button" class="step-btn demo-play">▶ 播放</button>
-        <label class="worked-range"><span class="worked-range-label demo-range-label">步骤</span>
+        <label class="worked-range"><span class="worked-range-label demo-range-label" role="status" aria-live="polite">步骤</span>
           <input type="range" class="demo-range" min="0" max="${trace.length - 1}" value="0" aria-label="${escapeAttr(`步骤进度：${rangeName}`)}" aria-valuemin="0" aria-valuemax="${trace.length - 1}" aria-valuenow="0" /></label>
         <button type="button" class="step-btn demo-next">下一步 ›</button>
       </div>
@@ -486,14 +490,24 @@ function mountStepDemo(container, demo) {
     prev.disabled = st.index <= 0;
     next.disabled = st.index >= trace.length - 1;
     play.textContent = st.playing ? "⏸ 暂停" : "▶ 播放";
-    wrap.querySelectorAll(`[data-step-nav="${id}"] [data-step]`).forEach((btn) => {
+    play.setAttribute("aria-pressed", String(st.playing));
+    wrap.querySelectorAll("[data-step-nav] [data-step]").forEach((btn) => {
       const i = Number(btn.dataset.step);
       btn.classList.toggle("is-active", i === st.index);
       btn.classList.toggle("is-done", i < st.index);
     });
   }
 
-  function go(i) {
+  function stop() {
+    const st = stepDemoState[id];
+    clearInterval(st.timer);
+    st.timer = null;
+    st.playing = false;
+  }
+
+  function go(i, autoplay = false) {
+    if (!Number.isFinite(i)) return;
+    if (!autoplay) stop();
     stepDemoState[id].index = Math.max(0, Math.min(trace.length - 1, i));
     paint();
   }
@@ -509,14 +523,14 @@ function mountStepDemo(container, demo) {
     st.playing = !st.playing;
     clearInterval(st.timer);
     if (st.playing) {
+      if (st.index >= trace.length - 1) st.index = 0;
       st.timer = setInterval(() => {
-        if (st.index >= trace.length - 1) {
-          st.playing = false;
-          clearInterval(st.timer);
+        if (!wrap.isConnected || document.hidden || st.index >= trace.length - 1) {
+          stop();
           paint();
           return;
         }
-        go(st.index + 1);
+        go(st.index + 1, true);
       }, demo.intervalMs || 1400);
     }
     paint();
@@ -529,29 +543,35 @@ function mountStepDemo(container, demo) {
 
   paint();
   wrap.setAttribute("tabindex", "0");
+  wrap.setAttribute("role", "group");
+  wrap.setAttribute("aria-label", `${rangeName}分步演示`);
+  wrap.addEventListener("course:demo-dispose", () => {
+    stop();
+    delete stepDemoState[id];
+  }, { once: true });
 }
 
 function renderStepDetailPanel(step, index, total, demo) {
   const labels = demo.stepLabels || traceDefaultLabels(total);
   const strip = labels
     .map((label, i) =>
-      `<button type="button" class="step-nav-btn ${i === index ? "is-active" : ""} ${i < index ? "is-done" : ""}" data-step="${i}"><span class="step-nav-num">${i + 1}</span><span class="step-nav-label">${escapeHtml(label)}</span></button>`,
+      `<button type="button" class="step-nav-btn ${i === index ? "is-active" : ""} ${i < index ? "is-done" : ""}" data-step="${i}"${i === index ? ' aria-current="step"' : ""}><span class="step-nav-num">${i + 1}</span><span class="step-nav-label">${escapeHtml(label)}</span></button>`,
     )
     .join("");
 
   const fields = (step.fields || [])
     .map(
       (f) =>
-        `<div class="detail-field ${f.wide ? "detail-wide" : ""}"><dt>${escapeHtml(f.label)}</dt><dd>${f.html || escapeHtml(f.value || "—")}</dd></div>`,
+        `<div class="detail-field ${f.wide ? "detail-wide" : ""}"><dt>${escapeHtml(f.label)}</dt><dd>${f.html || escapeHtml(f.value ?? "—")}</dd></div>`,
     )
     .join("");
 
   return `
     <section class="worked-step-panel" aria-label="步骤明细">
-      <div class="step-nav-strip" data-step-nav="${demo.key}" role="tablist">${strip}</div>
+      <div class="step-nav-strip" data-step-nav="${demo.key}" role="group" aria-label="选择步骤">${strip}</div>
       <div class="step-detail-card">
         <div class="step-detail-head">
-          <h4 class="step-detail-title">${escapeHtml(step.title || `步骤 ${index}`)}</h4>
+          <h4 class="step-detail-title">${escapeHtml(step.title || `步骤 ${index + 1}`)}</h4>
           <span class="step-detail-index">第 ${index + 1} / ${total} 步</span>
         </div>
         ${step.summary ? `<p class="step-detail-summary">${formatRichText(step.summary)}</p>` : ""}
@@ -757,8 +777,10 @@ function wireLabKeyboard() {
   if (labKeyboardWired) return;
   labKeyboardWired = true;
   document.addEventListener("keydown", (e) => {
-    if (!isLabFocused()) return;
-    const wrap = document.querySelector("#labPanel .worked-player");
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+    const target = e.target;
+    if (target.closest("input, textarea, select, button, a, [contenteditable], [role='tab']")) return;
+    const wrap = target.closest(".worked-player");
     if (!wrap) return;
     const prev = wrap.querySelector(".demo-prev");
     const next = wrap.querySelector(".demo-next");
@@ -842,7 +864,7 @@ function renderHeatmap(container, matrix, labels) {
       .map((v, j) => {
         const t = v / max;
         const bg = `rgba(13,107,98,${0.12 + t * 0.75})`;
-        return `<div class="heat-cell" style="background:${bg}" title="${labels?.[i] || i}→${labels?.[j] || j}: ${v.toFixed(2)}">${v.toFixed(2)}</div>`;
+        return `<div class="heat-cell" style="background:${bg};color:${t > 0.55 ? '#fff' : '#182522'}" title="${escapeAttr(labels?.[i] || i)}→${escapeAttr(labels?.[j] || j)}: ${v.toFixed(2)}">${v.toFixed(2)}</div>`;
       })
       .join(""),
   );
@@ -864,10 +886,12 @@ function buildLabSwitcher(tabsEl, panelEl, algos, demos) {
       t.classList.toggle("is-active", selected);
       t.setAttribute("aria-selected", String(selected));
       t.setAttribute("role", "tab");
+      t.tabIndex = selected ? 0 : -1;
+      t.setAttribute("aria-controls", panelEl.id);
     });
   };
   tabsEl.innerHTML = algos
-    .map((a) => `<button type="button" class="tab ${a.key === active ? "is-active" : ""}" data-lab="${a.key}" title="${escapeAttr(a.desc || "")}">${a.label}</button>`)
+    .map((a) => `<button type="button" id="lab-tab-${a.key}" class="tab ${a.key === active ? "is-active" : ""}" data-lab="${a.key}" title="${escapeAttr(a.desc || "")}">${escapeHtml(a.label)}</button>`)
     .join("");
   tabsEl.setAttribute("role", "tablist");
   setActiveTabState();
@@ -876,7 +900,11 @@ function buildLabSwitcher(tabsEl, panelEl, algos, demos) {
   panelEl.before(descEl);
   function paint() {
     const cur = algos.find((a) => a.key === active);
+    if (!cur) return;
     descEl.textContent = cur.desc || "";
+    panelEl.querySelectorAll(".worked-player").forEach((player) => player.dispatchEvent(new Event("course:demo-dispose")));
+    panelEl.setAttribute("role", "tabpanel");
+    panelEl.setAttribute("aria-labelledby", `lab-tab-${active}`);
     panelEl.innerHTML = "";
     const slot = document.createElement("div");
     slot.dataset.stepDemo = cur.demo;
@@ -898,8 +926,22 @@ function buildLabSwitcher(tabsEl, panelEl, algos, demos) {
     paint();
     keepLabControlsInView();
   });
+  tabsEl.addEventListener("keydown", (e) => {
+    const index = algos.findIndex((algo) => algo.key === active);
+    let nextIndex;
+    if (e.key === "ArrowRight") nextIndex = (index + 1) % algos.length;
+    else if (e.key === "ArrowLeft") nextIndex = (index + algos.length - 1) % algos.length;
+    else if (e.key === "Home") nextIndex = 0;
+    else if (e.key === "End") nextIndex = algos.length - 1;
+    else return;
+    e.preventDefault();
+    active = algos[nextIndex].key;
+    setActiveTabState();
+    paint();
+    tabsEl.querySelector('[aria-selected="true"]')?.focus();
+  });
   document.addEventListener("course:lab-select", (e) => {
-    if (!e.detail?.key) return;
+    if (!algos.some((algo) => algo.key === e.detail?.key)) return;
     active = e.detail.key;
     setActiveTabState();
     paint();

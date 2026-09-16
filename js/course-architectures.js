@@ -185,30 +185,28 @@ function renderMAE(container, step = {}) {
 
 function renderSkipGram(container, step = {}) {
   const inner = `
-    ${box(240, 30, 80, 40, "中心词", "鲁迅", "is-active")}
-    ${arrow(280, 70, 280, 100, "is-accent")}
-    ${box(220, 100, 120, 50, "Softmax", "P(上下文|中心)", step.phase === "softmax" ? "is-active" : "")}
-    ${arrow(200, 125, 120, 125)}
-    ${box(60, 100, 60, 50, "写", "正例", "is-active")}
-    ${arrow(360, 125, 440, 125)}
-    ${box(440, 100, 60, 50, "了", "正例", "is-active")}
-    ${arrow(280, 150, 280, 180, "is-accent")}
-    ${box(200, 180, 160, 40, "负采样", "桌子、天气…", step.phase === "neg" ? "is-active" : "")}`;
-  mount(container, inner, "0 0 560 230", "Word2Vec Skip-gram + 负采样");
+    ${box(20, 82, 90, 56, "中心词", "鲁迅 · v", "is-active")}
+    ${arrow(110, 110, 160, 110, "is-accent")}
+    ${box(160, 82, 120, 56, "点积 v·u", "二分类得分", "is-active")}
+    ${arrow(280, 110, 370, 55, "is-accent")}
+    ${box(370, 30, 210, 50, "正例：写", "提高点积与匹配概率", "is-active")}
+    ${arrow(280, 110, 370, 160)}
+    ${box(370, 135, 210, 50, "采样负例：桌子、天气", "降低点积与匹配概率", step.phase === "neg" ? "is-active" : "")}
+    <text x="300" y="215" text-anchor="middle" class="arch-anno">负采样只比较正例与少量负例，不计算全词表 Softmax。</text>`;
+  mount(container, inner, "0 0 600 235", "Skip-gram 的负采样训练目标");
 }
 
 function renderMDPLoop(container) {
   const inner = `
-    ${box(240, 20, 100, 44, "智能体", "π(a|s)", "is-active")}
-    ${arrow(290, 64, 290, 90, "is-accent")}
-    ${box(220, 90, 140, 44, "环境", "s, r, s′", "is-active")}
-    ${arrow(220, 112, 120, 112)}
-    ${box(40, 90, 100, 44, "状态 s", "", "is-active")}
-    ${arrow(360, 112, 460, 112)}
-    ${box(460, 90, 100, 44, "动作 a", "", "is-active")}
-    ${arrow(290, 134, 290, 160, "is-accent")}
-    ${box(220, 160, 140, 44, "奖励 r", "+折扣 γ", "is-active")}`;
-  mount(container, inner, "0 0 580 220", "MDP 智能体–环境交互环");
+    ${box(40, 30, 180, 56, "智能体", "根据 sₜ 选择动作", "is-active")}
+    ${arrow(220, 58, 350, 58, "is-accent")}
+    ${box(350, 30, 190, 56, "动作 aₜ", "执行当前选择", "is-active")}
+    ${arrow(445, 86, 445, 150, "is-accent")}
+    ${box(350, 150, 190, 56, "环境", "响应动作并转移状态", "is-active")}
+    ${arrow(350, 178, 220, 178, "is-accent")}
+    ${box(40, 150, 180, 56, "新状态与奖励", "sₜ₊₁、rₜ₊₁", "is-active")}
+    ${arrow(130, 150, 130, 86, "is-accent")}`;
+  mount(container, inner, "0 0 580 230", "智能体选择动作，环境返回新状态和奖励");
 }
 
 function renderTransE(container) {

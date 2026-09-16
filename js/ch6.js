@@ -11,15 +11,13 @@ const CH6_KG = {
     luxun: { id: "luxun", name: "鲁迅", short: "鲁迅", x: 90, y: 150 },
     kr: { id: "kr", name: "狂人日记", short: "狂人", x: 280, y: 80 },
     hn: { id: "hn", name: "呐喊", short: "呐喊", x: 280, y: 220 },
-    club: { id: "club", name: "文学周报社", short: "周报", x: 480, y: 150 },
-    md: { id: "md", name: "茅盾文学奖", short: "茅奖", x: 520, y: 80 },
+    club: { id: "club", name: "《新青年》", short: "新青年", x: 480, y: 150 },
   },
   edges: [
     { from: "luxun", to: "kr", rel: "创作" },
     { from: "luxun", to: "hn", rel: "创作" },
     { from: "kr", to: "club", rel: "发表于" },
-    { from: "hn", to: "club", rel: "发表于" },
-    { from: "kr", to: "md", rel: "获得" },
+    { from: "kr", to: "hn", rel: "收录于" },
   ],
 };
 
@@ -29,9 +27,9 @@ const CH6_KG_MOYAN = {
   nodes: {
     my: { id: "my", name: "莫言", short: "莫言", x: 80, y: 160 },
     wa: { id: "wa", name: "《蛙》", short: "蛙", x: 240, y: 80 },
-    hlg: { id: "hlg", name: "《红高粱》", short: "红高粱", x: 240, y: 220 },
+    hlg: { id: "hlg", name: "《红高粱家族》", short: "红高粱家族", x: 240, y: 220 },
     md: { id: "md", name: "茅盾文学奖", short: "茅奖", x: 420, y: 60 },
-    canon: { id: "canon", name: "新中国长篇小说典藏", short: "典藏", x: 420, y: 160 },
+    canon: { id: "canon", name: "新中国70年70部长篇小说典藏", short: "典藏", x: 420, y: 160 },
     film: { id: "film", name: "电影《红高粱》", short: "电影", x: 420, y: 260 },
     bear: { id: "bear", name: "柏林金熊奖", short: "金熊", x: 560, y: 260 },
   },
@@ -47,7 +45,7 @@ const CH6_KG_MOYAN = {
 
 const forwardTrace = [
   {
-    title: "推理算法 · 文学知识图谱推演",
+    title: "放入初始事实",
     summary: "把已知事实放入工作记忆。",
     reason: "前向链从事实出发：先把「苏格拉底是人」放进待推理集合。",
     facts: [{ text: "人(苏格拉底)", new: true }],
@@ -176,11 +174,11 @@ const multihopTrace = [
   {
     title: "第二跳",
     summary: "继续满足「发表于」约束。",
-    reason: "两部作品都连到「文学周报社」，查询约束全部满足。",
-    activeNodes: ["luxun", "kr", "hn", "club"],
-    activeEdges: ["luxun-创作-kr", "luxun-创作-hn", "kr-发表于-club", "hn-发表于-club"],
-    pathEdges: ["luxun-创作-kr", "kr-发表于-club", "luxun-创作-hn", "hn-发表于-club"],
-    fields: [{ label: "答案", value: "《狂人日记》《呐喊》（均发表于文学周报社）" }],
+    reason: "《狂人日记》沿「发表于」连接《新青年》；《呐喊》是小说集，本图没有它的「发表于」边，不满足本次约束。",
+    activeNodes: ["luxun", "kr", "club"],
+    activeEdges: ["luxun-创作-kr", "kr-发表于-club"],
+    pathEdges: ["luxun-创作-kr", "kr-发表于-club"],
+    fields: [{ label: "本图答案", value: "《狂人日记》，发表于《新青年》；不是鲁迅作品的完整目录" }],
   },
 ];
 
@@ -195,7 +193,7 @@ const pathRankTrace = [
   {
     title: "路径 A",
     summary: "作品 → 获得茅盾文学奖",
-    reason: "路径 A：《蛙》获得茅盾文学奖 — 权重高（权威奖项）。",
+    reason: "路径 A：《蛙》获得茅盾文学奖。本演示人为赋予这类证据 3 分，并非客观文学评分。",
     activeNodes: ["my", "wa", "md"],
     activeEdges: ["my-作品-wa", "wa-获得-md"],
     pathEdges: ["my-作品-wa", "wa-获得-md"],
@@ -204,7 +202,7 @@ const pathRankTrace = [
   {
     title: "路径 B",
     summary: "作品 → 入选典藏",
-    reason: "路径 B：《红高粱》入选新中国长篇小说典藏。",
+    reason: "路径 B：《红高粱家族》入选「新中国70年70部长篇小说典藏」，本演示赋 2 分。",
     activeNodes: ["my", "hlg", "canon"],
     activeEdges: ["my-作品-hlg", "hlg-入选-canon"],
     pathEdges: ["my-作品-hlg", "hlg-入选-canon"],
@@ -213,12 +211,12 @@ const pathRankTrace = [
   {
     title: "路径 C + 排序",
     summary: "多条路径计票，给出排序。",
-    reason: "路径 C：《红高粱》→ 电影 → 金熊奖。汇总：《蛙》3 分、《红高粱》2+1 分 — 软自洽排序。",
+    reason: "路径 C：《红高粱家族》的部分篇章改编为电影《红高粱》，电影获金熊奖。两候选均为 3 分，按本例的同分规则比较路径数。",
     activeNodes: ["my", "wa", "hlg", "md", "canon", "film", "bear"],
     activeEdges: ["my-作品-wa", "wa-获得-md", "my-作品-hlg", "hlg-入选-canon", "hlg-改编-film", "film-获得-bear"],
     fields: [
-      { label: "候选排序", value: "1.《蛙》3分 2.《红高粱》3分（并列，路径数多者优先）" },
-      { label: "tie-break", value: "同分→路径条数多者胜；《红高粱》2条路径" },
+      { label: "候选排序", value: "1.《红高粱家族》3分；2.《蛙》3分（同分时比较路径数）" },
+      { label: "同分规则", value: "《红高粱家族》2条路径，《蛙》1条；仅为本例排序约定" },
       { label: "方法", value: "路径证据投票（软自洽）" },
     ],
   },
@@ -341,7 +339,7 @@ const ch6Config = {
       subtitle: "在图上找满足关系约束的路径",
       cells: [
         {
-          prompt: "查询「鲁迅发表过哪些作品？」→ 模板 (鲁迅,创作,?X) 且 (?X,发表于,?Y)。**每一跳都要检查关系类型**——这是与裸图搜索的差别。",
+          prompt: "查询本图记录了鲁迅哪些作品及其发表刊物：模板 (鲁迅,创作,?X) 且 (?X,发表于,?Y)。**每一跳都要检查关系类型**，不能只看两个节点是否连通。",
           vibeTip: "像 SQL JOIN：关系类型是硬约束。",
           copyPrompt: C.multihopConcept,
         },
@@ -364,7 +362,7 @@ const ch6Config = {
       subtitle: "信息不完整时，用多条路径投票排序",
       cells: [
         {
-          prompt: "问「莫言的代表作？」图谱没有「代表作」边。收集路径 A/B/C 的证据，按权重计票给出排序。**硬约束仍要守**——关系类型不能乱连。",
+          prompt: "问「莫言的代表作？」图谱没有「代表作」边。本例用预设权重汇总路径 A/B/C，演示证据排序，不构成逻辑证明或客观排名。**关系类型仍是硬约束**。",
           vibeTip: "软的是对「缺边」的容忍，不是对语义的放弃。",
           copyPrompt: C.pathrankConcept,
         },
@@ -437,10 +435,10 @@ const ch6Config = {
         },
         {
           title: "发表关系",
-          summary: "两部作品均发表于文学周报社。",
+          summary: "《狂人日记》发表于《新青年》，后收入小说集《呐喊》；发表与收录是不同关系。",
           activeNodes: ["luxun", "kr", "hn", "club"],
-          activeEdges: ["luxun-创作-kr", "luxun-创作-hn", "kr-发表于-club", "hn-发表于-club"],
-          highlightEdges: ["kr-发表于-club", "hn-发表于-club"],
+          activeEdges: ["luxun-创作-kr", "luxun-创作-hn", "kr-发表于-club", "kr-收录于-hn"],
+          highlightEdges: ["kr-发表于-club", "kr-收录于-hn"],
           legend: [{ cls: "final", label: "本步新增" }, { cls: "path", label: "创作链" }],
         },
       ],

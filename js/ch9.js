@@ -19,17 +19,17 @@ const ch9Config = {
     workflow: {
       key: "workflow",
       cells: [{
-        prompt: "CoT 先写推理链再作答；SFT 对齐 instruction 输出格式。请步进对比三种回答方式。",
+        prompt: "**CoT（思维链）提示**让模型给出中间步骤；**SFT（监督微调）**用输入与示范回答训练模型、更新参数。请对比直接作答、分步作答与监督微调的区别。",
         demoKey: "workflow",
         interactive: true,
-        vibeTip: "CoT/SFT 不改变模型结构，改变的是「输出格式与推理习惯」。",
+        vibeTip: "这里的 CoT 提示不更新参数；SFT 是训练过程，可改善任务表现与指令遵循，不只是改变格式。",
         copyPrompt: C.workflow,
       }],
     },
     compare: {
       key: "compare",
       cells: [{
-        prompt: "语言智能流水线四阶段：**BPE** 子词切分 → **Skip-gram** 词向量 → **自注意力** 上下文建模 → **语言模型** 自回归生成。请对照下表理解各阶段产出。",
+        prompt: "分词、向量表示、上下文建模与生成各解决什么问题？**BPE、Skip-gram、自注意力、语言模型**分别展示这些思想；现代语言模型通常联合训练嵌入层，并不必须先训练 Skip-gram。",
         tableKey: "ch9-compare",
         outputLabel: "对比表",
         copyPrompt: C.compare,
@@ -40,7 +40,7 @@ const ch9Config = {
     bpe: {
       key: "bpe",
       mentorKey: "ch9-bpe",
-      title: "语言模型 · 分词到序列生成", subtitle: "字节对合并",
+      title: "BPE 子词分词", subtitle: "字节对合并",
       cells: [
         {
           prompt: "BPE 从字符开始，反复合并**最高频相邻对**，在字与词之间找粒度。合并顺序取决于语料统计，不是人工规则。",
@@ -48,7 +48,7 @@ const ch9Config = {
           copyPrompt: C.bpeConcept,
         },
         {
-          prompt: "请观看步进：句子「鲁迅 写 了 狂人 日记」上注意哪两个符号被合并、词表如何变短。",
+          prompt: "请观看步进：按预设合并顺序处理「鲁迅写了狂人日记」，观察词元序列如何变短。训练词表时，每次合并会加入一个新词元，并不是缩小词表。",
           demoKey: "bpe", labTarget: "bpe", interactive: true,
           copyPrompt: C.bpeDemo,
         },
@@ -63,7 +63,7 @@ const ch9Config = {
       title: "Word2Vec Skip-gram", subtitle: "分布式语义",
       cells: [
         {
-          prompt: "Skip-gram：用中心词「鲁迅」预测上下文「写」。共现多的词向量靠近——**统计共现，不是词典定义**。",
+          prompt: "Skip-gram：用中心词「鲁迅」预测上下文「写」。负采样训练提高正例的点积、降低负例的点积，学习的是**统计共现，不是词典定义**。",
           architectureKey: "skipgram",
           vibeTip: "中心=鲁迅，正例=写，负例=桌子。",
           copyPrompt: C.w2vConcept,
@@ -126,14 +126,14 @@ const ch9Config = {
     bpe: {
       key: "bpe", stepLabels: ["字符", "合并日记", "合并狂人", "合并鲁迅"],
       trace: [
-        { tokens: ["鲁","迅","写","了","狂","人","日","记"], pair: ["日","记"], count: 12, title: "字符级输入", summary: "句子先被拆成最小字符词元。", reason: "BPE 从细粒度开始，反复统计相邻词元对的出现频率。", fields: [{ label: "高频对", value: "日+记" }] },
-        { tokens: ["鲁","迅","写","了","狂","人","日记"], highlight: ["日记"], title: "合并日记", summary: "把最高频相邻对「日+记」合成一个词元。", reason: "常一起出现的片段应作为更稳定的子词单位。", fields: [{ label: "新词元", value: "日记" }] },
+        { tokens: ["鲁","迅","写","了","狂","人","日","记"], pair: ["日","记"], title: "字符级输入", summary: "句子先被拆成字符词元；本例预设依次合并日+记、狂+人、鲁+迅。", reason: "真实合并顺序来自训练语料的频率统计，不能由这一句话确定。", fields: [{ label: "本步合并", value: "日+记" }] },
+        { tokens: ["鲁","迅","写","了","狂","人","日记"], highlight: ["日记"], title: "合并日记", summary: "按预设第一条合并规则，将「日+记」合成一个词元。", reason: "实际训练时会统计语料中的相邻对，再确定合并顺序。", fields: [{ label: "新词元", value: "日记" }] },
         { tokens: ["鲁","迅","写","了","狂人","日记"], highlight: ["狂人","日记"], title: "合并狂人", summary: "继续把「狂+人」合成「狂人」。", reason: "每次合并都会减少序列长度，但仍保留可拆分能力。", fields: [{ label: "长度", value: "7→6" }] },
         { tokens: ["鲁迅","写","了","狂人","日记"], highlight: ["鲁迅","狂人","日记"], title: "形成子词表", summary: "得到「鲁迅 / 写 / 了 / 狂人 / 日记」这些子词词元。", reason: "语言模型后续预测的是词元，不是原始汉字或完整词典词。", fields: [{ label: "输出", value: "子词序列" }] },
       ],
       render(v, s) {
         courseShared.renderTokenStrip(v, s.tokens, s.highlight || []);
-        if (s.pair) v.innerHTML += `<p class="output-caption">最高频对：${s.pair.join("+")}（${s.count} 次）</p>`;
+        if (s.pair) v.innerHTML += `<p class="output-caption">预设合并对：${s.pair.join("+")}</p>`;
       },
     },
     w2v: {
@@ -142,9 +142,9 @@ const ch9Config = {
       stepLabels: ["窗口", "正例", "负例", "完成"],
       trace: [
         { title: "取上下文窗口", summary: "中心词是「鲁迅」，窗口里出现上下文词「写」。", reason: "Skip-gram 用中心词预测上下文词。", phase: 0, caption: "中心词预测上下文「写」。", fields: [{ label: "正例对", value: "鲁迅→写" }] },
-        { title: "正例拉近", summary: "提高 v_鲁迅 与 v_写 的点积相似度。", reason: "真实共现的词应在向量空间中更接近。", phase: 1, caption: "相似度 0.42 → 0.68", fields: [{ label: "相似度", value: "0.42→0.68" }] },
-        { title: "负采样推远", summary: "随机采到不相关词「桌子」，把它从「鲁迅」附近推开。", reason: "负样本让模型不只会拉近，还会学会区分。", phase: 2, caption: "相似度 0.15 → −0.22", fields: [{ label: "相似度", value: "0.15→−0.22" }] },
-        { title: "更新向量空间", summary: "共现词靠近，不相关词远离，语义结构逐步形成。", reason: "大量窗口重复训练后，词向量会编码统计语义。", phase: 3, caption: "共现词在空间中靠近。", fields: [{ label: "效果", value: "共现词靠近" }] },
+        { title: "正例拉近", summary: "提高中心词向量 v_鲁迅 与上下文向量 u_写 的点积。", reason: "两者来自不同的参数矩阵；图中距离仅作直觉示意。", phase: 1, caption: "正例点积示意：0.42 → 0.68", fields: [{ label: "正例点积", value: "0.42→0.68" }] },
+        { title: "负采样推远", summary: "将采样词「桌子」作为负例，降低 v_鲁迅 与 u_桌子 的点积。", reason: "负例来自采样分布，不保证语义上总是不相关。", phase: 2, caption: "负例点积示意：0.15 → −0.22", fields: [{ label: "负例点积", value: "0.15→−0.22" }] },
+        { title: "更新向量空间", summary: "大量上下文窗口共同塑造词向量的统计语义。", reason: "语境相似的词可能有相似表示，但共现不等于语义相同。", phase: 3, caption: "图中位置示意训练方向，不代表实际向量坐标。", fields: [{ label: "学习信号", value: "上下文共现" }] },
       ],
       render(v, s) { window.courseViz.renderWord2Vec(v, s); },
     },
@@ -163,21 +163,21 @@ const ch9Config = {
           queryToken: "写",
           sourceTokens: ["鲁迅", "写", "了", "狂人", "日记"],
           scores: [1.2, 0.7, 0.1, 0.6, 0.3],
-          weights: [0.35, 0.22, 0.08, 0.2, 0.15],
+          weights: window.courseViz.softmax([1.2, 0.7, 0.1, 0.6, 0.3]),
           focusIndex: 0,
           architectureStep: { highlight: ["attn"] },
         },
         {
           title: "Softmax 归一化",
           summary: "权重显示「写」主要看向「鲁迅」，也保留自身和宾语线索。",
-          reason: "这些权重不是人工规则，是 QK 分数归一化后的软分配。",
+          reason: "这里用预设分数演示 Softmax；真实模型中的分数由训练得到的 Q/K 计算。",
           fields: [{ label: "α(鲁迅)", value: "0.35" }, { label: "权重和", value: "1.00" }],
           mode: "self",
           phase: "softmax",
           queryToken: "写",
           sourceTokens: ["鲁迅", "写", "了", "狂人", "日记"],
           scores: [1.2, 0.7, 0.1, 0.6, 0.3],
-          weights: [0.35, 0.22, 0.08, 0.2, 0.15],
+          weights: window.courseViz.softmax([1.2, 0.7, 0.1, 0.6, 0.3]),
           focusIndex: 0,
           architectureStep: { highlight: ["attn"] },
         },
@@ -185,13 +185,13 @@ const ch9Config = {
           title: "加权 V 得新表示",
           summary: "「写」的新向量混入主语和宾语信息，不再只是孤立词向量。",
           reason: "输出是 ΣαᵢVᵢ，再送入后续 FFN；位置编码负责保留词序。",
-          fields: [{ label: "输出", value: "写′" }, { label: "最大贡献", value: "鲁迅 0.35" }],
+          fields: [{ label: "输出", value: "写′" }, { label: "最大权重", value: "鲁迅 0.35" }],
           mode: "self",
           phase: "context",
           queryToken: "写",
           sourceTokens: ["鲁迅", "写", "了", "狂人", "日记"],
           scores: [1.2, 0.7, 0.1, 0.6, 0.3],
-          weights: [0.35, 0.22, 0.08, 0.2, 0.15],
+          weights: window.courseViz.softmax([1.2, 0.7, 0.1, 0.6, 0.3]),
           focusIndex: 0,
           architectureStep: { highlight: ["attn", "ffn"] },
         },
@@ -201,12 +201,13 @@ const ch9Config = {
     lm: {
       key: "lm",
       architectureKey: "decoder-only",
-      stepLabels: ["P(写｜鲁迅)", "P(了｜鲁迅 写)", "P(狂人｜鲁迅 写 了)", "句概率"],
+      stepLabels: ["预测写", "预测了", "预测狂人", "预测日记", "续写概率"],
       trace: [
-        { title: "第一步", summary: "首词预测：「鲁迅」后最可能是「写」。", prefix: ["鲁迅"], candidates: [{ w: "写", p: 0.64 }, { w: "是", p: 0.12 }, { w: "的", p: 0.08 }] },
-        { title: "第二步", summary: "链式扩展：P(了|鲁迅 写)。", prefix: ["鲁迅", "写"], candidates: [{ w: "了", p: 0.58 }, { w: "过", p: 0.21 }, { w: "的", p: 0.09 }] },
-        { title: "第三步", summary: "子词预测：BPE 切分后的下一词元。", prefix: ["鲁迅", "写", "了"], candidates: [{ w: "狂人", p: 0.41 }, { w: "《", p: 0.18 }, { w: "一", p: 0.11 }] },
-        { title: "整句", summary: "概率连乘 → 困惑度。", prefix: ["鲁迅", "写", "了", "狂人", "日记"], product: "0.64×0.58×0.41×…≈0.064", ppl: "8.2", candidates: [{ w: "（完成）", p: 1.0 }] },
+        { title: "第一步", summary: "给定前缀「鲁迅」，用示意分布预测下一词元。", prefix: ["鲁迅"], candidates: [{ w: "写", p: 0.64 }, { w: "是", p: 0.12 }, { w: "的", p: 0.08 }, { w: "其他合计", p: 0.16 }] },
+        { title: "第二步", summary: "链式扩展：P(了|鲁迅 写)。", prefix: ["鲁迅", "写"], candidates: [{ w: "了", p: 0.58 }, { w: "过", p: 0.21 }, { w: "的", p: 0.09 }, { w: "其他合计", p: 0.12 }] },
+        { title: "第三步", summary: "预测下一子词词元「狂人」。", prefix: ["鲁迅", "写", "了"], candidates: [{ w: "狂人", p: 0.41 }, { w: "《", p: 0.18 }, { w: "一", p: 0.11 }, { w: "其他合计", p: 0.30 }] },
+        { title: "第四步", summary: "P(日记|鲁迅 写 了 狂人)=0.42。", prefix: ["鲁迅", "写", "了", "狂人"], candidates: [{ w: "日记", p: 0.42 }, { w: "其他合计", p: 0.58 }] },
+        { title: "续写概率与困惑度", summary: "给定「鲁迅」，4 个后续词元的条件概率连乘约为 0.06392，PPL≈1.99。", reason: "只评估这 4 个词元，不含前缀或结束符；不是整句的无条件概率。", prefix: ["鲁迅", "写", "了", "狂人", "日记"], probabilityLabel: "P(续写|鲁迅)", product: "0.64×0.58×0.41×0.42≈0.06392", ppl: (Math.pow(0.64 * 0.58 * 0.41 * 0.42, -1 / 4)).toFixed(2), candidates: [] },
       ],
       render(v, s) { window.courseViz.renderLMChain(v, s); },
     },
@@ -215,8 +216,8 @@ const ch9Config = {
       stepLabels: ["直接答", "CoT", "SFT"],
       trace: [
         { title: "直接答", summary: "模型只输出最终答案，无法检查中间是否数错。", reason: "适合简单题；复杂题缺少可诊断过程。", phase: 0, fields: [{ label: "可检查性", value: "低" }] },
-        { title: "CoT", summary: "先列中间步骤，再给结论，错误位置更容易被发现。", reason: "推理链把隐式计算外显出来。", phase: 1, fields: [{ label: "可检查性", value: "高" }] },
-        { title: "SFT", summary: "用固定 instruction/response 格式训练模型按要求作答。", reason: "SFT 不是让模型自动变聪明，而是让输出更符合任务格式。", phase: 2, fields: [{ label: "目标", value: "格式对齐" }] },
+        { title: "CoT 提示", summary: "要求先列中间步骤，再给结论，便于检查计算。", reason: "提示改变本次作答方式，不更新参数；生成的步骤仍需核对。", phase: 1, fields: [{ label: "参数更新", value: "无" }] },
+        { title: "SFT 监督微调", summary: "用输入与示范回答组成训练集，通过损失和反向传播更新模型参数。", reason: "模型学习任务行为与指令遵循；只看到一种回答格式，不能判断模型是否经过 SFT。", phase: 2, fields: [{ label: "参数更新", value: "有（训练时）" }] },
       ],
       render(v, s) { window.courseViz.renderWorkflow(v, s); },
     },
@@ -227,11 +228,11 @@ const ch9Config = {
       <tr><td>上下文</td><td>自注意力</td><td>Transformer 块</td></tr><tr><td>生成</td><td>语言模型</td><td>下一词分布</td></tr></tbody></table></div>`,
   },
   labAlgos: [
-    { key: "bpe", label: "BPE", demo: "bpe", desc: "子词合并：人+记→日记→狂人→鲁迅。" },
+    { key: "bpe", label: "BPE", demo: "bpe", desc: "预设合并：日+记→日记，狂+人→狂人，鲁+迅→鲁迅。" },
     { key: "w2v", label: "Word2Vec", demo: "w2v", desc: "向量空间中拉近共现词、推远负样本。" },
     { key: "selfattn", label: "自注意力", demo: "selfattn", desc: "同一句内 Q 查 K，再加权 V 得新表示。" },
     { key: "lm", label: "语言模型", demo: "lm", desc: "自回归接龙与条件概率。" },
-    { key: "workflow", label: "CoT/SFT", demo: "workflow", desc: "同一错题计数题：直接答 vs 推理链 vs 模板格式。" },
+    { key: "workflow", label: "CoT/SFT", demo: "workflow", desc: "错题计数：直接作答、CoT 提示与 SFT 参数训练。" },
   ],
 };
 

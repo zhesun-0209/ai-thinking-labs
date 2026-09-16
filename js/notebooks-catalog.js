@@ -254,9 +254,9 @@ const CHAPTER_NOTEBOOKS = {
       {
         file: "ch12_mcts.ipynb",
         title: "冰湖导航 MCTS 规划",
-        blurb: "从起点先看候选动作，再反复模拟未来路线，观察访问次数、平均价值和探索项如何共同选择动作。",
+        blurb: "用模拟比较候选路线，按访问次数选择动作；走到新位置后重新规划，观察滑动如何改变下一步选择。",
         outcomes: ["查看起点候选动作", "读懂 UCT 平衡项"],
-        result: "起点地图、候选动作、前几次模拟路径、根节点统计、UCT 分数、访问价值图",
+        result: "起点地图、候选动作、模拟与回传、逐步规划、状态价值、多局比较",
         tier: "A",
         minutes: 20,
         ready: true,
@@ -326,118 +326,88 @@ function readerUrl(filename) {
   return `rendered/${stem(filename)}.html`;
 }
 
-function formatPointList(text) {
-  return String(text || "")
-    .split(/[、,，]/)
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .join(" · ");
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[char]);
 }
 
-function renderNotebookCard(item) {
+function findNotebook(value) {
+  const filename = /\.ipynb$/i.test(value) ? value.replace(/\.ipynb$/i, ".ipynb") : value + ".ipynb";
+  return Object.values(CHAPTER_NOTEBOOKS).flatMap((chapter) => chapter.items)
+    .find((item) => item.ready && item.file === filename) || null;
+}
+
+function renderNotebookCard(item, headingLevel) {
+  const title = escapeHtml(item.title);
+  const heading = "h" + headingLevel;
+  const content = "<" + heading + ">" + title + "</" + heading + ">" +
+    (item.blurb ? '<p class="nb-card-blurb">' + escapeHtml(item.blurb) + "</p>" : "");
   if (!item.ready) {
-    return `<article class="nb-card nb-card--soon">
-      <h3>${item.title}</h3>
-      ${item.blurb ? `<p class="nb-card-blurb">${item.blurb}</p>` : ""}
-      <p class="nb-soon">即将推出</p>
-    </article>`;
+    return '<article class="nb-card"><div>' + content + '</div><p class="nb-soon">即将推出</p></article>';
   }
-  const points = formatPointList(item.result);
-  return `<article class="nb-card">
-    <h3>${item.title}</h3>
-    ${item.blurb ? `<p class="nb-card-blurb">${item.blurb}</p>` : ""}
-    ${
-      points
-        ? `<p class="nb-card-points"><span class="nb-card-points-label">知识点</span><span class="nb-card-points-text">${points}</span></p>`
-        : ""
-    }
-    <div class="nb-actions">
-      <a class="nb-btn nb-btn--primary" href="${readerUrl(item.file)}">在线阅读</a>
-      <a class="nb-btn" href="${item.file}" download>下载 .ipynb</a>
-    </div>
-  </article>`;
+  const points = String(item.result || "").split(/[、,，]/).map((part) => part.trim()).filter(Boolean).join(" · ");
+  return '<article class="nb-card"><div>' + content +
+    (points ? '<p class="nb-card-meta"><span class="nb-card-points-label">知识点</span>' + escapeHtml(points) + '</p>' : "") +
+    '</div><div class="nb-actions">' +
+    '<a class="nb-btn nb-btn--primary" href="' + readerUrl(item.file) + '" aria-label="在线阅读：' + title + '">在线阅读</a>' +
+    '<a class="nb-btn" href="' + escapeHtml(item.file) + '" download aria-label="下载 ' + title + ' .ipynb">下载 .ipynb</a>' +
+    "</div></article>";
 }
 
-function renderChapterSection(chNum) {
+function renderChapterSection(chNum, single = false) {
   const ch = CHAPTER_NOTEBOOKS[chNum];
   if (!ch) return "";
-  const cards = ch.items.map((item) => renderNotebookCard(item)).join("");
-  return `<section class="nb-chapter" id="ch${chNum}">
-    <div class="nb-chapter-head">
-      <span class="nb-chapter-num">${chNum}</span>
-      <div>
-        <p class="nb-chapter-question">${ch.question}</p>
-        <h2>${ch.title}</h2>
-        <a class="nb-back-ch" href="${ch.web}">返回第 ${chNum} 章网页</a>
-      </div>
-    </div>
-    <div class="nb-grid">${cards}</div>
-  </section>`;
+  const labelId = single ? "nbPageTitle" : "nbChapterTitle" + chNum;
+  const heading = single
+    ? '<p class="nb-chapter-count">' + ch.items.length + " 个实验</p>"
+    : '<h2 id="' + labelId + '">第 ' + chNum + " 章 · " + escapeHtml(ch.title) + "</h2>";
+  return '<section class="nb-chapter" id="ch' + chNum + '" aria-labelledby="' + labelId + '">' +
+    '<div class="nb-chapter-head">' + heading +
+    '<a class="nb-back-ch" href="' + ch.web + '">第 ' + chNum + ' 章正文</a></div><div class="nb-grid">' +
+    ch.items.map((item) => renderNotebookCard(item, single ? 2 : 3)).join("") + "</div></section>";
 }
 
-function renderOverview(titleText) {
-  return `<section class="nb-overview" aria-labelledby="nbOverviewTitle">
-    <div>
-      <p class="nb-kicker">Python 代码实验</p>
-      <h2 id="nbOverviewTitle">${titleText}</h2>
-      <p>Notebook 已预渲染，可直接在线阅读。下载运行前请先安装依赖；部分实验首次运行可能需要联网或本地缓存。</p>
-    </div>
-  </section>`;
-}
-
-function renderInvalidChapterPage(rawValue) {
+function setPageTitle(title) {
   const titleEl = document.getElementById("nbPageTitle");
-  const mainEl = document.getElementById("nbMain");
-  if (titleEl) titleEl.textContent = "Python 代码实验";
-  if (!mainEl) return;
-  const safeValue = String(rawValue || "").trim();
-  mainEl.innerHTML = `
-    <section class="nb-overview nb-overview--empty" aria-labelledby="nbOverviewTitle">
-      <div>
-        <p class="nb-kicker">Python 代码实验</p>
-        <h2 id="nbOverviewTitle">未找到该章节</h2>
-        <p>${safeValue ? `当前参数为 ${safeValue}。` : ""}请选择第 5-12 章，或直接查看全部 Python 实验。</p>
-        <div class="nb-actions nb-actions--inline">
-          <a class="nb-btn nb-btn--primary" href="../hub.html">返回全部章节</a>
-          <a class="nb-btn" href="chapter.html?ch=5-12">查看第 5-12 章</a>
-        </div>
-      </div>
-    </section>`;
+  if (titleEl) titleEl.textContent = title;
+  document.title = title + " · AI思维 Python 实验";
 }
 
-function renderChapterPage(chNum, rawValue = chNum) {
-  const ch = CHAPTER_NOTEBOOKS[chNum];
-  if (!ch) {
-    renderInvalidChapterPage(rawValue);
+function renderInvalidChapterPage() {
+  setPageTitle("未找到该章节");
+  const mainEl = document.getElementById("nbMain");
+  if (mainEl) {
+    mainEl.innerHTML = '<section class="nb-empty"><p>可用章节：第 5-12 章。</p>' +
+      '<a class="nb-btn nb-btn--primary" href="chapter.html?ch=5-12">查看全部实验</a></section>';
+  }
+}
+
+function renderChapterPage(chNum) {
+  if (!Number.isInteger(chNum) || !Object.hasOwn(CHAPTER_NOTEBOOKS, chNum)) {
+    renderInvalidChapterPage();
     return;
   }
-  const titleEl = document.getElementById("nbPageTitle");
+  setPageTitle("第 " + chNum + " 章 · " + CHAPTER_NOTEBOOKS[chNum].title);
   const mainEl = document.getElementById("nbMain");
-  if (titleEl) titleEl.textContent = `第 ${chNum} 章 · ${ch.title} · Python 实验`;
-  if (mainEl) {
-    mainEl.innerHTML = `
-      ${renderOverview(`第 ${chNum} 章代码实验`)}
-      ${renderChapterSection(chNum)}`;
-  }
+  if (mainEl) mainEl.innerHTML = renderChapterSection(chNum, true);
 }
 
 function renderChapterRangePage(start, end) {
-  const titleEl = document.getElementById("nbPageTitle");
-  const mainEl = document.getElementById("nbMain");
-  if (!mainEl) return;
-  const low = Math.min(start, end);
-  const high = Math.max(start, end);
-  const chapterNums = Object.keys(CHAPTER_NOTEBOOKS)
-    .map(Number)
-    .filter((num) => num >= low && num <= high);
-  if (!chapterNums.length) {
-    renderInvalidChapterPage(`${start}-${end}`);
+  if (![start, end].every((num) => Number.isInteger(num) && Object.hasOwn(CHAPTER_NOTEBOOKS, num))) {
+    renderInvalidChapterPage();
     return;
   }
-  if (titleEl) titleEl.textContent = `第 ${chapterNums[0]}-${chapterNums[chapterNums.length - 1]} 章 · Python 实验`;
-  mainEl.innerHTML = `
-    ${renderOverview(`第 ${chapterNums[0]}-${chapterNums[chapterNums.length - 1]} 章代码实验`)}
-    ${chapterNums.map((num) => renderChapterSection(num)).join("")}`;
+  const low = Math.min(start, end);
+  const high = Math.max(start, end);
+  if (low === high) {
+    renderChapterPage(low);
+    return;
+  }
+  const chapterNums = Object.keys(CHAPTER_NOTEBOOKS).map(Number).filter((num) => num >= low && num <= high);
+  setPageTitle("第 " + low + "-" + high + " 章 · Python 实验");
+  const mainEl = document.getElementById("nbMain");
+  if (mainEl) mainEl.innerHTML = chapterNums.map((num) => renderChapterSection(num)).join("");
 }
 
 function renderIndexPage() {
@@ -448,6 +418,7 @@ if (typeof window !== "undefined") {
   window.NOTEBOOKS_CATALOG = {
     CHAPTER_NOTEBOOKS,
     readerUrl,
+    findNotebook,
     renderChapterPage,
     renderChapterRangePage,
     renderIndexPage,

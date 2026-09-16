@@ -85,15 +85,16 @@ const algorithms = {
     mark visited
     if current is goal: return path(parent)
 
-    for neighbor in neighbors(current) by 字母序:
-      if neighbor not visited and not in frontier:
+    for neighbor in neighbors(current) by 字母逆序:
+      if neighbor not visited:
+        remove neighbor from frontier if present
         parent[neighbor] = current
         frontier.push(neighbor)`,
     advancedSteps: [
       "先把起点放入待探索栈",
       "从栈顶取出一个状态",
       "检查它是不是目标",
-      "若不是，把所有没去过且不在栈中的邻居压入栈顶",
+      "若不是，把未访问邻居按字母逆序压栈；已在栈中的移到栈顶并更新路径来源",
       "重复 2-4，直到找到目标或栈为空",
     ],
     prompt: [
@@ -145,7 +146,7 @@ const algorithms = {
     tagline: "谁更便宜先走谁",
     strategy: "按累计代价最小",
     summary:
-      "一致代价搜索每次取出「从起点走到这里花费最少」的地点展开，保证找到总代价最低的路径。",
+      "一致代价搜索每次取出累计代价最小的地点展开；本例边权非负，能保证找到总代价最低的路径。",
     narrative:
       "比较从起点到各地点的累计代价，优先展开代价最小的，最终得到最便宜的路径。",
     pseudocode: `function ucs(start, goal):
@@ -213,7 +214,7 @@ const algorithms = {
     tagline: "理性与直觉的握手",
     strategy: "按综合代价最小",
     summary:
-      "A* 同时考虑已走代价 g 和估计剩余距离 h，取 g+h 最小的地点展开。在估计值合理时，能保证找到最优路径。",
+      "A* 同时考虑已走代价 g 和估计剩余代价 h，取 g+h 最小的地点展开。本例最优路径可用实际代价核对；一般图上，此实现需一致启发式来保证最优。",
     narrative:
       "既看已经走了多远，也看离目标还有多远，取两者之和最小的地点展开，通常比单纯贪婪更可靠。",
     pseudocode: `function astar(start, goal):
@@ -355,9 +356,8 @@ function runSearch(algorithmKey) {
 
         if (algorithmKey === "dfs") {
           if (inFrontier.has(nb)) {
-            if (!visited.has(nb)) parents[nb] = current.id;
-            skipped.push(`${nb} 已在栈中，更新 parent`);
-            return;
+            const idx = frontier.findIndex((entry) => entry.id === nb);
+            frontier.splice(idx, 1);
           }
           parents[nb] = current.id;
           gScores[nb] = nextG;
@@ -547,7 +547,7 @@ const MINIMAX_TREE = {
           isMax: false,
           score: -10,
           terminal: true,
-          pruned: true,
+          pruned: false,
         },
       ],
     },
@@ -562,7 +562,7 @@ const MINIMAX_TREE = {
           isMax: false,
           score: 8,
           terminal: true,
-          pruned: true,
+          pruned: false,
         },
       ],
     },
@@ -592,31 +592,31 @@ function buildMinimaxSteps() {
       scores: {},
     },
     {
-      title: "假设对手反击（MIN）",
-      narrative: "如果吃炮，对手会将军——局面评估 -100。",
-      explanation: "极小化层：假设对手选让我方最糟的应对。吃炮分支下限是 -100。",
-      highlighted: ["eat", "opp-check"],
+      title: "先评估发展（MIN）",
+      narrative: "先看发展分支：对手只有兑子这一种应对，得分 +8。",
+      explanation: "根节点已有保底值 α=8。其余走法必须超过 8，才值得替换当前选择。",
+      highlighted: ["develop", "opp-trade"],
       pruned: [],
-      chosen: "eat",
-      scores: { eat: -100 },
+      chosen: "develop",
+      scores: { develop: 8 },
     },
     {
       title: "Alpha-Beta 剪枝",
-      narrative: "防守分支对手最多 -10；发展分支在展开前已被剪枝——已有防守保底 5 分。",
-      explanation: "剪枝：若某分支上限不如已知最佳选择，就不必继续算下去（类比招聘：25万岗位不必继续面）。",
+      narrative: "再看防守：普通应给 +5，因此该 MIN 分支的值至多为 5，已不如发展的 +8。",
+      explanation: "β=5≤α=8，可跳过尚未评估的「对手进攻」。+5 是上界，不是防守的保底值。",
       highlighted: ["defend", "opp-normal"],
-      pruned: ["opp-attack", "opp-trade", "develop"],
-      chosen: "defend",
-      scores: { eat: -100, defend: 5, develop: 8 },
+      pruned: ["opp-attack"],
+      chosen: "develop",
+      scores: { defend: "≤5", develop: 8 },
     },
     {
-      title: "选择防守",
-      narrative: "不吃炮，先防守。博弈搜索比较的是最坏情况下的相对最好。",
-      explanation: "MiniMax 结论：防守（最坏 -10 优于吃炮的 -100）。不要幻想最好上限，要看最糟下限。",
-      highlighted: ["defend", "opp-normal"],
-      pruned: ["opp-attack", "opp-trade", "eat", "opp-check"],
-      chosen: "defend",
-      scores: { eat: -100, defend: 5 },
+      title: "选择发展",
+      narrative: "最后评估吃炮，唯一应对得 −100。发展保证 +8，优于另外两种走法。",
+      explanation: "完整树的值是 max(−100, min(5,−10), 8)=8。剪掉防守的剩余应对不改变结论。",
+      highlighted: ["root", "develop", "opp-trade", "eat", "opp-check"],
+      pruned: ["opp-attack"],
+      chosen: "develop",
+      scores: { eat: -100, defend: "≤5", develop: 8 },
     },
   ];
   return steps;
@@ -801,7 +801,7 @@ const vibeModules = {
   compare: {
     cells: [
       {
-        prompt: `在同一张校园图上，六种搜索策略各会走出怎样的路径？下表比较它们的选点规则、路径结果和能否保证最优。\n\n${CAMPUS_GRAPH_SPEC}`,
+        prompt: `在同一张校园图上，五种路径搜索各会找到怎样的路线？下表比较它们的选点规则、路径结果和能否保证最优。\n\n${CAMPUS_GRAPH_SPEC}`,
         copyPrompt: C5.compareTable,
         vibeTip: "点击表格中的某一行，可跳转到实验室查看该算法的完整步进过程。",
         output: { type: "compare-table" },
@@ -865,11 +865,11 @@ const vibeNotebooks = {
         output: { type: "worked-map", algo: "bfs", withPseudo: true },
       },
       {
-        prompt: "本例中，第一步展开校门口的三个邻居；第二步从队头取出食堂，发现它连着操场——搜索结束。总共 2 步，这是等权图上的最少步数。",
+        prompt: "展开校门口后，超市、教学楼、食堂依次排入队列；轮到食堂时发现操场，再等操场出队才结束。最终路径含 2 条边，不等于算法只展开了 2 个节点。",
         copyPrompt: C5.bfsLayers,
         vibeTip: "广度优先像同心圆扩散：离起点近的先处理，所以第一次碰到目标时步数最少。",
         labAlgo: "bfs",
-        output: { type: "insight", html: "<strong>层序展开</strong>：第一步处理校门口的所有邻居（超市、教学楼、食堂）；第二步从队头取出食堂，发现它直接连着操场。在每条路代价相同的情况下，广度优先保证步数最少。" },
+        output: { type: "insight", html: "<strong>层序展开</strong>：第一层为超市、教学楼、食堂，操场位于第二层。本页从队列取出操场时结束；找到的路径是校门口→食堂→操场，共 2 条边。BFS 保证最少边数，但本图带权，未必总代价最低。" },
       },
       {
         prompt: "深度优先与广度优先：待探索结构不同、本图路径不同、步数不同。深度优先适合「找任意一条路」，广度优先适合「找最少步数」。",
@@ -941,7 +941,7 @@ const vibeNotebooks = {
         output: { type: "insight", html: "<strong>贪婪的陷阱</strong>：第一步必展开超市（h=1 最小），但 x→超市 就要 7 且无出路到操场。回溯后走 x→食堂→操场，花费 8；一致代价 / A* 经图书馆只需 7。" },
       },
       {
-        prompt: "贪婪搜索只看估计距离 h；一致代价搜索只看累计花费 g。两者各走极端，也各有可能错过最优路径。",
+        prompt: "贪婪搜索只看估计距离 h，可能错过最优路径；一致代价搜索只看累计花费 g，在本例非负边权下保证最优，但可能展开更多节点。",
         copyPrompt: C5.greedyVsUcs,
         vibeTip: "记住这个对比：A* 把已走代价 g 和估计距离 h 结合起来排序。",
         output: { type: "compare-pair", algos: ["greedy", "ucs"] },
@@ -1201,10 +1201,9 @@ function renderCampusMap(step, options = {}) {
 
   const visited = new Set(step?.visited || []);
   const frontier = new Set((step?.frontier || []).map((e) => e.id));
-  const path = new Set(step?.path || []);
+  const path = step?.path || [];
   const currentId = step?.current?.id;
   const finalPath = options.finalPath || [];
-  const markerId = options.markerId || "campus-arrow";
   const metricMode = options.metricMode || null;
   const gScores = step?.gScores || {};
   const frontierEntries = step?.frontier || [];
@@ -1230,10 +1229,10 @@ function renderCampusMap(step, options = {}) {
   const edgeMarkup = CAMPUS_EDGES.map(({ from, to, cost }) => {
     const a = CAMPUS_NODES[from];
     const b = CAMPUS_NODES[to];
-    const inFinal =
-      finalPath.length > 0 &&
-      finalPath.some((n, i) => n === from && finalPath[i + 1] === to);
-    const inPath = path.has(from) && path.has(to) && !inFinal;
+    const containsEdge = (route) => route.some((node, i) =>
+      (node === from && route[i + 1] === to) || (node === to && route[i + 1] === from));
+    const inFinal = containsEdge(finalPath);
+    const inPath = containsEdge(path) && !inFinal;
     const cls = ["graph-edge", inFinal ? "in-final" : "", inPath ? "in-path" : ""]
       .filter(Boolean)
       .join(" ");
@@ -1241,7 +1240,7 @@ function renderCampusMap(step, options = {}) {
     const flip = EDGE_LABEL_FLIP[`${from}-${to}`] ?? EDGE_LABEL_FLIP[`${to}-${from}`] ?? 1;
     const label = edgeLabelPos(a.x, a.y, b.x, b.y, flip);
     return `
-      <line class="${cls}" x1="${line.x1}" y1="${line.y1}" x2="${line.x2}" y2="${line.y2}" marker-end="url(#${markerId})"></line>
+      <line class="${cls}" x1="${line.x1}" y1="${line.y1}" x2="${line.x2}" y2="${line.y2}"></line>
       <text class="graph-weight ${inFinal ? "in-final" : ""}" x="${label.x}" y="${label.y}">${cost}</text>
     `;
   }).join("");
@@ -1276,11 +1275,6 @@ function renderCampusMap(step, options = {}) {
 
   container.innerHTML = `
     <svg class="campus-svg" viewBox="${SVG_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="校园搜索图">
-      <defs>
-        <marker id="${markerId}" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
-          <path d="M0,0 L0,6 L9,3 z"></path>
-        </marker>
-      </defs>
       ${edgeMarkup}
       ${nodeMarkup}
     </svg>
@@ -1289,7 +1283,7 @@ function renderCampusMap(step, options = {}) {
 
 function renderRepresentation() {
   const el = document.getElementById("reprCampusMap");
-  if (el) renderCampusMap({ visited: [], frontier: [], path: [] }, { container: el, showH: false, markerId: "repr-arrow" });
+  if (el) renderCampusMap({ visited: [], frontier: [], path: [] }, { container: el, showH: false });
 }
 
 /* ========== Tabs & navigation ========== */
@@ -1712,7 +1706,7 @@ function mountOutputCell(container, output, instanceId, notebookKey) {
         <div class="repr-row"><strong>已访问</strong><span>已经展开过的地点</span></div>
         <div class="repr-row"><strong>路径来源</strong><span>记录每个地点是从哪里来的</span></div>`;
       container.append(mapEl, table);
-      renderCampusMap({ visited: [], frontier: [], path: [] }, { container: mapEl, showH: false, markerId: "repr-arrow" });
+      renderCampusMap({ visited: [], frontier: [], path: [] }, { container: mapEl, showH: false });
       break;
     }
     case "term-table": {
@@ -2012,8 +2006,7 @@ function renderWorkedRun(container, key, instanceKey) {
   const mapSlot = container.querySelector(`[data-worked-map="${instanceKey}"]`);
   renderCampusMap(step, {
     container: mapSlot,
-    finalPath: run.finalPath,
-    markerId: `worked-${instanceKey.replace(/[^a-z0-9-]/gi, "-")}`,
+    finalPath: index === trace.length - 1 && step.current?.id === GOAL_ID ? run.finalPath : [],
     metricMode: metricModeForAlgorithm(key),
     showH: key === "greedy" || key === "astar",
   });
@@ -2152,6 +2145,10 @@ function renderMinimaxStep(index) {
   const step = MINIMAX_STEPS[index];
   if (!step) return;
 
+  if (state.algorithmKey === "minimax") {
+    if (dom.stepIndex) dom.stepIndex.textContent = String(index + 1);
+    if (dom.stepTotal) dom.stepTotal.textContent = String(MINIMAX_STEPS.length);
+  }
   if (dom.minimaxLabStepTitle) dom.minimaxLabStepTitle.textContent = step.title;
   if (dom.minimaxLabNarrative) dom.minimaxLabNarrative.textContent = step.narrative;
   if (dom.minimaxLabRange) {
@@ -2169,9 +2166,9 @@ function renderMinimaxStep(index) {
 function buildGameTreeSvg(step) {
   const nodes = [
     { id: "root", x: 280, y: 30, label: "我方走", layer: "max" },
-    { id: "eat", x: 100, y: 100, label: "吃炮", layer: "max" },
-    { id: "defend", x: 280, y: 100, label: "防守", layer: "max" },
-    { id: "develop", x: 460, y: 100, label: "发展", layer: "max" },
+    { id: "eat", x: 100, y: 100, label: "吃炮", layer: "min" },
+    { id: "defend", x: 280, y: 100, label: "防守", layer: "min" },
+    { id: "develop", x: 460, y: 100, label: "发展", layer: "min" },
     { id: "opp-check", x: 100, y: 180, label: "将军 -100", layer: "min" },
     { id: "opp-normal", x: 220, y: 180, label: "普通 +5", layer: "min" },
     { id: "opp-attack", x: 340, y: 180, label: "进攻 -10", layer: "min" },
@@ -2348,8 +2345,7 @@ function render() {
   if (dom.pseudocode) dom.pseudocode.textContent = algo.pseudocode;
 
   renderCampusMap(step, {
-    finalPath: workedRuns[key]?.finalPath || step.path,
-    markerId: "lab-arrow",
+    finalPath: state.stepIndex === steps.length - 1 && step.current?.id === GOAL_ID ? step.path : [],
     metricMode: metricModeForAlgorithm(key),
     showH: key === "greedy" || key === "astar",
   });
@@ -2371,8 +2367,6 @@ function renderMinimaxLab(algo) {
   if (dom.algorithmTitle) dom.algorithmTitle.textContent = algo.title;
   if (dom.algorithmSummary) dom.algorithmSummary.textContent = algo.summary;
   if (dom.algorithmTagline) dom.algorithmTagline.textContent = algo.tagline;
-  if (dom.stepIndex) dom.stepIndex.textContent = String(state.minimaxStep + 1);
-  if (dom.stepTotal) dom.stepTotal.textContent = String(MINIMAX_STEPS.length);
   if (dom.pseudocode) dom.pseudocode.textContent = algo.pseudocode;
   renderMinimaxStep(state.minimaxStep);
   toggleLabPanels();

@@ -30,6 +30,13 @@ function fmt(n, d = 2) {
   return Number(n).toFixed(d);
 }
 
+function softmax(scores) {
+  const max = Math.max(...scores);
+  const exp = scores.map((score) => Math.exp(score - max));
+  const total = exp.reduce((sum, value) => sum + value, 0);
+  return exp.map((value) => value / total);
+}
+
 let transeMarkerUid = 0;
 
 function renderFormula(container, keyOrLatex) {
@@ -156,7 +163,7 @@ function renderAttentionFlow(container, step) {
   const sourceTokens = step.sourceTokens || ["鲁迅", "写", "日记"];
   const queryToken = step.queryToken || "日记";
   const scores = step.scores || [0.4, 2.1, 0.3];
-  const weights = step.weights || [0.05, 0.8, 0.15];
+  const weights = softmax(scores);
   const phase = step.phase || "score";
   const mode = step.mode || "cross";
   const focus = step.focusIndex ?? weights.reduce((best, v, i, arr) => (v > arr[best] ? i : best), 0);
@@ -185,7 +192,7 @@ function renderAttentionFlow(container, step) {
       : `交叉注意力：解码器的 Q(${queryToken}) 查询编码器的 K/V`;
   const querySub = mode === "self" ? "Q/K/V 同句" : "Q 来自解码器";
   const memorySub = mode === "self" ? "同一句词元（K,V）" : "编码器序列（K,V）";
-  const resultLabel = mode === "self" ? `新表示：${queryToken}′` : `输出倾向：${sourceTokens[focus]}`;
+  const resultLabel = mode === "self" ? `新表示：${queryToken}′` : `最大权重：${sourceTokens[focus]}`;
 
   const encGap = n > 1 ? Math.min(118, (mode === "cross" ? 400 : W - 120) / (n - 1)) : 0;
   const encStart = mode === "cross" ? 72 : (W - encGap * (n - 1)) / 2;
@@ -1022,12 +1029,12 @@ function renderMCTSTree(container, step) {
   const nodes =
     phase === "backup"
       ? [
-          { id: "root", label: "根", n: 11, q: 5.62, x: 260, y: 28 },
+          { id: "root", label: "根", n: 11, q: 6, x: 260, y: 28 },
           { id: "a", label: "a", n: 6, q: 3, parent: "root", x: 120, y: 96 },
-          { id: "b", label: "b", n: 5, q: 2.62, parent: "root", x: 400, y: 96, delta: "+1N +0.62Q" },
-          { id: "c", label: "c", n: 1, q: 0.62, parent: "b", x: 400, y: 168, delta: "新叶 +1N" },
+          { id: "b", label: "b", n: 5, q: 3, parent: "root", x: 400, y: 96, delta: "N+1，Q+1" },
+          { id: "c", label: "c", n: 1, q: 1, parent: "b", x: 400, y: 168, delta: "N+1，Q+1" },
         ]
-      : base.map((n) => ({ ...n }));
+      : base.filter((n) => phase !== "select" || n.id !== "c").map((n) => ({ ...n }));
   const active = step.active || "root";
   const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
   const edges = nodes
@@ -1254,16 +1261,16 @@ function renderTransE(container, step) {
   const uid = `transe-${++transeMarkerUid}`;
   const phaseLines = {
     init: ["向量平移假设", "h + r 应靠近正确尾实体 t"],
-    pos: ["正例训练", "把预测点 h+r 拉向 t"],
-    neg: ["负例训练", "把错误尾实体 t′ 推离 h+r"],
-    update: ["Margin 更新", "让 d⁺ 比 d⁻ 至少小 margin"],
+    pos: ["查看正例距离", "示意一次联合更新后，h+r 更靠近 t"],
+    neg: ["查看负例距离", "查看同次更新后 t′ 与 h+r 的距离"],
+    update: ["检查间隔损失", "已满足间隔，无需继续更新此样本对"],
   };
   const [titleLine1, titleLine2] = phaseLines[kind] || phaseLines.init;
   const states = {
     init: { pred: [188, 192], tail: [282, 192], neg: [318, 244], dPos: 0.84, dNeg: 1.36, loss: 0.48 },
-    pos: { pred: [248, 192], tail: [282, 192], neg: [318, 244], dPos: 0.31, dNeg: 1.62, loss: 0 },
+    pos: { pred: [248, 192], tail: [282, 192], neg: [318, 244], dPos: 0.31, dNeg: 2.08, loss: 0 },
     neg: { pred: [248, 192], tail: [282, 192], neg: [318, 244], dPos: 0.31, dNeg: 2.08, loss: 0 },
-    update: { pred: [254, 192], tail: [282, 192], neg: [322, 246], dPos: 0.28, dNeg: 2.08, loss: 0 },
+    update: { pred: [248, 192], tail: [282, 192], neg: [318, 244], dPos: 0.31, dNeg: 2.08, loss: 0 },
   };
   const state = states[kind] || states.init;
   const head = [82, 192];
@@ -1393,7 +1400,7 @@ function renderLMChain(container, step) {
   const candidates = step.candidates || [{ w: "写", p: 0.64 }];
   const maxP = Math.max(...candidates.map((c) => c.p), 0.01);
   const chainHtml = step.product
-    ? `<div class="lm-chain-mul"><span>P(句) =</span><code>${step.product}</code></div>`
+    ? `<div class="lm-chain-mul"><span>${step.probabilityLabel || "P(句)"} =</span><code>${step.product}</code></div>`
     : "";
   container.innerHTML = `
     <div class="lm-chain">
@@ -1424,7 +1431,7 @@ function renderActorCritic(container, step) {
     </div>`;
 }
 
-function renderTDUpdate(container, step) {
+function renderTDUpdate(container, step, phase = 0) {
   const vOld = step.vOld ?? 2.0;
   const vNew = step.vNew ?? 2.52;
   const r = step.r ?? 1;
@@ -1445,17 +1452,19 @@ function renderTDUpdate(container, step) {
         <text x="64" y="146" text-anchor="middle" font-size="11" fill="#c2410c">V=${fmt(vOld)}</text>
         <text x="152" y="78" fill="#64748b" font-size="12">动作 a</text>
         <path d="M 124 72 L 176 72" stroke="#64748b" marker-end="url(#${arr})"/>
-        <text x="150" y="62" fill="#0d6b62" font-size="11">r=${r}</text>
+        <text x="150" y="62" fill="#0d6b62" font-size="11">${phase >= 1 ? `r=${r}` : ""}</text>
         <g transform="translate(232,72)">
           <circle r="30" fill="#64748b"/>
           <text text-anchor="middle" dy="5" fill="#fff" font-size="14">s′</text>
         </g>
         <text x="232" y="128" text-anchor="middle" font-size="12" fill="#334155">已比价</text>
-        <text x="232" y="146" text-anchor="middle" font-size="11" fill="#334155">V=${fmt(vNext)}</text>
-        <rect x="312" y="36" width="188" height="88" rx="8" fill="#fff" stroke="#e2e8f0"/>
-        <text x="326" y="58" font-size="11" fill="#64748b">Bellman 目标（一步）</text>
-        <text x="326" y="80" font-size="13" fill="#0f172a">r + γV(s′) = ${r} + 0.9×${fmt(vNext)} = ${fmt(target)}</text>
-        <text x="326" y="102" font-size="12" fill="#c2410c">δ = ${fmt(delta)} → V 新 ${fmt(vNew)}</text>
+        <text x="232" y="146" text-anchor="middle" font-size="11" fill="#334155">${phase >= 1 ? `V=${fmt(vNext)}` : "待观察"}</text>
+        <rect x="312" y="36" width="188" height="138" rx="8" fill="#fff" stroke="#e2e8f0"/>
+        <text x="326" y="58" font-size="12" fill="#64748b">${["旧价值估计", "观察一次转移", "一步 TD 目标", "更新当前价值"][phase]}</text>
+        ${phase >= 2 ? `<text x="326" y="84" font-size="13" fill="#0f172a">r + γV(s′)</text>
+        <text x="326" y="105" font-size="12" fill="#0f172a">${r} + 0.9 × ${fmt(vNext)} = ${fmt(target)}</text>` : `<text x="326" y="84" font-size="13" fill="#0f172a">V(s) = ${fmt(vOld)}</text>`}
+        ${phase >= 3 ? `<text x="326" y="131" font-size="12" fill="#c2410c">δ = ${fmt(delta)}</text>
+        <text x="326" y="153" font-size="12" fill="#0d6b62">V 新 = ${fmt(vNew)}</text>` : ""}
         <defs><marker id="${arr}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#64748b"/></marker></defs>
       </svg>
       <div data-math="td_update" class="td-formula-slot"></div>
@@ -1792,21 +1801,21 @@ function renderWorkflow(container, step) {
   const modes = [
     {
       name: "直接答",
-      user: "50 道错题里，概念混淆和计算错误各多少题？请只给两个数字。",
-      bot: "概念混淆 18 题，计算错误 20 题。",
+      user: "已统计：概念混淆18题、计算错误20题、粗心12题。概念混淆和计算错误各多少题？请只给两个数字。",
+      bot: "18，20",
       chain: null,
     },
     {
       name: "CoT 推理链",
-      user: "50 道错题里，概念混淆和计算错误各多少题？请只给两个数字。",
+      user: "已统计：概念混淆18题、计算错误20题、粗心12题。请先核对总数，再给出前两类题数。",
       bot: "概念混淆 18 题，计算错误 20 题。",
-      chain: ["逐题标注错因标签", "概念混淆计数 → 18", "计算错误计数 → 20", "输出两个数字"],
+      chain: ["核对总数：18+20+12=50", "按题目顺序读取前两类", "概念混淆18，计算错误20"],
     },
     {
-      name: "SFT 对齐格式",
-      user: "50 道错题里，概念混淆和计算错误各多少题？请只给两个数字。",
-      bot: "分析：按错因标签统计。\n答案：概念混淆 18，计算错误 20。",
-      chain: ["固定「分析：… 答案：…」模板", "便于部署与自动解析"],
+      name: "SFT 监督微调",
+      user: "训练输入示例：概念混淆18题、计算错误20题、粗心12题。请按此顺序输出前两类题数。",
+      bot: "示范回答：18，20",
+      chain: ["收集多组输入与示范回答", "计算预测回答与示范的损失", "反向传播并更新模型参数"],
     },
   ];
   const m = modes[phase];
@@ -1818,7 +1827,7 @@ function renderWorkflow(container, step) {
         ${m.chain ? `<div class="workflow-chain">${m.chain.map((c) => `<div class="workflow-step-chip">${c}</div>`).join("")}</div>` : ""}
         <div class="workflow-bubble bot"><strong>模型</strong><p>${m.bot}</p></div>
       </div>
-      <p class="output-caption">${phase === 0 ? "缺推理过程，难以纠错。" : phase === 1 ? "CoT：先写中间步骤再答。" : "SFT：固定输出模板，便于部署。"}</p>
+      <p class="output-caption">${phase === 0 ? "直接作答不展示中间步骤。" : phase === 1 ? "CoT 提示：改变本次作答方式，不更新参数。" : "SFT：通过示范数据训练参数，不是套用回答模板。"}</p>
     </div>`;
 }
 
@@ -2342,7 +2351,7 @@ function renderReprLandscape(container, step) {
       </svg>
       ${tempBar}
       ${formula}
-      <p class="output-caption">${repr === "代数" ? "直接搜索卡在局部低谷，损失=12.4" : temp ? "退火允许上坡跳出 · 换几何后地形更平滑" : "换表征后沿缓坡继续下降，损失=2.3"}</p>
+      <p class="output-caption">${temp ? `本次接受较差候选，损失=${step.loss}` : `${repr}表征，当前损失=${step.loss}`}（教学示意，非真实证明搜索记录）</p>
     </div>`;
   if (temp && window.courseMath?.mountMath) {
     window.courseMath.mountMath(container.querySelector(".repr-formula-slot"), "anneal");
@@ -2358,15 +2367,15 @@ function renderMDPBooking(container, step) {
   ];
   const cur = step.state ?? 0;
   const gamma = 0.9;
-  const rewards = [0, 1, 2, 10];
+  const rewards = [1, 2, 10];
   const edges = [
-    { from: 0, to: 1, action: "搜索航班", r: 0 },
-    { from: 1, to: 2, action: "选择航班", r: 1 },
-    { from: 2, to: 3, action: "支付", r: 2 },
+    { from: 0, to: 1, action: "搜索航班", r: 1 },
+    { from: 1, to: 2, action: "选择航班", r: 2 },
+    { from: 2, to: 3, action: "支付", r: 10 },
   ];
   const gTerms = [];
   let g = 0;
-  for (let t = 0; t <= cur; t++) {
+  for (let t = 0; t < cur; t++) {
     g += Math.pow(gamma, t) * rewards[t];
     gTerms.push(`${t ? "+" : ""}${(Math.pow(gamma, t) * rewards[t]).toFixed(1)}`);
   }
@@ -2407,7 +2416,7 @@ function renderMDPBooking(container, step) {
           <rect width="528" height="64" rx="8" fill="#fff" stroke="#e2e8f0"/>
           <text x="12" y="22" font-size="11" fill="#334155"><tspan font-weight="600">当前：</tspan>${st.desc}</text>
           <text x="12" y="40" font-size="11" fill="#334155"><tspan font-weight="600">动作 a：</tspan>${step.action || st.actions[0]}</text>
-          <text x="12" y="56" font-size="11" fill="#0d6b62"><tspan font-weight="600">即时奖励 r：</tspan>${step.reward ?? st.reward} · <tspan font-weight="600">累积 G≈</tspan>${g.toFixed(1)} = ${gTerms.join("")}</text>
+          <text x="12" y="56" font-size="11" fill="#0d6b62"><tspan font-weight="600">已获奖励：</tspan>${step.reward ?? st.reward} · <tspan font-weight="600">从起点累计折扣回报：</tspan>${g.toFixed(1)} = ${gTerms.join("") || "0"}</text>
         </g>
       </svg>
       <div data-math="return_g" class="mdp-formula-slot"></div>
@@ -2422,11 +2431,11 @@ function bellmanDiagram(part) {
   if (part === "define") {
     return mk(`
       <rect width="520" height="148" fill="#f8fafc" rx="8"/>
-      <text x="16" y="22" font-size="11" fill="#64748b">折扣回报 G = r₀ + γr₁ + γ²r₂ + …</text>
+      <text x="16" y="22" font-size="11" fill="#64748b">折扣回报 G₀ = r₁ + γr₂ + γ²r₃ = 10.9</text>
       <g transform="translate(24,38)"><rect width="72" height="40" rx="6" fill="#ecfdf5" stroke="#0d6b62"/><text x="36" y="25" text-anchor="middle" font-size="11">s₀ 待搜索</text></g>
-      <text x="108" y="60" font-size="10" fill="#64748b">→ r=0 →</text>
+      <text x="108" y="60" font-size="10" fill="#64748b">→ r=1 →</text>
       <g transform="translate(148,38)"><rect width="72" height="40" rx="6" fill="#fff" stroke="#cbd5e1"/><text x="36" y="25" text-anchor="middle" font-size="11">s₁ 已比价</text></g>
-      <text x="232" y="60" font-size="10" fill="#64748b">→ r=1 →</text>
+      <text x="232" y="60" font-size="10" fill="#64748b">→ r=2 →</text>
       <g transform="translate(272,38)"><rect width="72" height="40" rx="6" fill="#fff" stroke="#cbd5e1"/><text x="36" y="25" text-anchor="middle" font-size="11">s₂ …</text></g>
       <text x="360" y="60" font-size="10" fill="#0d6b62">γ=0.9 折扣未来奖励</text>
       <text x="16" y="132" font-size="11" fill="#334155">V(s) = 从 s 出发、按策略 π 行动的期望回报</text>`, 148);
@@ -2502,6 +2511,7 @@ window.courseViz = {
   entropy,
   infoGain,
   fmt,
+  softmax,
   renderFormula,
   renderLegend,
   renderDecisionTree,

@@ -63,7 +63,7 @@
 
 第 5 章当前满足的基线：
 
-- 可见 cell 构建校园图和邻接表。
+- 可见 cell 构建罗马尼亚城市路线图和邻接表。
 - 可见 cell 实现 `def dfs`、`def bfs`、`def ucs`、`def greedy`、`def astar`。
 - 每个算法都有过程表和路径图。
 - 页面不出现 `plot_campus`、`run_all(graph)`、`comparison_table(graph)`、`verify_against_web(graph)`。
@@ -85,10 +85,12 @@ from notebook_content import ch05
 for name, cells in ch05.notebooks().items():
     write_notebook(name, cells)
 PY
-python scripts/render_notebooks.py ch05_campus_search.ipynb
+python scripts/render_notebooks.py ch05_campus_search.ipynb --execute
 ```
 
 将 `ch05` 和 notebook 文件名替换为当前章节。
+
+仅调整阅读页外观、复用现有运行结果时，不运行生成器，使用 `python scripts/render_notebooks.py --export-only`。默认导出不会执行 Python；新增或修改代码后的验收必须显式使用 `--execute`。后续章节的内容可能集中在 `notebook_content/ch08.py`，修改前按目标文件名定位定义，不能假定模块名与章节号一一对应。
 
 验收时至少检查：
 

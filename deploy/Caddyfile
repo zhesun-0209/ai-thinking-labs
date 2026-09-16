@@ -1,0 +1,36 @@
+@@SITE_DOMAIN@@ {
+	root * @@SITE_ROOT@@
+	encode zstd gzip
+
+	# HTML (including directory indexes) and metadata must revalidate.
+	header ?Cache-Control "no-cache, max-age=0, must-revalidate"
+	header X-Content-Type-Options "nosniff"
+	header Referrer-Policy "strict-origin-when-cross-origin"
+	@assets path *.css *.js *.svg *.png *.jpg *.jpeg *.webp *.gif *.ico *.woff *.woff2 *.ttf *.ipynb
+	header @assets Cache-Control "public, max-age=3600, must-revalidate"
+	@notebooks path *.ipynb
+	header @notebooks Content-Type "application/x-ipynb+json"
+
+	# Legacy project-path bookmarks on the NEW domain; query strings survive.
+	@legacyRoot path /ai-thinking-labs /ai-thinking-labs/
+	redir @legacyRoot /{?query} 308
+	@legacy path_regexp legacy ^/ai-thinking-labs/(.+)$
+	redir @legacy /{re.legacy.1}{?query} 308
+
+	@private path /.git* /.env* /docs /docs/* /scripts /scripts/* /deploy /deploy/* /labs /labs/*
+	error @private 404
+	@notFound path /404.html
+	error @notFound 404
+	file_server
+	handle_errors {
+		header Cache-Control "no-store"
+		@missing expression {err.status_code} == 404
+		handle @missing {
+			rewrite * /404.html
+			file_server
+		}
+		handle {
+			respond "Request failed" {err.status_code}
+		}
+	}
+}

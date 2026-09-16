@@ -29,20 +29,16 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install fonts for CJK plots
-        run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
-
-      - name: Render notebook HTML
-        run: |
-          pip install -r scripts/requirements-notebooks.txt
-          python -m ipykernel install --user --name python3
-          python scripts/generate_all_notebooks.py
-          python scripts/render_notebooks.py
+      - name: Build reviewed static files
+        run: >-
+          python scripts/build_site.py
+          --site-url https://zhesun-0209.github.io/ai-thinking-labs/
+          --output "$RUNNER_TEMP/site-release"
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: ${{ runner.temp }}/site-release/public
 
       - name: Deploy to GitHub Pages
         id: deployment

@@ -2056,197 +2056,286 @@ display(transition_detail_table(root_state).round(3))
 
 
 MCTS_CELL = """
-# 运行 UCT：平均回报代表动作已有表现，探索项代表还值得继续试探。
-rng = np.random.default_rng(12)
-N_state = defaultdict(int)
-N_action = defaultdict(int)
-W_action = defaultdict(float)
-
-def sample_model_step(state, action):
-    outcomes = mcts_step_model(state, action)
-    probs = np.array([item[0] for item in outcomes], dtype=float)
-    probs = probs / probs.sum()
-    idx = rng.choice(len(outcomes), p=probs)
-    prob, next_state, reward, done, _ = outcomes[idx]
-    return next_state, reward, done
-
-
-def uct_action(state, c=1.4):
-    for action in mcts_actions:
-        if N_action[(state, action)] == 0:
-            return action
-    scores = []
-    for action in mcts_actions:
-        mean_value = W_action[(state, action)] / N_action[(state, action)]
-        explore = c * np.sqrt(np.log(N_state[state] + 1) / N_action[(state, action)])
-        scores.append(mean_value + explore)
-    return int(np.argmax(scores))
-
-
-def rollout_action(state):
-    scores = []
-    for action in mcts_actions:
-        outcomes = mcts_step_model(state, action)
-        scores.append(sum(prob * reward for prob, _, reward, _, _ in outcomes))
-    scores = np.array(scores)
+# 有限深度节点为 (位置, 剩余步数)，撞墙回到同一格也不会混用不同时间的价值。
+MCTS_HORIZON = 18
+MCTS_GAMMA = 0.99
+MCTS_BUDGET = 1000
+model_outcomes = {
+    (state, action): mcts_step_model(state, action)
+    for state in range(n_rows * n_cols) for action in mcts_actions
+}
+rollout_cumulative = {}
+for state in range(n_rows * n_cols):
+    scores = np.array([
+        sum(prob * reward for prob, _, reward, _, _ in model_outcomes[state, action])
+        for action in mcts_actions
+    ])
     weights = np.exp((scores - scores.max()) * 5.0)
-    weights = weights / weights.sum()
-    return int(rng.choice(list(mcts_actions.keys()), p=weights))
+    rollout_cumulative[state] = np.cumsum(weights / weights.sum())
+    rollout_cumulative[state][-1] = 1.0
 
 
-def rollout(state, depth_limit=18, gamma=0.99):
-    total = 0.0
-    discount = 1.0
-    for _ in range(depth_limit):
-        action = rollout_action(state)
-        state, reward, done = sample_model_step(state, action)
+def sample_model_step(state, action, rng):
+    draw = rng.random()
+    cumulative = 0.0
+    outcomes = model_outcomes[state, action]
+    for prob, next_state, reward, done, _ in outcomes:
+        cumulative += prob
+        if draw < cumulative:
+            return next_state, reward, done
+    return outcomes[-1][1:4]
+
+
+def rollout(state, remaining, rng, gamma):
+    total, discount, steps = 0.0, 1.0, 0
+    while steps < remaining and mcts_map[state_to_rc(state)] not in {"H", "G"}:
+        # 仅用于模拟后半段的启发式策略，不是最终执行动作的选择规则。
+        action = int(np.searchsorted(rollout_cumulative[state], rng.random()))
+        state, reward, done = sample_model_step(state, action, rng)
         total += discount * reward
         discount *= gamma
+        steps += 1
         if done:
             break
-    return total
+    return total, steps
 
 
-simulation_rows = []
-early_simulation_rows = []
-for simulation in range(1, 1001):
-    state = root_state
-    path = []
-    path_states = [root_state]
-    path_actions = []
-    total_reward = 0.0
-    discount = 1.0
-    done = False
-    for depth in range(18):
-        action = uct_action(state)
-        path.append((state, action))
-        path_actions.append(mcts_actions[action])
-        next_state, reward, done = sample_model_step(state, action)
-        total_reward += discount * reward
-        discount *= 0.99
-        state = next_state
-        path_states.append(state)
-        if done:
-            break
-    if not done:
-        total_reward += discount * rollout(state)
+def backpropagate(path, tail_return, gamma, n_state, n_action, w_action):
+    value = tail_return
+    for key, action, reward in reversed(path):
+        value = reward + gamma * value
+        n_state[key] += 1
+        n_action[key, action] += 1
+        w_action[key, action] += value
+    return value
 
-    if simulation <= 8:
-        early_simulation_rows.append({
-            "模拟轮次": simulation,
-            "动作序列": " → ".join(path_actions[:8]),
-            "状态序列": " → ".join(state_name(s) for s in path_states[:9]),
-            "累计回报": total_reward,
-        })
 
-    for state, action in path:
-        N_state[state] += 1
-        N_action[(state, action)] += 1
-        W_action[(state, action)] += total_reward
-    if simulation % 200 == 0:
-        simulation_rows.append({"simulation": simulation, "root_visits": N_state[root_state]})
+def action_statistics(key, n_state, n_action, w_action, exploration=1.4):
+    rows = []
+    for action in mcts_actions:
+        visits = n_action.get((key, action), 0)
+        mean = w_action.get((key, action), 0.0) / visits if visits else np.nan
+        bonus = exploration * math.sqrt(math.log(max(1, n_state.get(key, 0))) / visits) if visits else np.inf
+        rows.append({"action_id": action, "action": mcts_actions[action], "visits": visits,
+                     "mean_value": mean, "explore": bonus, "UCT": mean + bonus if visits else np.inf})
+    # UCT 只决定下一次模拟探索谁；实际执行按访问次数，平手时按平均回报。
+    return pd.DataFrame(rows).sort_values(
+        ["visits", "mean_value", "action_id"], ascending=[False, False, True]
+    ).reset_index(drop=True)
 
-root_rows = []
-for action in mcts_actions:
-    visits = N_action[(root_state, action)]
-    mean_value = W_action[(root_state, action)] / visits if visits else 0
-    explore = 1.4 * np.sqrt(np.log(N_state[root_state] + 1) / visits) if visits else 0
-    root_rows.append({
-        "action_id": action,
-        "action": mcts_actions[action],
-        "visits": visits,
-        "mean_value": mean_value,
-        "explore": explore,
-        "UCT": mean_value + explore,
-    })
 
-mcts_root_df = pd.DataFrame(root_rows).sort_values("UCT", ascending=False).reset_index(drop=True)
-mcts_sim_df = pd.DataFrame(simulation_rows)
-display(pd.DataFrame(early_simulation_rows).round(4))
-display(mcts_root_df.rename(columns={
-    "action_id": "动作编号",
-    "action": "动作",
-    "visits": "访问次数",
-    "mean_value": "平均回报",
-    "explore": "探索项",
-}).round(4))
-print("起点推荐动作:", mcts_root_df.loc[0, "action"])
+def mcts_plan(start_state, remaining, simulations=1000, seed=12, gamma=0.99, exploration=1.4, trace_count=0):
+    if remaining < 0 or simulations < 1 or not 0 <= gamma <= 1 or exploration < 0:
+        raise ValueError("步数非负、模拟次数为正，折扣在 [0,1] 内，探索系数非负。")
+    rng = np.random.default_rng(seed)
+    n_state, n_action, w_action = defaultdict(int), defaultdict(int), defaultdict(float)
+    traces, snapshots = [], []
+    root_key = (int(start_state), remaining)
+    result = {"root_key": root_key, "N_state": n_state, "N_action": n_action,
+              "W_action": w_action, "traces": traces, "snapshots": snapshots,
+              "action": None, "table": pd.DataFrame()}
+    if remaining == 0 or mcts_map[state_to_rc(start_state)] in {"H", "G"}:
+        return result
+
+    for simulation in range(1, simulations + 1):
+        state, left, path = int(start_state), remaining, []
+        tail_return, rollout_steps, expanded = 0.0, 0, False
+        while left > 0:
+            key = (state, left)
+            unvisited = [a for a in mcts_actions if n_action[key, a] == 0]
+            if unvisited:
+                action = int(rng.choice(unvisited))
+                expanded = True
+            else:
+                # Selection：沿已访问动作按 UCT 向下走，随机转移按环境概率抽样。
+                log_visits = math.log(n_state[key])
+                action = max(mcts_actions, key=lambda a:
+                    w_action[key, a] / n_action[key, a]
+                    + exploration * math.sqrt(log_visits / n_action[key, a]))
+            next_state, reward, done = sample_model_step(state, action, rng)
+            path.append((key, action, reward))
+            state, left = next_state, left - 1
+            if done:
+                break
+            if expanded:
+                # Expansion 后只做剩余步数的 rollout，本次不再扩展第二个新动作。
+                tail_return, rollout_steps = rollout(state, left, rng, gamma)
+                break
+
+        assert len(path) + rollout_steps <= remaining
+        assert len({key for key, _, _ in path}) == len(path)
+        root_return = backpropagate(path, tail_return, gamma, n_state, n_action, w_action)
+        if simulation <= trace_count:
+            traces.append({
+                "模拟轮次": simulation,
+                "选择与扩展路径": " → ".join(f"{state_name(k[0])}[剩{k[1]}步]/{mcts_actions[a]}" for k, a, _ in path),
+                "扩展新动作数": int(expanded), "后续模拟步数": rollout_steps,
+                "总步数": len(path) + rollout_steps, "根节点回报": root_return,
+            })
+        if trace_count and (simulation % max(1, simulations // 5) == 0 or simulation == simulations):
+            row = {"模拟次数": simulation}
+            row.update({f"{name}访问次数": n_action[root_key, a] for a, name in mcts_actions.items()})
+            snapshots.append(row)
+
+    table = action_statistics(root_key, n_state, n_action, w_action, exploration)
+    result.update(action=int(table.loc[0, "action_id"]), table=table)
+    assert n_state[root_key] == simulations
+    for key, count in n_state.items():
+        assert sum(n_action[key, a] for a in mcts_actions) == count
+    return result
+
+
+def show_action_table(plan):
+    display(plan["table"].rename(columns={
+        "action_id": "动作编号", "action": "动作", "visits": "访问次数",
+        "mean_value": "平均后续回报", "explore": "探索项", "UCT": "UCT（仅供模拟选择）",
+    }).round(4))
+
+
+root_plan = mcts_plan(root_state, MCTS_HORIZON, MCTS_BUDGET, seed=12, trace_count=8)
+mcts_root_df = root_plan["table"]
+display(pd.DataFrame(root_plan["traces"]).round(4))
+display(pd.DataFrame(root_plan["snapshots"]))
+show_action_table(root_plan)
+print("起点推荐动作:", mcts_actions[root_plan["action"]], "（按访问次数排序）")
 """
 
 
 MCTS_NEXT_CELL = """
-# 沿着根节点推荐动作走一步，再查看新状态的候选动作。
-best_root_action = int(mcts_root_df.loc[0, "action_id"])
-best_outcomes = mcts_step_model(root_state, best_root_action)
-safe_outcomes = [item for item in best_outcomes if mcts_map[state_to_rc(item[1])] != "H"]
-next_prob, next_state, next_reward, next_done, _ = max(safe_outcomes, key=lambda item: (item[0], item[2]))
-next_candidates = action_candidate_table(next_state).sort_values("一步期望得分", ascending=False).reset_index(drop=True)
+# 执行与搜索使用独立随机数。真实抽样保留掉洞、撞墙等结果，不筛选安全结果。
+environment_rng = np.random.default_rng(2026)
+state, remaining = root_state, MCTS_HORIZON
+episode_states, episode_rows, episode_plans = [state], [], []
+episode_return, discount = 0.0, 1.0
+for step in range(MCTS_HORIZON):
+    plan = root_plan if step == 0 else mcts_plan(state, remaining, MCTS_BUDGET, seed=12 + step)
+    episode_plans.append(plan)
+    action = plan["action"]
+    next_state, reward, done = sample_model_step(state, action, environment_rng)
+    episode_return += discount * reward
+    episode_rows.append({
+        "步次": step + 1, "当前状态": state_name(state), "剩余步数": remaining,
+        "重新规划的动作": mcts_actions[action], "动作访问次数": int(plan["table"].loc[0, "visits"]),
+        "估计后续回报": plan["table"].loc[0, "mean_value"], "实际下一状态": state_name(next_state),
+        "即时奖励": reward, "累计折扣回报": episode_return, "是否结束": done,
+    })
+    state, remaining, discount = next_state, remaining - 1, discount * MCTS_GAMMA
+    episode_states.append(state)
+    if done:
+        break
 
-display(pd.DataFrame([{
-    "起点动作": mcts_actions[best_root_action],
-    "最可能下一状态": state_name(next_state),
-    "该步概率": next_prob,
-    "即时得分": next_reward,
-    "是否结束": next_done,
-}]).round(3))
-display(next_candidates.round(3))
-display(transition_detail_table(next_state).round(3))
+display(pd.DataFrame(episode_rows).round(4))
+next_plan = episode_plans[1] if len(episode_plans) > 1 else None
+if next_plan is not None:
+    print("实际下一状态重新搜索:", state_name(next_plan["root_key"][0]), "剩余步数:", next_plan["root_key"][1])
+    show_action_table(next_plan)
+middle_plan = episode_plans[len(episode_plans) // 2]
+print("中间状态重新搜索:", state_name(middle_plan["root_key"][0]), "剩余步数:", middle_plan["root_key"][1])
+show_action_table(middle_plan)
+print("本次抽样到达终点:", state == goal_state, "折扣回报:", round(episode_return, 4))
 
-fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.6))
-draw_mcts_lake(axes[0], "从起点推进一步", highlight_state=next_state, path_states=[root_state, next_state])
-root_r, root_c = state_to_rc(root_state)
-next_r, next_c = state_to_rc(next_state)
-axes[0].annotate("", xy=(next_c, next_r), xytext=(root_c, root_r), arrowprops={"arrowstyle": "->", "lw": 2.4, "color": "#2563eb"})
-
-axes[1].bar(next_candidates["候选动作"], next_candidates["一步期望得分"], color="#2563eb")
-axes[1].axhline(0, color="#94a3b8", linewidth=0.9)
-axes[1].set_title(f"{state_name(next_state)} 的下一轮候选", loc="left", fontweight="bold")
-axes[1].set_ylabel("一步期望得分")
-axes[1].grid(True, axis="y", color="#e2e8f0", linewidth=0.8)
+fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.7))
+draw_mcts_lake(axes[0], "逐步重新规划的实际路线", highlight_state=state, path_states=episode_states)
+for before, after in zip(episode_states, episode_states[1:]):
+    if before != after:
+        r0, c0 = state_to_rc(before)
+        r1, c1 = state_to_rc(after)
+        axes[0].annotate("", xy=(c1, r1), xytext=(c0, r0), arrowprops={"arrowstyle": "->", "lw": 1.8, "color": "#2563eb"})
+if next_plan is not None:
+    next_table = next_plan["table"]
+    bars = axes[1].bar(next_table["action"], next_table["mean_value"], color="#2563eb")
+    for bar, visits in zip(bars, next_table["visits"]):
+        axes[1].annotate(f"n={visits}", (bar.get_x() + bar.get_width() / 2, bar.get_height()),
+                         ha="center", va="bottom", xytext=(0, 5), textcoords="offset points")
+    axes[1].set_title(f"下一状态 {state_name(next_plan['root_key'][0])}，剩 {next_plan['root_key'][1]} 步", loc="left", fontweight="bold")
+    axes[1].set_ylabel("重新搜索的平均后续回报（按访问次数排序）")
+    axes[1].margins(y=0.25)
+    axes[1].axhline(0, color="#94a3b8", linewidth=0.9)
+    axes[1].grid(True, axis="y", color="#e2e8f0", linewidth=0.8)
+else:
+    axes[1].text(0.5, 0.5, "已到终止状态，不再规划", ha="center", va="center")
+    axes[1].set_axis_off()
 plt.tight_layout()
 plt.show()
 """
 
 
 MCTS_PLOT_CELL = """
-# 绘制根节点动作统计和 MCTS 访问到的状态价值。
+# 固定剩余步数切片，不把不同规划时长的价值混成一张图。
 fig, axes = plt.subplots(1, 2, figsize=(10.6, 4.7))
 x = np.arange(len(mcts_root_df))
 axes[0].bar(x - 0.18, mcts_root_df["mean_value"], width=0.36, color="#2563eb", label="平均回报")
 axes[0].bar(x + 0.18, mcts_root_df["UCT"], width=0.36, color="#f97316", label="UCT 总分")
 axes[0].set_xticks(x, mcts_root_df["action"])
-axes[0].set_title("起点动作评分组成", loc="left", fontweight="bold")
+axes[0].set_title("起点：UCT 用于探索，执行按访问次数", loc="left", fontweight="bold")
 axes[0].set_ylabel("评分")
 axes[0].axhline(0, color="#94a3b8", linewidth=0.9)
 axes[0].grid(True, axis="y", color="#e2e8f0", linewidth=0.8)
 axes[0].legend()
 
 state_count = n_rows * n_cols
-value_grid = np.zeros(state_count)
+slice_remaining = MCTS_HORIZON - 2
+value_grid = np.full(state_count, np.nan)
 policy_grid = np.full(state_count, -1)
 for state in range(state_count):
-    values = []
-    for action in mcts_actions:
-        visits = N_action[(state, action)]
-        values.append(W_action[(state, action)] / visits if visits else np.nan)
-    if not np.all(np.isnan(values)):
-        policy_grid[state] = int(np.nanargmax(values))
-        value_grid[state] = float(np.nanmax(values))
+    key = (state, slice_remaining)
+    if root_plan["N_state"].get(key, 0):
+        table = action_statistics(key, root_plan["N_state"], root_plan["N_action"], root_plan["W_action"])
+        policy_grid[state] = int(table.loc[0, "action_id"])
+        value_grid[state] = float(table.loc[0, "mean_value"])
 value_grid = value_grid.reshape(n_rows, n_cols)
 policy_grid = policy_grid.reshape(n_rows, n_cols)
 
-im = axes[1].imshow(value_grid, cmap="RdYlGn", vmin=min(-1.0, value_grid.min()), vmax=max(1.0, value_grid.max()))
+im = axes[1].imshow(np.ma.masked_invalid(value_grid), cmap="RdYlGn", vmin=-0.5, vmax=1.5)
 for state in range(state_count):
     r, c = state_to_rc(state)
     tile = mcts_map[r, c]
     arrow = "" if tile in {"H", "G"} or policy_grid[r, c] < 0 else mcts_arrows[int(policy_grid[r, c])]
-    axes[1].text(c, r, f"{tile}\\n{value_grid[r, c]:.2f}\\n{arrow}", ha="center", va="center", color="#0f172a", fontweight="bold")
-axes[1].set_title("MCTS 估计状态价值", loc="left", fontweight="bold")
+    label = "终止" if tile in {"H", "G"} else ("未访问" if np.isnan(value_grid[r, c]) else f"{value_grid[r, c]:.2f}")
+    axes[1].text(c, r, f"{tile}\\n{label}\\n{arrow}", ha="center", va="center", color="#0f172a", fontweight="bold")
+axes[1].set_title(f"剩 {slice_remaining} 步：最多访问动作的平均回报", loc="left", fontweight="bold")
 axes[1].set_xticks(range(n_cols))
 axes[1].set_yticks(range(n_rows))
 fig.colorbar(im, ax=axes[1], fraction=0.046, pad=0.04)
 plt.tight_layout()
 plt.show()
+"""
+
+
+MCTS_VALIDATE_CELL = """
+# 在同一组随机环境中比较两种策略的成功率与回报。
+def evaluate_policy(use_mcts, episodes=96, simulations=400):
+    rows = []
+    for episode in range(episodes):
+        # 两种策略共享每局的环境种子，规划随机数不会消耗真实转移的随机数。
+        env_rng = np.random.default_rng(10000 + episode)
+        action_rng = np.random.default_rng(20000 + episode)
+        state, total, discount = root_state, 0.0, 1.0
+        for step in range(MCTS_HORIZON):
+            if use_mcts:
+                plan = mcts_plan(state, MCTS_HORIZON - step, simulations,
+                                 seed=30000 + episode * MCTS_HORIZON + step)
+                action = plan["action"]
+            else:
+                action = int(action_rng.integers(4))
+            state, reward, done = sample_model_step(state, action, env_rng)
+            total += discount * reward
+            discount *= MCTS_GAMMA
+            if done:
+                break
+        rows.append({"成功": state == goal_state, "折扣回报": total, "步数": step + 1})
+    return pd.DataFrame(rows)
+
+
+random_evaluation = evaluate_policy(False)
+mcts_evaluation = evaluate_policy(True)
+evaluation_summary = pd.DataFrame([
+    {"策略": name, "局数": len(data), "成功局数": int(data["成功"].sum()),
+     "成功率": data["成功"].mean(), "平均折扣回报": data["折扣回报"].mean(), "平均步数": data["步数"].mean()}
+    for name, data in [("均匀随机", random_evaluation), ("每步 MCTS（400 次模拟）", mcts_evaluation)]
+])
+display(evaluation_summary.round(4))
+print("成功率是固定地图和种子下的有限样本结果，不保证每局成功；距离奖励也不等于成功概率。")
 """
 
 
@@ -3021,17 +3110,21 @@ def _ch12() -> dict[str, list]:
         "ch12_mcts.ipynb": flatten([
             rs.chapter_link(
                 "第 12 章 · 冰湖导航 MCTS 规划代码实验",
-                "本页让智能体从起点反复模拟未来路线。每个动作会因为滑动到达不同格子，MCTS 会在平均回报和探索项之间分配模拟次数。",
-                ["查看起点候选动作", "反复模拟候选路线", "展开下一状态候选", "绘制访问价值"],
+                "在已知滑动概率的冰湖上，用有限深度 MCTS 规划未来 18 步以内的行动。UCT 分配模拟次数，实际动作按访问次数选择，每走一步再从观测到的新状态规划剩余路程。",
+                ["查看环境与奖励", "选择、扩展、模拟与回传", "下一状态重新规划", "多局比较"],
                 "../ch12.html",
             ),
             rs.section("0", "从起点规划动作", "先看起点的候选动作、滑动概率和一步期望得分。得分由步进代价、靠近终点的进度、掉洞惩罚和到达奖励共同决定，用来让中间状态也能比较好坏。"),
             rs.code(DEPENDENCIES_CELL),
             rs.code(MCTS_INTRO_CELL),
-            rs.section("1", "模拟与展开", "MCTS 会反复抽样未来路线。根节点表格展示动作访问次数和平均回报，下一状态表格展示推荐动作落到新格子之后如何继续选择。"),
+            rs.section("1", "选择、扩展、模拟与回传", "每个节点用（位置，剩余步数）标识。选择阶段沿已访问动作按 UCT 向下走，遇到未访问动作只扩展一次，再模拟剩余路程。倒序回传 G = r + 0.99 × G，每个节点只累计自身之后的奖励，不包含到达它之前的奖励。到达终点、掉洞或剩余步数耗尽时停止，截断后的价值取 0。"),
             rs.code(MCTS_CELL),
+            rs.section("2", "观测新状态，再次规划", "执行转移按原滑动概率抽样，不筛掉危险结果。起点、下一状态和中间状态各做一次新的 MCTS；剩余步数随实际行动递减，表格按访问次数排序，平手时比较平均后续回报。UCT 不是最终动作的排序分数，一步期望得分也不是长期价值。"),
             rs.code(MCTS_NEXT_CELL),
+            rs.section("3", "区分探索评分与后续回报", "左图保留 UCT 作为模拟阶段的诊断信息；右图仅取起点搜索中剩余 16 步的节点，显示该节点访问最多动作的平均回报。未访问格子留空，终止状态不选动作。它不是所有位置的精确最优价值图。"),
             rs.code(MCTS_PLOT_CELL),
+            rs.section("4", "多局比较", "比较 96 局独立环境抽样中的每步 MCTS 与均匀随机策略。成功率和折扣回报分别统计；本实验的距离奖励会影响规划偏好，不能把平均回报直接解释成成功概率。"),
+            rs.code(MCTS_VALIDATE_CELL),
         ]),
         "ch12_image_diffusion.ipynb": flatten([
             rs.chapter_link(

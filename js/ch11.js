@@ -50,12 +50,12 @@ const ch11Config = {
     mdp: {
       key: "mdp",
       mentorKey: "ch11-mdp",
-      title: "强化学习 · 序贯决策与价值迭代", subtitle: "观测 → 动作 → 奖励",
+      title: "MDP 状态与动作", subtitle: "状态 → 动作 → 奖励",
       cells: [
         {
           prompt: "订机票：待搜索 → 已比价(+1) → 已下单(+2) → 已确认(+10)。**智能体-环境环**：每步 s → a → (r, s′)。",
           architectureKey: "mdp",
-          vibeTip: "G = Σ γᵗ r_t；γ<1 才能看长远。",
+          vibeTip: "γ 越接近 1，越重视未来奖励；γ=0 只看即时奖励。有限回合也可取 γ=1。",
           copyPrompt: C.mdpConcept,
         },
         {
@@ -74,7 +74,7 @@ const ch11Config = {
       title: "Actor-Critic", subtitle: "策略 + 价值",
       cells: [
         {
-          prompt: "对照 **Actor-Critic 架构图**：Actor 输出 π(a|s)，Critic 估计 V(s)，优势 A=R+γV(s′)−V(s) 指导更新。",
+          prompt: "对照 **Actor-Critic 架构图**：Actor 输出 π(a|s)，Critic 估计 V(s)。本例用一步 TD 误差 δ=r+γV(s′)−V(s) 作为优势估计来指导更新。",
           architectureKey: "actor-critic",
           vibeTip: "A>0：这步比预期好，提高该动作概率。",
           copyPrompt: C.actorConcept,
@@ -96,7 +96,7 @@ const ch11Config = {
       cells: [
         {
           prompt: "V(s) ← V(s) + α[r + γV(s′) − V(s)]。**不必等回合结束**，用下一状态价值自举。δ = r + γV(s′) − V(s) 是「惊喜程度」。",
-          vibeTip: "TD 有偏但方差小；蒙特卡洛等到终局更准但慢。",
+          vibeTip: "TD 用估计值自举，通常方差较低但可能有偏；蒙特卡洛使用完整回报，通常方差较高，并非总是更准。",
           copyPrompt: C.tdConcept,
         },
         {
@@ -135,7 +135,7 @@ const ch11Config = {
       key: "bellman",
       stepLabels: ["回报 G", "Bellman", "最优", "TD"],
       trace: [
-        { part: "define", title: "折扣回报 G", summary: "从当前步起，未来奖励按 γ 折扣求和。", reason: "γ<1 让智能体既看眼前也看长远。", fields: [{ label: "例", value: "0+0.9+1.62+…" }] },
+        { part: "define", title: "折扣回报 G", summary: "从当前步起，未来奖励按 γ 折扣求和。", reason: "本例三个动作的奖励是 1、2、10，γ=0.9；初始状态不额外占一个奖励时间步。", fields: [{ label: "G₀", value: "1+0.9×2+0.9²×10=10.9" }] },
         { part: "expect", title: "Bellman 期望方程", summary: "V(s) 等于走一步的期望回报。", reason: "把「长期」拆成「一步 + 未来」— 递归结构。", fields: [{ label: "核心", value: "r + γV(s′)" }] },
         { part: "optimal", title: "最优 Bellman", summary: "最优策略下选价值最高的动作。", reason: "动态规划可解，但大状态空间需采样近似。", fields: [{ label: "符号", value: "V*(s)" }] },
         { part: "td", title: "TD(0) 自举", summary: "用一步样本 r+γV(s′) 更新 V(s)。", reason: "TD 是 Bellman 方程的随机近似。", fields: [{ label: "更新", value: "V←V+αδ" }] },
@@ -165,7 +165,7 @@ const ch11Config = {
         { title: "s₀ 待搜索", summary: "用户打开订票 App，环境处于「待搜索」。智能体必须选动作「搜索航班」。", reason: "MDP 五元组 (S,A,P,R,γ) 中，这是初始状态 s₀∈S。", state: 0, action: "搜索航班", reward: 0, fields: [{ label: "s", value: "待搜索" }, { label: "a", value: "搜索航班" }, { label: "r", value: "0" }] },
         { title: "s₁ 已比价", summary: "环境返回航班列表，状态变为「已比价」，即时奖励 +1。", reason: "P(s₁|s₀,搜索)=1；有进展但任务未完成。", state: 1, action: "选择航班", reward: 1, fields: [{ label: "s′", value: "已比价" }, { label: "r", value: "+1" }] },
         { title: "s₂ 已下单", summary: "用户选定航班并下单，奖励 +2（比比价更接近目标）。", reason: "越接近「已确认」，中间奖励可设计得越大。", state: 2, action: "支付", reward: 2, fields: [{ label: "s′", value: "已下单" }, { label: "r", value: "+2" }] },
-        { title: "s₃ 已确认", summary: "支付成功、出票确认 — 终止状态，奖励 +10。", reason: "终止后无后续动作；G 会把 +10 折扣传回前面各状态。", state: 3, action: "—", reward: 10, fields: [{ label: "终止", value: "是" }, { label: "G", value: "≈9.8" }] },
+        { title: "s₃ 已确认", summary: "支付成功、出票确认，最后一次转移奖励 +10，随后终止。", reason: "从初始状态算 G₀=1+0.9×2+0.9²×10=10.9；到达终态后，剩余回报为 0。", state: 3, action: "—", reward: 10, fields: [{ label: "终止", value: "是" }, { label: "G₀", value: "10.9" }] },
       ],
       render(v, s) { window.courseViz.renderMDPBooking(v, s); },
     },
@@ -176,8 +176,8 @@ const ch11Config = {
       trace: [
         { title: "Actor 输出策略", summary: "当前状态下，Actor 给「搜索」0.70、「等待」0.30。", reason: "π(a|s) 是动作概率分布，不是价值估计。", fields: [{ label: "π(搜索)", value: "0.70" }], actions: [{ name: "搜索", p: 0.7 }, { name: "等待", p: 0.3 }] },
         { title: "Critic 估价值", summary: "Critic 估计当前状态长期回报 V(s)=4.2。", reason: "V(s) 用来判断刚才动作是否比预期更好。", fields: [{ label: "V(s)", value: "4.2" }], v: 4.2, actions: [{ name: "搜索", p: 0.7 }, { name: "等待", p: 0.3 }] },
-        { title: "计算优势 A", summary: "实际回报比预期高 1.8，说明「搜索」这步值得加强。", reason: "A=R+γV(s′)−V(s)，A>0 提高该动作概率。", fields: [{ label: "A", value: "+1.8" }], v: 4.2, advantage: 1.8, actions: [{ name: "搜索", p: 0.7 }, { name: "等待", p: 0.3 }] },
-        { title: "更新策略", summary: "把「搜索」概率从 0.70 提高到 0.78。", reason: "Actor 按 Critic 给出的优势方向更新。", fields: [{ label: "π(搜索)", value: "0.70→0.78" }], v: 4.2, advantage: 1.8, actions: [{ name: "搜索", p: 0.78 }, { name: "等待", p: 0.22 }] },
+        { title: "估计优势", summary: "设 r=1、γ=0.9、V(s′)=50/9，一步目标为 6，比 V(s)=4.2 高 1.8。", reason: "δ=1+0.9×(50/9)−4.2=1.8，用作优势估计；不是完整回合的实际回报。", fields: [{ label: "优势估计", value: "+1.8" }], v: 4.2, advantage: 1.8, actions: [{ name: "搜索", p: 0.7 }, { name: "等待", p: 0.3 }] },
+        { title: "更新策略", summary: "以 0.70→0.78 示意提高「搜索」概率的方向。", reason: "具体增幅取决于学习率和参数化方式，不能只由优势 1.8 唯一算出。", fields: [{ label: "π(搜索)，示意", value: "0.70→0.78" }], v: 4.2, advantage: 1.8, actions: [{ name: "搜索", p: 0.78 }, { name: "等待", p: 0.22 }] },
       ],
       render(v, s) { window.courseViz.renderActorCritic(v, s); },
     },
@@ -190,7 +190,7 @@ const ch11Config = {
         { title: "TD 目标", summary: "用 r+γV(s′)=1+0.9×4=4.60 当作学习目标。", reason: "这就是 Bellman 自举：用下一状态估计补足未来回报。", fields: [{ label: "目标", value: "4.60" }], vOld: 2.0, r: 1, vNext: 4.0, target: 4.6 },
         { title: "更新 V(s)", summary: "按 α=0.2 向目标靠近：2.00→2.52。", reason: "δ=4.60−2.00=2.60，只走一小步避免震荡。", fields: [{ label: "δ", value: "+2.60" }, { label: "V新", value: "2.52" }], vOld: 2.0, vNew: 2.52, r: 1, vNext: 4.0, target: 4.6 },
       ],
-      render(v, s) { window.courseViz.renderTDUpdate(v, s); },
+      render(v, s, index) { window.courseViz.renderTDUpdate(v, s, index); },
     },
     epsilon: {
       key: "epsilon", stepLabels: ["ε=0.4", "ε=0.15", "ε=0.02"],

@@ -1,613 +1,420 @@
 #!/usr/bin/env python3
-"""Execute real Jupyter notebooks and export official nbconvert HTML."""
+"""Export stored Notebook outputs without execution; opt in with --execute."""
 
 from __future__ import annotations
 
 import argparse
-import html
-import json
+import base64
 import re
+import struct
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import quote, unquote, urlsplit
+
+import nbformat
+from bs4 import BeautifulSoup
+from nbconvert import HTMLExporter
+from traitlets.config import Config
 
 ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOKS_DIR = ROOT / "notebooks"
 RENDERED_DIR = NOTEBOOKS_DIR / "rendered"
-READER_SCRIPT = """<script id="ai-labs-reader-script">
+CSS_VERSION = "20260916"
+
+# Retain nbconvert's cell and MIME renderers, not the JupyterLab application CSS.
+READER_TEMPLATE = r"""
+{% extends 'index.html.j2' %}
+{% block html_head %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ resources.reader_title | e }} · AI思维 Notebook</title>
+<meta name="description" content="{{ resources.reader_title | e }}，AI思维配套代码实验。">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../notebooks.css?v={{ resources.css_version }}">
+{% endblock html_head %}
+"""
+
+READER_SCRIPT = r"""
 (() => {
-  const root = document.documentElement;
-  const topButton = document.getElementById("ai-labs-top");
-  const updateProgress = () => {
-    const scrollable = Math.max(1, root.scrollHeight - root.clientHeight);
-    const progress = Math.min(1, Math.max(0, root.scrollTop / scrollable));
-    root.style.setProperty("--ai-labs-read-progress", `${Math.round(progress * 100)}%`);
-    if (topButton) topButton.hidden = root.scrollTop < 520;
+  const status = document.getElementById("ai-labs-status");
+  let statusTimer;
+  const announce = (message) => {
+    clearTimeout(statusTimer);
+    status.textContent = message;
+    statusTimer = setTimeout(() => { status.textContent = ""; }, 4000);
   };
-  document.addEventListener("scroll", updateProgress, { passive: true });
-  topButton?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-  updateProgress();
+  const iconButton = (symbol, label, className = "") => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "nb-icon-button " + className;
+    button.textContent = symbol;
+    button.title = label;
+    button.setAttribute("aria-label", label);
+    return button;
+  };
+  const fallbackCopy = (text) => {
+    const active = document.activeElement;
+    const buffer = document.createElement("textarea");
+    buffer.className = "nb-copy-buffer";
+    buffer.value = text;
+    buffer.setAttribute("aria-label", "待复制代码");
+    document.body.append(buffer);
+    buffer.select();
+    let copied = false;
+    try { copied = document.execCommand("copy"); }
+    finally {
+      buffer.remove();
+      active?.focus({ preventScroll: true });
+    }
+    return copied;
+  };
+  document.querySelectorAll(".jp-CodeCell .jp-InputArea-editor pre").forEach((pre, index) => {
+    const tools = document.createElement("div");
+    tools.className = "nb-code-tools";
+    const label = "复制代码单元 " + (index + 1);
+    const button = iconButton("⧉", label, "nb-copy");
+    let resetTimer;
+    button.addEventListener("click", async () => {
+      let copied = false;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(pre.textContent);
+          copied = true;
+        }
+      } catch (_) { /* Clipboard permissions can be denied on a static host. */ }
+      if (!copied) {
+        try { copied = fallbackCopy(pre.textContent); } catch (_) { copied = false; }
+      }
+      clearTimeout(resetTimer);
+      button.dataset.state = copied ? "copied" : "failed";
+      button.textContent = copied ? "✓" : "⧉";
+      button.title = copied ? "已复制" : "复制失败";
+      button.setAttribute("aria-label", button.title);
+      announce(copied ? "代码已复制" : "复制失败，请选中代码后复制。");
+      resetTimer = setTimeout(() => {
+        button.textContent = "⧉";
+        button.title = label;
+        button.setAttribute("aria-label", label);
+        delete button.dataset.state;
+      }, 2200);
+    });
+    tools.append(button);
+    pre.closest(".jp-Cell-inputWrapper").prepend(tools);
+  });
+
+  const dialog = document.createElement("dialog");
+  dialog.className = "nb-image-dialog";
+  dialog.setAttribute("aria-labelledby", "nb-image-title");
+  const header = document.createElement("header");
+  const title = document.createElement("h2");
+  title.id = "nb-image-title";
+  title.textContent = "输出图";
+  const closeButton = iconButton("×", "关闭原图");
+  header.append(title, closeButton);
+  const detail = document.createElement("div");
+  detail.className = "nb-image-detail";
+  detail.tabIndex = 0;
+  detail.setAttribute("role", "region");
+  detail.setAttribute("aria-label", "原始尺寸图像");
+  const fullImage = document.createElement("img");
+  detail.append(fullImage);
+  dialog.append(header, detail);
+  document.body.append(dialog);
+  closeButton.addEventListener("click", () => dialog.close());
+  let imageTrigger;
+  dialog.addEventListener("close", () => {
+    document.body.classList.remove("nb-dialog-open");
+    fullImage.removeAttribute("src");
+    imageTrigger?.focus({ preventScroll: true });
+  });
+  if (typeof dialog.showModal === "function") {
+    document.querySelectorAll(".nb-figure img").forEach((img) => {
+      const toolbar = document.createElement("div");
+      toolbar.className = "nb-figure-tools";
+      const button = iconButton("⤢", "查看原图：" + img.alt);
+      button.setAttribute("aria-haspopup", "dialog");
+      const open = () => {
+        imageTrigger = button;
+        title.textContent = img.alt;
+        fullImage.alt = img.alt;
+        fullImage.src = img.currentSrc || img.src;
+        fullImage.width = img.naturalWidth || Number(img.getAttribute("width"));
+        dialog.showModal();
+        document.body.classList.add("nb-dialog-open");
+        detail.scrollTo(0, 0);
+      };
+      button.addEventListener("click", open);
+      img.addEventListener("click", open);
+      img.dataset.zoomable = "true";
+      toolbar.append(button);
+      img.before(toolbar);
+    });
+  }
+
+  const top = document.getElementById("ai-labs-top");
+  let pending = false;
+  const updateTop = () => { top.hidden = window.scrollY < 520; pending = false; };
+  document.addEventListener("scroll", () => {
+    if (!pending) { pending = true; requestAnimationFrame(updateTop); }
+  }, { passive: true });
+  top.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    document.getElementById("nb-content").focus({ preventScroll: true });
+  });
+  updateTop();
 })();
-</script>"""
-RENDER_STYLE = """<style id="ai-labs-render-style">
-:root {
-  --ai-labs-accent: #2563eb;
-  --ai-labs-accent-dark: #1e3a8a;
-  --ai-labs-blue: #2563eb;
-  --ai-labs-amber: #c2410c;
-  --ai-labs-line: #e2e8f0;
-  --ai-labs-surface: #ffffff;
-  --ai-labs-soft: #f8fafc;
-  --ai-labs-gutter: clamp(18px, 6vw, 96px);
-  --ai-labs-read-progress: 0%;
+"""
+
+# Descriptions identify the plotted data, not unverified numerical conclusions.
+IMAGE_DESCRIPTIONS = {
+    "ch05_campus_search": [
+        "罗马尼亚城市路线图，标出 Arad 起点、Bucharest 终点、道路距离和启发式距离",
+        "DFS 搜索的节点展开顺序与最终路线",
+        "BFS 搜索的节点展开顺序与最终路线",
+        "UCS 搜索的累计代价与最终路线",
+        "贪心搜索按启发式距离展开的节点与最终路线",
+        "A* 搜索按 g+h 展开的节点与最终路线",
+    ],
+    "ch06_forward_backward_chain": ["动物分类专家系统的事实、触发规则与前向推理路径"],
+    "ch06_graph_reasoning": ["人物知识图谱中 Marie Curie 到诺贝尔奖的多跳路径"],
+    "ch07_decision_tree_kmeans": [
+        "Wine 分类决策树的特征分裂与叶节点",
+        "Wine 决策树的重要性前八项特征",
+        "Iris 鸢尾花数据的聚类分组与聚类中心",
+        "不同 k 值的簇内平方和与轮廓系数",
+    ],
+    "ch07_perceptron_gd": [
+        "疾病指标回归的拟合直线与梯度下降 MSE 曲线",
+        "鸢尾花二分类样本与感知机线性决策边界",
+    ],
+    "ch08_mlp_backprop": ["乳腺癌 MLP 的训练损失、混淆矩阵与样本预测置信度"],
+    "ch08_transe_attention": [
+        "国家与首都的 TransE 向量几何关系、正负例训练距离",
+        "词语注意力权重矩阵与每个查询词的最高关注关系",
+    ],
+    "ch09_attention_lm": ["句子的因果注意力矩阵、可见上下文与最高关注词关系"],
+    "ch09_bpe": ["BPE 合并的符号对频次、词元数量变化与合并过程"],
+    "ch09_word2vec_analogy": ["Skip-gram 训练损失及词向量二维投影中的类比关系"],
+    "ch10_clip_infonce": ["真实图片与候选文本提示的 CLIP 匹配概率矩阵"],
+    "ch10_conv2d_numpy": ["花朵原图、Sobel 卷积窗口、边缘特征图与最大池化结果"],
+    "ch10_mae_masking": ["原图、掩码可见输入、ViT-MAE 预测图块、重建结果与误差图"],
+    "ch10_vit_patchify": ["建筑照片的图块网格、展平向量与选定局部图块"],
+    "ch11_epsilon_greedy": [
+        "悬崖行走环境中的起点、终点和危险区域",
+        "探索率 0.10 训练后的完成路线",
+        "不同探索率的训练回报与探索率 0.10 的策略图",
+    ],
+    "ch11_mdp_value_iteration": [
+        "冰湖导航初始状态与选定动作后的下一格",
+        "冰湖价值迭代的状态价值、策略箭头与 Bellman 误差收敛曲线",
+    ],
+    "ch11_td_learning": [
+        "出租车任务的初始位置、乘客与目的地",
+        "训练后出租车接送乘客的执行路线",
+        "Q-learning 训练回报曲线与起始状态各动作的 Q 值",
+    ],
+    "ch12_alphafold_concepts": ["蛋白序列对齐、位置保守性、位置对表征与候选接触热力图"],
+    "ch12_image_denoising": ["建筑原图、带噪输入、去噪输出与重建误差"],
+    "ch12_image_denoising_diffusion": ["花朵图片前向加噪序列与预训练 DDPM 的反向采样轨迹"],
+    "ch12_image_diffusion": ["花朵照片在不同时间步的前向加噪序列"],
+    "ch12_image_patch_gan": ["GAN 训练损失、判别器输出、真实手写数字与生成数字的对比"],
+    "ch12_iris_parameter_search": ["鸢尾花分类的参数搜索轨迹及 C、gamma 参数空间得分"],
+    "ch12_mcts": [
+        "冰湖 MCTS 的起点环境与规划目标",
+        "MCTS 每步重新规划后的实际抽样路线，以及下一状态各动作的后续回报与访问次数",
+        "起点动作的平均回报与仅用于探索的 UCT，以及剩余 16 步节点中最多访问动作的平均回报",
+    ],
 }
 
-html[lang="zh-CN"] {
-  scroll-padding-top: 72px;
-}
 
-body.jp-Notebook {
-  margin: 0;
-  padding: 0 var(--ai-labs-gutter) 56px;
-  background: #fbfcfd;
-  color: #111827;
-  font-family: "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
-}
-
-#ai-labs-chrome {
-  position: sticky;
-  top: 0;
-  z-index: 9999;
-  margin: 0 calc(-1 * var(--ai-labs-gutter)) 22px;
-  padding: 10px var(--ai-labs-gutter);
-  min-height: 48px;
-  box-sizing: border-box;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 18px;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.96);
-  color: #0f172a;
-  border-bottom: 1px solid var(--ai-labs-line);
-  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
-  font: 700 13px/1.3 "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-
-#ai-labs-chrome::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 3px;
-  background: linear-gradient(90deg, var(--ai-labs-accent) var(--ai-labs-read-progress), transparent 0);
-}
-
-#ai-labs-chrome a {
-  color: #0f172a;
-  min-height: 32px;
-  padding: 0 2px;
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-}
-
-#ai-labs-chrome a:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.22);
-  outline-offset: 2px;
-}
-
-#ai-labs-chrome span {
-  margin-left: auto;
-  opacity: 0.9;
-}
-
-#ai-labs-top {
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  z-index: 9998;
-  min-width: 42px;
-  min-height: 42px;
-  border: 1px solid var(--ai-labs-line);
-  border-radius: 8px;
-  background: #fff;
-  color: var(--ai-labs-accent-dark);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
-  font: 800 16px/1 "Noto Sans CJK SC", system-ui, -apple-system, "Segoe UI", sans-serif;
-  cursor: pointer;
-}
-
-#ai-labs-top[hidden] {
-  display: none;
-}
-
-.jp-Notebook .jp-Cell {
-  max-width: 960px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 10px;
-}
-
-.jp-Notebook .jp-CodeCell {
-  max-width: min(1120px, 100%);
-}
-
-.jp-Notebook .jp-MarkdownCell:first-of-type {
-  padding: 18px 20px;
-  border: 1px solid var(--ai-labs-line);
-  border-left: 5px solid var(--ai-labs-accent);
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: none;
-}
-
-.jp-RenderedHTMLCommon,
-.jp-RenderedHTMLCommon p,
-.jp-RenderedHTMLCommon li {
-  line-height: 1.72;
-}
-
-.jp-RenderedHTMLCommon p,
-.jp-RenderedHTMLCommon ul,
-.jp-RenderedHTMLCommon ol {
-  max-width: 840px;
-}
-
-.jp-RenderedHTMLCommon h1,
-.jp-RenderedHTMLCommon h2,
-.jp-RenderedHTMLCommon h3 {
-  letter-spacing: 0;
-  color: #1f2937;
-}
-
-.jp-RenderedHTMLCommon h1 {
-  font-size: clamp(1.85rem, 5vw, 2.45rem);
-  line-height: 1.16;
-}
-
-.jp-RenderedHTMLCommon h2 {
-  margin-top: 1.35em;
-  padding-top: 0.2em;
-  font-size: clamp(1.35rem, 3.6vw, 1.78rem);
-}
-
-.jp-RenderedHTMLCommon h3 {
-  color: #334155;
-}
-
-.jp-RenderedHTMLCommon a.anchor-link {
-  margin-left: 0.35em;
-  color: var(--ai-labs-accent);
-  font-size: 0.72em;
-  text-decoration: none;
-  opacity: 0;
-  transition: opacity 120ms ease;
-}
-
-.jp-RenderedHTMLCommon h1:hover a.anchor-link,
-.jp-RenderedHTMLCommon h2:hover a.anchor-link,
-.jp-RenderedHTMLCommon h3:hover a.anchor-link,
-.jp-RenderedHTMLCommon a.anchor-link:focus-visible {
-  opacity: 0.75;
-}
-
-.jp-RenderedHTMLCommon a.anchor-link:focus-visible {
-  outline: 2px solid rgba(37, 99, 235, 0.24);
-  outline-offset: 2px;
-}
-
-.jp-RenderedHTMLCommon a {
-  color: var(--ai-labs-accent-dark);
-  font-weight: 700;
-}
-
-.jp-RenderedHTMLCommon code {
-  border-radius: 5px;
-  padding: 0.1em 0.35em;
-  background: #eef2f7;
-  color: #334155;
-}
-
-.jp-RenderedHTMLCommon details {
-  max-width: 840px;
-  margin: 12px 0;
-  padding: 12px 14px;
-  border: 1px solid var(--ai-labs-line);
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.jp-RenderedHTMLCommon summary {
-  cursor: pointer;
-  color: var(--ai-labs-accent-dark);
-  font-weight: 800;
-}
-
-.jp-RenderedHTMLCommon table,
-.jp-RenderedHTMLCommon table.dataframe {
-  width: max-content;
-  min-width: min(100%, 720px);
-  max-width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  margin: 10px 0 18px;
-  overflow: hidden;
-  border: 1px solid var(--ai-labs-line);
-  border-radius: 8px;
-  background: var(--ai-labs-surface);
-  box-shadow: none;
-}
-
-.jp-RenderedHTMLCommon thead th {
-  background: #f1f5f9;
-  color: #0f172a;
-  font-weight: 800;
-  border-bottom: 1px solid var(--ai-labs-line);
-}
-
-.jp-RenderedHTMLCommon th,
-.jp-RenderedHTMLCommon td {
-  padding: 9px 11px;
-  border-right: 1px solid #eef2f7;
-  border-bottom: 1px solid #eef2f7;
-  vertical-align: top;
-  white-space: nowrap;
-}
-
-.jp-RenderedHTMLCommon tr:nth-child(even) td,
-.jp-RenderedHTMLCommon tr:nth-child(even) th {
-  background: #f8fafc;
-}
-
-.jp-RenderedHTMLCommon tr:last-child td,
-.jp-RenderedHTMLCommon tr:last-child th {
-  border-bottom: 0;
-}
-
-.jp-RenderedHTMLCommon tr > :last-child {
-  border-right: 0;
-}
-
-.jp-InputArea-editor,
-.jp-OutputArea-output {
-  max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-color: #94a3b8 #f1f5f9;
-}
-
-.jp-InputArea-editor {
-  border: 1px solid var(--ai-labs-line);
-  border-radius: 8px;
-  background: #f8fafc;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-
-.jp-OutputArea-output {
-  border-radius: 8px;
-}
-
-.jp-RenderedHTMLCommon:has(table),
-.jp-OutputArea-output:has(table) {
-  position: relative;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.jp-RenderedText pre {
-  padding: 12px 14px;
-  border-radius: 8px;
-  background: #f8fafc;
-  border: 1px solid var(--ai-labs-line);
-}
-
-.jp-RenderedHTMLCommon img,
-.jp-OutputArea-output img,
-.jp-OutputArea-output svg {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  background: #ffffff;
-  border: 1px solid var(--ai-labs-line);
-  box-shadow: none;
-}
-
-@media (max-width: 640px) {
-  html[lang="zh-CN"] {
-    scroll-padding-top: 64px;
-  }
-
-  body.jp-Notebook {
-    padding-bottom: 40px;
-  }
-
-  #ai-labs-chrome {
-    min-height: 48px;
-    margin-bottom: 16px;
-    padding-top: 8px;
-    padding-bottom: 8px;
-    flex-wrap: nowrap;
-    gap: 14px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    scrollbar-width: none;
-  }
-
-  #ai-labs-chrome::-webkit-scrollbar {
-    display: none;
-  }
-
-  #ai-labs-chrome a {
-    flex: 0 0 auto;
-  }
-
-  #ai-labs-chrome span {
-    flex: 0 0 auto;
-    margin-left: 0;
-    font-size: 0;
-  }
-
-  #ai-labs-chrome span::before {
-    content: "进度";
-    font-size: 12px;
-  }
-
-  #ai-labs-top {
-    right: 14px;
-    bottom: 14px;
-  }
-
-  .jp-Notebook .jp-InputPrompt,
-  .jp-Notebook .jp-OutputPrompt {
-    display: none;
-  }
-
-  .jp-Notebook .jp-Cell-inputWrapper,
-  .jp-Notebook .jp-Cell-outputWrapper {
-    padding-left: 0;
-  }
-
-  .jp-Notebook .jp-MarkdownCell:first-of-type {
-    padding: 14px;
-  }
-
-  .jp-CodeCell .jp-InputArea-editor {
-    max-height: min(58vh, 520px);
-    overflow: auto;
-  }
-
-  .jp-CodeCell .jp-InputArea {
-    position: relative;
-  }
-
-  .jp-CodeCell .jp-InputArea::after {
-    content: "代码可上下或横向滚动";
-    display: block;
-    margin: 4px 0 0;
-    color: #64748b;
-    font-size: 11px;
-    font-weight: 700;
-  }
-
-  .jp-RenderedHTMLCommon table,
-  .jp-RenderedHTMLCommon table.dataframe {
-    max-width: none;
-    min-width: 640px;
-  }
-
-  .jp-RenderedHTMLCommon th,
-  .jp-RenderedHTMLCommon td {
-    min-width: 78px;
-    white-space: normal;
-  }
-
-  .jp-RenderedHTMLCommon:has(table)::after {
-    content: "横向滑动查看完整表格";
-    display: block;
-    margin: -8px 0 12px;
-    color: #64748b;
-    font-size: 11px;
-    font-weight: 700;
-  }
-}
-</style>"""
-CHROME_RE = re.compile(r'<(?:div|nav) id="ai-labs-chrome"[^>]*>.*?</(?:div|nav)>\s*', re.DOTALL)
-STYLE_RE = re.compile(r'<style id="ai-labs-render-style">.*?</style>\s*', re.DOTALL)
-TOP_BUTTON_RE = re.compile(r'<button id="ai-labs-top"[^>]*>.*?</button>\s*', re.DOTALL)
-READER_SCRIPT_RE = re.compile(r'<script id="ai-labs-reader-script">.*?</script>\s*', re.DOTALL)
-REQUIRE_JS_RE = re.compile(
-    r'<script\s+src="https://cdnjs\.cloudflare\.com/ajax/libs/require\.js/2\.1\.10/require\.min\.js"></script>\s*',
-    re.IGNORECASE,
-)
-MATHJAX_RE = re.compile(
-    r"<!-- Load mathjax -->.*?<!-- End of mathjax configuration -->",
-    re.DOTALL | re.IGNORECASE,
-)
-MERMAID_RE = re.compile(
-    r'<script type="module">\s*document\.addEventListener\("DOMContentLoaded", async \(\) => \{.*?<!-- End of mermaid configuration -->',
-    re.DOTALL,
-)
-DEFAULT_IMAGE_ALT_RE = re.compile(r'alt="No description has been provided for this image"')
+def list_notebooks(names: list[str] | None = None) -> list[Path]:
+    if not names:
+        return sorted(NOTEBOOKS_DIR.glob("ch*.ipynb"))
+    paths = []
+    for name in names:
+        if not re.fullmatch(r"ch\d{2}_[a-z0-9_]+\.ipynb", name):
+            raise ValueError(f"expected an ipynb filename under notebooks/: {name}")
+        path = NOTEBOOKS_DIR / name
+        if not path.is_file():
+            raise ValueError(f"notebook not found: {name}")
+        if path not in paths:
+            paths.append(path)
+    return paths
 
 
-def list_notebooks(pattern: list[str] | None = None) -> list[Path]:
-    if pattern:
-        return [NOTEBOOKS_DIR / p for p in pattern if (NOTEBOOKS_DIR / p).exists()]
-    return sorted(NOTEBOOKS_DIR.glob("ch*.ipynb"))
-
-
-def run(cmd: list[str]) -> None:
+def execute_inplace(path: Path) -> None:
+    cmd = [
+        sys.executable, "-m", "jupyter", "nbconvert",
+        "--Application.log_level=ERROR", "--to", "notebook", "--execute", "--inplace",
+        "--ExecutePreprocessor.timeout=120", str(path.relative_to(ROOT)),
+    ]
     print("+", " ".join(cmd), flush=True)
     subprocess.run(cmd, cwd=str(ROOT), check=True)
 
 
-def execute_inplace(path: Path) -> None:
-    run(
-        [
-            sys.executable,
-            "-m",
-            "jupyter",
-            "nbconvert",
-            "--Application.log_level=ERROR",
-            "--to",
-            "notebook",
-            "--execute",
-            "--inplace",
-            "--ExecutePreprocessor.timeout=120",
-            str(path.relative_to(ROOT)),
-        ]
-    )
+def notebook_title(nb, path: Path) -> str:
+    for cell in nb.cells:
+        if cell.cell_type == "markdown":
+            for line in cell.source.splitlines():
+                if line.startswith("# "):
+                    return line[2:].strip()
+    return path.stem
 
 
-def export_html(path: Path) -> Path:
-    RENDERED_DIR.mkdir(parents=True, exist_ok=True)
-    stem = path.stem
-    run(
-        [
-            sys.executable,
-            "-m",
-            "jupyter",
-            "nbconvert",
-            "--Application.log_level=ERROR",
-            "--to",
-            "html",
-            "--template",
-            "lab",
-            "--embed-images",
-            "--TagRemovePreprocessor.enabled=True",
-            "--TagRemovePreprocessor.remove_cell_tags=ai-labs-bootstrap",
-            f"--output={stem}",
-            f"--output-dir={RENDERED_DIR.relative_to(ROOT)}",
-            str(path.relative_to(ROOT)),
-        ]
-    )
-    out = RENDERED_DIR / f"{stem}.html"
-    inject_chrome(out, path)
-    return out
+def validate_static_output(soup: BeautifulSoup, path: Path) -> None:
+    # Never silently ship raw formulae or missing interactive dependencies.
+    for block in soup.select(".jp-RenderedMarkdown, .jp-RenderedLatex, .jp-RenderedHTML"):
+        fragment = BeautifulSoup(str(block), "html.parser")
+        for code in fragment.select("pre, code"):
+            code.decompose()
+        if block.get("data-mime-type") == "text/latex" or fragment.select(".math") or re.search(r"\\[([]|\\begin\{|(?<!\\)\$[^$]+\$", fragment.get_text()):
+            raise ValueError(f"{path.name}: math requires a local, licensed renderer before export")
+    if soup.select("script, iframe, object, embed"):
+        raise ValueError(f"{path.name}: interactive output needs an explicit local renderer")
+    for node in soup.select("[src], link[href]"):
+        value = node.get("src", node.get("href", ""))
+        if urlsplit(value).scheme in ("http", "https") or value.startswith("//"):
+            raise ValueError(f"{path.name}: external rendering dependency: {value}")
+    for style in soup.select("style"):
+        if re.search(r"@import|url\s*\(", style.get_text(), re.IGNORECASE):
+            raise ValueError(f"{path.name}: output CSS contains a rendering dependency")
 
 
-def notebook_title(notebook_path: Path) -> str:
-    nb = json.loads(notebook_path.read_text(encoding="utf-8"))
-    for cell in nb.get("cells", []):
-        if cell.get("cell_type") != "markdown":
-            continue
-        source = "".join(cell.get("source", []))
-        for line in source.splitlines():
-            if line.startswith("#"):
-                return line.lstrip("#").strip()
-    return notebook_path.stem
+def decorate_html(text: str, notebook_path: Path) -> str:
+    soup = BeautifulSoup(text, "html.parser")
+    validate_static_output(soup, notebook_path)
+    soup.html["lang"] = "zh-CN"
+    main = soup.main
+    main["id"] = "nb-content"
+    main["tabindex"] = "-1"
+    ch = int(re.match(r"ch(\d+)_", notebook_path.stem).group(1))
+    chrome = soup.new_tag("nav", id="ai-labs-chrome")
+    chrome["aria-label"] = "Notebook 导航"
+    for href, label in [
+        (f"../chapter.html?ch={ch}", "实验列表"),
+        (f"../../ch{ch}.html", "章节正文"),
+        (f"../{notebook_path.name}", "下载 .ipynb"),
+    ]:
+        link = soup.new_tag("a", href=href)
+        link.string = label
+        if href.endswith(".ipynb"):
+            link["download"] = ""
+        chrome.append(link)
+    skip = soup.new_tag("a", href="#nb-content", attrs={"class": "nb-skip"})
+    skip.string = "跳到正文"
+    main.insert_before(skip)
+    main.insert_before(chrome)
+
+    # Drop only the duplicate chapter link, not the introductory learning content.
+    chapter_href = f"../../ch{ch}.html"
+    for link in main.select("a[href]"):
+        if link["href"] == f"../ch{ch}.html":
+            link["href"] = chapter_href
+        parent = link.parent
+        if link["href"] == chapter_href and parent.name == "p" and parent.get_text(strip=True) == link.get_text(strip=True):
+            parent.decompose()
+    for heading in main.select("h1[id], h2[id], h3[id], h4[id]"):
+        heading["id"] = unquote(heading["id"])
+        anchor = heading.select_one(".anchor-link")
+        if anchor:
+            anchor["href"] = "#" + quote(heading["id"], safe="-_")
+            anchor["aria-label"] = "链接到本节"
+            anchor["title"] = "链接到本节"
+    for wrapper in main.select(".jp-Cell-inputWrapper"):
+        wrapper.attrs.pop("tabindex", None)
+    for index, editor in enumerate(main.select(".jp-InputArea-editor"), 1):
+        editor["tabindex"] = "0"
+        editor["role"] = "region"
+        editor["aria-label"] = f"代码单元 {index}"
+    for table in main.select("table"):
+        wrapper = soup.new_tag("div", attrs={"class": "nb-table-scroll", "tabindex": "0", "role": "region", "aria-label": "数据表格"})
+        table.wrap(wrapper)
+    for index, output in enumerate(main.select(".jp-RenderedText"), 1):
+        output["tabindex"] = "0"
+        output["role"] = "region"
+        output["aria-label"] = f"文本输出 {index}"
+    images = main.select(".jp-OutputArea-output img")
+    descriptions = IMAGE_DESCRIPTIONS.get(notebook_path.stem, [])
+    for index, img in enumerate(images):
+        if len(descriptions) == len(images):
+            description = descriptions[index]
+        else:
+            heading = img.find_previous(["h2", "h3"])
+            description = f"{heading.get_text(' ', strip=True) if heading else notebook_path.stem}，输出图 {index + 1}"
+        img["alt"] = description
+        img["loading"] = "lazy"
+        img["decoding"] = "async"
+        if img.get("src", "").startswith("data:image/png;base64,"):
+            data = base64.b64decode(img["src"].split(",", 1)[1])
+            if data[:8] == b"\x89PNG\r\n\x1a\n":
+                width, height = struct.unpack(">II", data[16:24])
+                img["width"], img["height"] = str(width), str(height)
+        img.wrap(soup.new_tag("figure", attrs={"class": "nb-figure"}))
+
+    top = soup.new_tag("button", id="ai-labs-top", attrs={"class": "nb-icon-button", "type": "button", "hidden": "", "aria-label": "回到顶部", "title": "回到顶部"})
+    top.string = "↑"
+    soup.body.append(top)
+    status = soup.new_tag("div", id="ai-labs-status", attrs={"role": "status", "aria-live": "polite", "aria-atomic": "true"})
+    soup.body.append(status)
+    script = soup.new_tag("script", id="ai-labs-reader-script")
+    script.string = READER_SCRIPT
+    soup.body.append(script)
+    return str(soup)
 
 
-def chapter_number(notebook_path: Path) -> str | None:
-    match = re.match(r"ch(\d{2})_", notebook_path.stem)
-    if not match:
-        return None
-    return str(int(match.group(1)))
+def make_exporter() -> HTMLExporter:
+    config = Config()
+    config.ExecutePreprocessor.enabled = False
+    config.TagRemovePreprocessor.enabled = True
+    config.TagRemovePreprocessor.remove_cell_tags = {"ai-labs-bootstrap"}
+    return HTMLExporter(template_name="lab", raw_template=READER_TEMPLATE, embed_images=True, config=config)
 
 
-def reader_chrome(notebook_path: Path) -> str:
-    ch = chapter_number(notebook_path)
-    chapter_link = f'<a href="../../ch{ch}.html">章节网页</a>' if ch else '<a href="../../hub.html">章节目录</a>'
-    lab_link = f'<a href="../chapter.html?ch={ch}">Python 代码实验</a>' if ch else '<a href="../../hub.html">章节目录</a>'
-    return (
-        '<nav id="ai-labs-chrome" aria-label="Notebook 导航">'
-        f"{lab_link}"
-        f"{chapter_link}"
-        '<a href="../../hub.html">章节目录</a>'
-        f'<a href="../{notebook_path.name}" download>下载 .ipynb</a>'
-        '<span>阅读进度</span>'
-        "</nav>"
-    )
-
-
-def set_html_lang(text: str) -> str:
-    def repl(match: re.Match[str]) -> str:
-        tag = match.group(0)
-        if re.search(r"\blang=", tag):
-            return re.sub(r'\blang=(["\']).*?\1', 'lang="zh-CN"', tag, count=1)
-        return tag.replace("<html", '<html lang="zh-CN"', 1)
-
-    return re.sub(r"<html\b[^>]*>", repl, text, count=1)
-
-
-def set_head_metadata(text: str, title: str) -> str:
-    escaped_title = html.escape(f"{title} · AI思维 Notebook")
-    description = html.escape(f"{title}，AI思维配套 Jupyter 预渲染代码实验。")
-    favicon = '<link rel="icon" href="../../favicon.svg" type="image/svg+xml"/>'
-
-    if re.search(r"<title>.*?</title>", text, re.DOTALL):
-        text = re.sub(r"<title>.*?</title>", f"<title>{escaped_title}</title>", text, count=1, flags=re.DOTALL)
-    else:
-        text = text.replace("</head>", f"<title>{escaped_title}</title>\n</head>", 1)
-
-    meta = f'<meta name="description" content="{description}"/>'
-    if re.search(r'<meta\s+name=["\']description["\'][^>]*>', text, re.IGNORECASE):
-        text = re.sub(r'<meta\s+name=["\']description["\'][^>]*>', meta, text, count=1, flags=re.IGNORECASE)
-    else:
-        text = re.sub(r"</title>", f"</title>\n{meta}", text, count=1)
-
-    if re.search(r'<link\s+rel=["\']icon["\'][^>]*>', text, re.IGNORECASE):
-        text = re.sub(r'<link\s+rel=["\']icon["\'][^>]*>', favicon, text, count=1, flags=re.IGNORECASE)
-    else:
-        text = re.sub(
-            r'(<meta\s+name=["\']description["\'][^>]*>)',
-            lambda match: f"{match.group(1)}\n{favicon}",
-            text,
-            count=1,
-            flags=re.IGNORECASE,
-        )
-
-    return text
-
-
-def inject_chrome(html_path: Path, notebook_path: Path) -> None:
-    text = html_path.read_text(encoding="utf-8")
-    title = notebook_title(notebook_path)
-    chrome = reader_chrome(notebook_path)
-
-    text = set_html_lang(text)
-    text = set_head_metadata(text, title)
-    text = REQUIRE_JS_RE.sub("", text)
-    text = MATHJAX_RE.sub("", text)
-    text = MERMAID_RE.sub("", text)
-    text = STYLE_RE.sub("", text)
-    text = TOP_BUTTON_RE.sub("", text)
-    text = READER_SCRIPT_RE.sub("", text)
-    text = DEFAULT_IMAGE_ALT_RE.sub('alt="Notebook 输出图表，请结合前后文字说明阅读"', text)
-    text = text.replace("</head>", f"{RENDER_STYLE}\n</head>", 1)
-    text = CHROME_RE.sub("", text)
-    text = re.sub(r'href="\.\./(ch(?:[5-9]|1[0-2])\.html)"', r'href="../../\1"', text)
-
-    if re.search(r"<body\b[^>]*>", text):
-        text = re.sub(
-            r"(<body\b[^>]*>)",
-            lambda match: f'{match.group(1)}\n{chrome}\n<button id="ai-labs-top" type="button" hidden aria-label="回到顶部">↑</button>',
-            text,
-            count=1,
-        )
-    else:
-        text = chrome + text
-    text = text.replace("</body>", f"{READER_SCRIPT}\n</body>", 1)
-    html_path.write_text(text, encoding="utf-8")
+def export_html(path: Path, exporter: HTMLExporter) -> str:
+    nb = nbformat.read(path, as_version=4)
+    for cell in nb.cells:
+        # Markdown can consume single-backslash LaTeX delimiters before HTML validation.
+        if cell.cell_type == "markdown" and re.search(r"\\[([]|\\begin\{", cell.source):
+            raise ValueError(f"{path.name}: LaTeX source requires a local, licensed renderer before export")
+    resources = {
+        "metadata": {"path": str(path.parent), "name": path.stem},
+        "language_code": "zh-CN",
+        "reader_title": notebook_title(nb, path),
+        "css_version": CSS_VERSION,
+    }
+    text, _ = exporter.from_notebook_node(nb, resources=resources)
+    return decorate_html(text, path)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("notebooks", nargs="*", help="ipynb names under notebooks/")
-    parser.add_argument("--skip-execute", action="store_true")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("notebooks", nargs="*", help="ipynb filenames under notebooks/; default: all")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--execute", action="store_true", help="explicitly execute and modify source ipynb files")
+    mode.add_argument("--export-only", "--skip-execute", dest="execute", action="store_false", help="export stored outputs only (default)")
+    parser.set_defaults(execute=False)
     args = parser.parse_args()
-
-    paths = list_notebooks(args.notebooks or None)
+    try:
+        paths = list_notebooks(args.notebooks or None)
+    except ValueError as exc:
+        parser.error(str(exc))
     if not paths:
-        raise SystemExit("no notebooks found")
-
+        parser.error("no notebooks found")
+    print(f"{len(paths)} notebooks; mode: {'EXECUTE IN PLACE' if args.execute else 'export stored outputs only'}", flush=True)
+    exporter = make_exporter()
+    rendered = []
     for path in paths:
-        if not args.skip_execute:
+        if args.execute:
             execute_inplace(path)
-        out = export_html(path)
-        print(f"ok {out.relative_to(ROOT)}")
+        rendered.append((path, export_html(path, exporter)))
+        print(f"prepared {path.name}", flush=True)
+    # Validate every page before replacing any previously published result.
+    RENDERED_DIR.mkdir(parents=True, exist_ok=True)
+    for path, text in rendered:
+        out = RENDERED_DIR / f"{path.stem}.html"
+        out.write_text(text, encoding="utf-8")
+        print(f"ok {out.relative_to(ROOT)}", flush=True)
 
 
 if __name__ == "__main__":

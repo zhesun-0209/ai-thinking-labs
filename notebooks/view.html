@@ -2,13 +2,28 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8"/>
-  <meta http-equiv="refresh" content="0; url=rendered/"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="notebooks.css?v=20260916"/>
+  <title>Notebook 阅读</title>
+</head>
+<body class="nb-page">
+  <main class="nb-main">
+    <h1 id="nbRedirectTitle">Notebook 阅读</h1>
+    <a class="nb-hub-link" href="chapter.html?ch=5-12">全部实验</a>
+    <noscript><p>请从实验列表打开阅读页。</p></noscript>
+  </main>
+  <script src="../js/notebooks-catalog.js?v=20260916-final"></script>
   <script>
     const q = new URLSearchParams(location.search).get("nb") || "";
-    const stem = q.replace(/\.ipynb$/i, "");
-    location.replace(stem ? `rendered/${stem}.html` : "index.html");
+    const item = window.NOTEBOOKS_CATALOG.findNotebook(q);
+    if (item) {
+      location.replace(window.NOTEBOOKS_CATALOG.readerUrl(item.file) + location.hash);
+    } else if (!q) {
+      location.replace("index.html");
+    } else {
+      document.getElementById("nbRedirectTitle").textContent = "未找到该实验";
+      document.title = "未找到该实验 · AI思维";
+    }
   </script>
-  <title>跳转中…</title>
-</head>
-<body><p><a href="../hub.html">章节目录</a></p></body>
+</body>
 </html>

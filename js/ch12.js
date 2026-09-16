@@ -18,10 +18,10 @@ const ch12Config = {
     alphafold: {
       key: "alphafold",
       cells: [{
-        prompt: "AlphaFold：序列 + MSA → Evoformer → 3D 结构 + pLDDT 置信度。步进查看数据流。",
+        prompt: "**AlphaFold 2**：序列 + 多序列比对（MSA）→ Evoformer → 结构模块 → 3D 结构与 pLDDT 局部置信度。步进查看这一代模型的数据流。",
         demoKey: "alphafold",
         interactive: true,
-        vibeTip: "蛋白质折叠 = 结构搜索问题，AlphaFold 用深度学习直接预测坐标。",
+        vibeTip: "结构预测不同于模拟完整折叠过程；这里介绍 AlphaFold 2，并非所有 AlphaFold 版本。",
         copyPrompt: C.alphafold,
       }],
     },
@@ -39,15 +39,15 @@ const ch12Config = {
     repr: {
       key: "repr",
       mentorKey: "ch12-repr",
-      title: "创造智能 · 搜索、生成与结构设计", subtitle: "AlphaProof 思路",
+      title: "表征搜索与模拟退火", subtitle: "优化地形的教学示意",
       cells: [
         {
-          prompt: "证明搜索可先**换几何表征**再优化；模拟退火允许暂时接受差解跳出局部最优。换表征 = 换优化问题的「地形」。",
+          prompt: "换表征可能改变搜索的难度；模拟退火以一定概率接受较差候选，帮助跳出局部低谷。下图是优化直觉的示意，**不是 AlphaProof 的算法流程**。",
           vibeTip: "代数坐标崎岖，几何坐标可能有缓坡。",
           copyPrompt: C.reprConcept,
         },
         {
-          prompt: "请观看损失柱形步进：12.4 → 8.1 → 3.2 → 2.3。",
+          prompt: "请观看损失变化：12.4 → 13.2 → 3.2 → 2.3。注意退火那一步暂时接受了更大的损失。",
           demoKey: "repr", labTarget: "repr", interactive: true,
           copyPrompt: C.reprDemo,
         },
@@ -59,11 +59,11 @@ const ch12Config = {
     mcts: {
       key: "mcts",
       mentorKey: "ch12-mcts",
-      title: "MCTS 四步", subtitle: "增量于第5章 MiniMax",
+      title: "MCTS 四步", subtitle: "用模拟结果分配搜索次数",
       cells: [
         {
           prompt: "MCTS：选择（UCT）→ 扩展 → 模拟 → 回传。**用采样估计胜率**，不必展开全部子树——与 MiniMax 本质不同。",
-          vibeTip: "UCT 平衡利用项（Q/N）与探索项（√lnN/N）。",
+          vibeTip: "UCT = Q子/N子 + c√(ln N父/N子)，c>0；未访问子节点优先尝试。",
           copyPrompt: C.mctsConcept,
         },
         {
@@ -85,7 +85,7 @@ const ch12Config = {
           prompt: "GAN：**生成器**造假样本，**判别器**判真假，二者交替训练。生成器希望 D(x̂)→1；判别器希望辨真辨假。",
           architectureKey: "gan",
           architectureStep: { phase: "both" },
-          vibeTip: "造假币者 vs 验钞机，达到纳什均衡。",
+          vibeTip: "生成器与判别器交替优化；理想均衡不代表实际训练一定能达到。",
           copyPrompt: C.ganConcept,
         },
         { prompt: "步进：观察 D(x̂) 随对抗训练变化。", demoKey: "gan", labTarget: "gan", interactive: true, outputLabel: "对抗训练", copyPrompt: C.ganDemo },
@@ -122,7 +122,7 @@ const ch12Config = {
       stepLabels: ["代数", "退火", "几何", "收敛"],
       trace: [
         { loss: 12.4, repr: "代数", annealStep: 0, history: [{ t: 0.28, y: 0.62 }], title: "代数搜索", summary: "直接在代数表达式空间搜索，损失卡在局部低谷 12.4。", reason: "表征选择会改变优化地形；同一问题在某种坐标下更难。", fields: [{ label: "损失", value: "12.4" }] },
-        { loss: 8.1, repr: "代数", temp: 2.0, acceptBad: true, annealStep: 1, history: [{ t: 0.28, y: 0.62 }, { t: 0.38, y: 0.55 }], title: "模拟退火", summary: "温度 T=2.0：以概率 exp(−ΔE/T) 接受更差解，跳出局部最优到损失=8.1。", reason: "早期高温多探索，后期降温更贪心。", fields: [{ label: "T", value: "2.0" }, { label: "损失", value: "8.1" }] },
+        { loss: 13.2, repr: "代数", temp: 2.0, acceptBad: true, annealStep: 1, history: [{ t: 0.28, y: 0.62 }, { t: 0.38, y: 0.70 }], title: "模拟退火", summary: "温度 T=2.0，损失从 12.4 升到 13.2，接受概率 exp(−0.8/2)≈0.67。", reason: "本步示意一次被接受的较差候选；接受差解不保证下一步就找到更优解。", fields: [{ label: "T", value: "2.0" }, { label: "损失", value: "13.2" }] },
         { loss: 3.2, repr: "几何", annealStep: 2, history: [{ t: 0.55, y: 0.35 }], title: "换几何表征", summary: "改用几何表征后，相邻候选更平滑，沿缓坡下降到 3.2。", reason: "好的表征把难搜索问题变成更容易优化的问题。", fields: [{ label: "损失", value: "3.2" }] },
         { loss: 2.3, repr: "几何", annealStep: 3, history: [{ t: 0.68, y: 0.28 }], title: "继续收敛", summary: "在平滑地形上继续下降，得到更好候选解 2.3。", reason: "表征和搜索策略共同决定能否找到高质量解。", fields: [{ label: "损失", value: "2.3" }] },
       ],
@@ -133,8 +133,8 @@ const ch12Config = {
       trace: [
         { phase: "select", active: "b", title: "UCT 选择", summary: "从根节点选 UCT 最大的分支 b。", reason: "UCT 同时看胜率 Q/N 和探索项，避免只盯旧高分。", fields: [{ label: "选择", value: "b" }] },
         { phase: "expand", active: "c", title: "扩展新节点", summary: "在 b 下面添加还没试过的叶节点 c。", reason: "MCTS 不一次展开全树，只在被选中的路径上增长。", fields: [{ label: "新增", value: "c" }] },
-        { phase: "sim", active: "c", title: "随机模拟", summary: "从 c 快速模拟到终局，得到一次胜负样本。", reason: "用采样估计局面质量，而不是穷举所有后续。", fields: [{ label: "模拟", value: "胜/负样本" }] },
-        { phase: "backup", active: "b", win: 0.62, title: "回传统计", summary: "把模拟结果沿路径回传，更新访问次数 N 和平均胜率 Q/N。", reason: "下一轮选择会基于更新后的统计重新计算 UCT。", fields: [{ label: "b 胜率", value: "0.62" }] },
+        { phase: "sim", active: "c", title: "随机模拟", summary: "从 c 模拟到终局，本次根节点一方获胜，记回报 1。", reason: "一次模拟给出一个样本，累计多次才能估计胜率；本图统一按根节点一方记分。", fields: [{ label: "本次回报", value: "1（获胜）" }] },
+        { phase: "backup", active: "b", win: 1, title: "回传统计", summary: "沿 c→b→根更新 N 与累计回报 Q。b 从 N=4,Q=2 变为 N=5,Q=3。", reason: "b 的新平均胜率为 3/5=0.60，不是本次模拟回报 1。", fields: [{ label: "b 胜率", value: "0.60" }] },
       ],
       render(v, s) {
         window.courseViz.renderMCTSTree(v, s);
@@ -149,11 +149,11 @@ const ch12Config = {
         { title: "生成器造样本", summary: "噪声 z 经过生成器生成假样本 x̂。", reason: "刚开始假样本很粗糙，判别器只给 D(x̂)=0.18。", fields: [{ label: "D(x̂)", value: "0.18" }], architectureStep: { phase: "g" } },
         { title: "判别器训练", summary: "判别器同时看真样本 x 和假样本 x̂。", reason: "判别器的目标是 D(x真)→1、D(x̂)→0。", fields: [{ label: "D(x真)", value: "0.92" }, { label: "D(x̂)", value: "0.08" }], architectureStep: { phase: "d" } },
         { title: "生成器对抗", summary: "冻结判别器，更新生成器，让假样本更像真样本。", reason: "生成器的目标是骗过判别器，因此希望 D(x̂) 升高。", fields: [{ label: "D(x̂)", value: "0.74" }], architectureStep: { phase: "g" } },
-        { title: "达到均衡", summary: "真假越来越难分，D(x̂) 接近 0.50。", reason: "0.50 表示判别器几乎只能猜，生成分布逼近真实分布。", fields: [{ label: "D(x̂)", value: "≈0.50" }], architectureStep: { phase: "both" } },
+        { title: "理想均衡", summary: "理想情况下，生成分布与真实分布相同，最优判别器输出 0.50。", reason: "反过来，单看 D(x̂)≈0.50 不能证明生成质量好，也可能是判别器尚未学会区分。", fields: [{ label: "D(x̂)，理想情况", value: "≈0.50" }], architectureStep: { phase: "both" } },
       ],
       render(v, s) {
         const phase = s.architectureStep?.phase ?? (s.title.includes("判别器") ? "d" : "g");
-        const stepIdx = ["生成器造样本", "判别器训练", "生成器对抗", "达到均衡"].indexOf(s.title);
+        const stepIdx = ["生成器造样本", "判别器训练", "生成器对抗", "理想均衡"].indexOf(s.title);
         v.innerHTML = `<div class="gan-demo-stack"><div class="gan-arch-slot"></div><div class="gan-metrics-slot"></div><div class="gan-formula-slot"></div><div class="gan-canvas-slot"></div><div class="gan-curve-slot"></div></div>`;
         window.courseArch.renderGAN(v.querySelector(".gan-arch-slot"), { phase });
         const metrics = v.querySelector(".gan-metrics-slot");
@@ -207,8 +207,8 @@ const ch12Config = {
   },
   tables: {
     "ch12-compare": `<div class="table-wrap compact"><table class="run-table compact comparison-table"><thead><tr><th>方法</th><th>核心机制</th><th>与第5章搜索</th></tr></thead><tbody>
-      <tr><td>表征+退火</td><td>换坐标系 + 模拟退火跳出局部最优</td><td>类似「换启发式」而非换图</td></tr><tr><td>MCTS</td><td>选择/扩展/模拟/回传，UCT 平衡探索</td><td>增量式 MiniMax + 随机模拟</td></tr>
-      <tr><td>GAN</td><td>G 与 D 对抗，D(x̂)→0.5 均衡</td><td>—</td></tr><tr><td>扩散</td><td>前向加噪 + U-Net 逐步去噪</td><td>—</td></tr></tbody></table></div>`,
+      <tr><td>表征+退火</td><td>改变表征、以一定概率接受差解</td><td>可能改变搜索空间及邻接关系</td></tr><tr><td>MCTS</td><td>选择/扩展/模拟/回传，UCT 平衡探索</td><td>按采样统计分配搜索预算，不是 MiniMax 的增量版</td></tr>
+      <tr><td>GAN</td><td>G 与 D 交替优化，0.5 不是质量证明</td><td>—</td></tr><tr><td>扩散</td><td>前向加噪 + U-Net 逐步去噪</td><td>—</td></tr></tbody></table></div>`,
   },
   labAlgos: [
     { key: "repr", label: "表征搜索", demo: "repr", desc: "代数与几何表征 · 退火跳出局部最优。" },

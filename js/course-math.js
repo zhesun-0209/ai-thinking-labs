@@ -12,7 +12,7 @@
             <span class="math-frac-den">Σ<sub>j</sub> exp(s<sub>j</sub>)</span>
           </span>
         </div>
-        <p class="math-note">正例分数在分子，同一批样本内全部图文对在分母</p>
+        <p class="math-note">固定图像 i：分母包含正例及所有候选文本；s 为经温度缩放的相似度。CLIP 再平均两个检索方向的损失。</p>
       </div>`,
 
     clip_cosine: `
@@ -46,8 +46,8 @@
       </div>`,
 
     advantage: `
-      <div class="math-block" role="img" aria-label="优势函数">
-        <div class="math-line math-line--hero">A = R + γ V(s′) − V(s)</div>
+      <div class="math-block" role="img" aria-label="一步优势估计">
+        <div class="math-line math-line--hero">Â = δ = r + γ V(s′) − V(s)</div>
       </div>`,
 
     gan_d: `
@@ -63,7 +63,7 @@
 
     return_g: `
       <div class="math-block" role="img" aria-label="折扣回报">
-        <div class="math-line math-line--hero">G<sub>t</sub> = r<sub>t</sub> + γ r<sub>t+1</sub> + γ² r<sub>t+2</sub> + …</div>
+        <div class="math-line math-line--hero">G<sub>t</sub> = r<sub>t+1</sub> + γ r<sub>t+2</sub> + γ² r<sub>t+3</sub> + …</div>
       </div>`,
 
     anneal: `
