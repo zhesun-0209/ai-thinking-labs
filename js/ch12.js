@@ -59,15 +59,15 @@ const ch12Config = {
     mcts: {
       key: "mcts",
       mentorKey: "ch12-mcts",
-      title: "MCTS 四步", subtitle: "用模拟结果分配搜索次数",
+      title: "蒙特卡洛树搜索", subtitle: "为什么优先尝试访问较少的分支？",
       cells: [
         {
-          prompt: "MCTS：选择（UCT）→ 扩展 → 模拟 → 回传。**用采样估计胜率**，不必展开全部子树——与 MiniMax 本质不同。",
+          prompt: "搜索预算有限时，既要继续尝试表现好的分支，也要给探索较少的分支机会。蒙特卡洛树搜索通过**选择、扩展、模拟、回传**，逐次积累判断依据，不必提前展开整棵树。",
           vibeTip: "UCT = Q子/N子 + c√(ln N父/N子)，c>0；未访问子节点优先尝试。",
           copyPrompt: C.mctsConcept,
         },
         {
-          prompt: "观看步进：哪条边被选中？Q/N 如何回传？",
+          prompt: "两条分支的平均回报相同，为什么先探索 b？一次模拟结束后，沿途节点的统计会怎样变化？",
           demoKey: "mcts", labTarget: "mcts", interactive: true,
           copyPrompt: C.mctsDemo,
         },
@@ -131,14 +131,14 @@ const ch12Config = {
     mcts: {
       key: "mcts", stepLabels: ["选择", "扩展", "模拟", "回传"],
       trace: [
-        { phase: "select", active: "b", title: "UCT 选择", summary: "从根节点选 UCT 最大的分支 b。", reason: "UCT 同时看胜率 Q/N 和探索项，避免只盯旧高分。", fields: [{ label: "选择", value: "b" }] },
-        { phase: "expand", active: "c", title: "扩展新节点", summary: "在 b 下面添加还没试过的叶节点 c。", reason: "MCTS 不一次展开全树，只在被选中的路径上增长。", fields: [{ label: "新增", value: "c" }] },
+        { phase: "select", active: "b", title: "选择：给较少尝试的分支机会", summary: "a 和 b 的平均回报都是 0.50，但 b 只访问过 4 次，比 a 的 6 次更少。本轮选择 b。", reason: "本例使用 UCT = Q/N + √(2 ln N父 / N)。平均回报相同时，访问越少，探索项越大。", fields: [{ label: "a 的 UCT", value: "0.50 + 0.88 = 1.38" }, { label: "b 的 UCT", value: "0.50 + 1.07 = 1.57" }] },
+        { phase: "expand", active: "c", title: "扩展：试一个新选择", summary: "沿 b 继续，在树中加入尚未尝试的分支 c。它还没有模拟记录，因此暂时没有平均回报。", reason: "每轮只在选中的路径上扩展，把计算留给更值得探索的方向。", fields: [{ label: "新增节点", value: "c" }, { label: "访问次数", value: "0" }] },
         { phase: "sim", active: "c", title: "随机模拟", summary: "从 c 模拟到终局，本次根节点一方获胜，记回报 1。", reason: "一次模拟给出一个样本，累计多次才能估计胜率；本图统一按根节点一方记分。", fields: [{ label: "本次回报", value: "1（获胜）" }] },
         { phase: "backup", active: "b", win: 1, title: "回传统计", summary: "沿 c→b→根更新 N 与累计回报 Q。b 从 N=4,Q=2 变为 N=5,Q=3。", reason: "b 的新平均胜率为 3/5=0.60，不是本次模拟回报 1。", fields: [{ label: "b 胜率", value: "0.60" }] },
       ],
       render(v, s) {
         window.courseViz.renderMCTSTree(v, s);
-        v.innerHTML += `<p class="output-caption">${{ select: "选择：UCT 最高的边", expand: "扩展：添加新子节点", sim: "模拟：快速对局", backup: "回传：更新 Q/N" }[s.phase]}</p>`;
+        v.innerHTML += '<p class="output-caption">节点内依次为访问次数 N、平均回报 Q/N。所有回报均从起点一方的视角记录。</p>';
       },
     },
     gan: {

@@ -1020,6 +1020,8 @@ function renderStateFlow(container, states, current, rewards = []) {
 
 function renderMCTSTree(container, step) {
   const phase = step.phase;
+  const width = Math.max(244, Math.min(520, container.closest(".study-viz-scroll")?.clientWidth || container.clientWidth || 520));
+  const positions = { root: [width / 2, 38], a: [64, 130], b: [width - 64, 130], c: [width - 64, 234] };
   const base = [
     { id: "root", label: "根", n: 10, q: 5, x: 260, y: 28 },
     { id: "a", label: "a", n: 6, q: 3, parent: "root", x: 120, y: 96 },
@@ -1036,12 +1038,13 @@ function renderMCTSTree(container, step) {
         ]
       : base.filter((n) => phase !== "select" || n.id !== "c").map((n) => ({ ...n }));
   const active = step.active || "root";
+  nodes.forEach(n => { [n.x, n.y] = positions[n.id]; });
   const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
   const edges = nodes
     .filter((n) => n.parent && byId[n.parent])
     .map((n) => {
       const p = byId[n.parent];
-      return `<line class="mcts-edge ${n.id === active || p.id === active ? "is-active" : ""}" x1="${p.x}" y1="${p.y + 18}" x2="${n.x}" y2="${n.y - 18}"/>`;
+      return `<path class="mcts-edge ${n.id === active || (phase === "backup" && n.id === "c") ? "is-active" : ""}" d="M${p.x},${p.y + 30} V${(p.y + n.y) / 2} H${n.x} V${n.y - 30}"/>`;
     })
     .join("");
   const nodeSvg = nodes
@@ -1049,15 +1052,15 @@ function renderMCTSTree(container, step) {
       const wr = n.n ? fmt(n.q / n.n, 2) : "—";
       const cls = [n.id === active ? "is-active" : "", n.isNew ? "is-new" : ""].filter(Boolean).join(" ");
       return `<g class="mcts-node-svg ${cls}" transform="translate(${n.x},${n.y})">
-        <rect class="mcts-node-box" x="-56" y="-22" width="112" height="44" rx="8"/>
-        <text class="mcts-node-label" y="-6">${n.label}</text>
-        <text class="mcts-node-meta" y="9">N=${n.n}  Q/N=${wr}</text>
-        ${n.delta ? `<text class="mcts-node-delta" y="23">${n.delta}</text>` : ""}
+        <rect class="mcts-node-box" x="-58" y="-30" width="116" height="60" rx="4"/>
+        <text class="mcts-node-label" y="-10">${n.label === "根" ? "起点" : `分支 ${n.label}`}</text>
+        <text class="mcts-node-meta" y="9">N=${n.n} · ${wr}</text>
+        ${n.delta ? `<text class="mcts-node-delta" y="48">${n.delta}</text>` : ""}
       </g>`;
     })
     .join("");
   container.innerHTML = `
-    <svg class="mcts-svg" viewBox="0 0 520 200" role="img" aria-label="MCTS 搜索树">
+    <svg class="mcts-svg" viewBox="0 0 ${width} 290" role="img" aria-label="MCTS 搜索树，当前阶段：${{select: "选择分支 b", expand: "新增分支 c", sim: "从 c 模拟", backup: "沿 c、b、起点回传"}[phase]}">
       ${edges}${nodeSvg}
     </svg>`;
 }
@@ -1769,7 +1772,7 @@ function renderMAEFlow(container, step) {
     const pattern = MAE_PATCH_PATTERNS[patchIdx];
     const cells = pattern.flat().map((v) => {
       const g = recon ? Math.round(v * 180 + 40) : Math.round(v * 200);
-      const color = recon ? `rgb(${g},${g + 20},255)` : `rgb(${g - 30},${g + 10},${g - 10})`;
+      const color = `rgb(${g - 30},${g + 10},${g - 10})`;
       return `<i style="background:${color}"></i>`;
     }).join("");
     return `<div class="mae-pixel-mini">${cells}</div>`;
@@ -1777,54 +1780,31 @@ function renderMAEFlow(container, step) {
   const phase = step.maePhase ?? (step.recon ? 4 : step.encode ? 3 : step.mask > 0 ? 2 : 1);
   const visible = phase >= 3 ? [0] : phase >= 2 ? [0] : [0, 1, 2, 3];
   const masked = [1, 2, 3];
-  const patchTile = (i) => {
-    const isMask = masked.includes(i) && phase >= 2 && phase < 4;
-    const isRecon = masked.includes(i) && phase >= 4;
+  const patchTile = (i, tilePhase = phase) => {
+    const isMask = masked.includes(i) && tilePhase >= 2 && tilePhase < 4;
+    const isRecon = masked.includes(i) && tilePhase >= 4;
     const showPx = !isMask || isRecon;
     let inner = "";
     if (isMask && !isRecon) {
-      inner = `<div class="mae-mask-block">MASK</div>`;
+      inner = `<div class="mae-mask-block">遮罩</div>`;
     } else if (showPx) {
       inner = maePixelMini(i, isRecon);
     }
-    const cls = visible.includes(i) && phase >= 3 ? "to-encoder" : isMask ? "is-masked" : isRecon ? "is-recon" : "";
+    const cls = visible.includes(i) && tilePhase >= 3 ? "to-encoder" : isMask ? "is-masked" : isRecon ? "is-recon" : "";
     return `<div class="mae-patch ${cls}"><span>P${i + 1}</span>${inner}</div>`;
   };
   container.innerHTML = `
-    <div class="mae-paper-flow">
-      <div class="mae-paper-row">
-        <div class="mae-panel ${phase >= 1 ? "is-on" : ""}">
-          <h5>① 切图块</h5>
-          <div class="mae-grid">${[0, 1, 2, 3].map((i) => patchTile(i)).join("")}</div>
-        </div>
-        <span class="mae-arrow">→</span>
-        <div class="mae-panel ${phase >= 2 ? "is-on" : ""}">
-          <h5>② 随机遮 75%</h5>
-          <div class="mae-grid">${[0, 1, 2, 3].map((i) => patchTile(i)).join("")}</div>
-          <p class="mae-caption">仅 P1 可见，P2–P4 被移除</p>
-        </div>
-        <span class="mae-arrow">→</span>
-        <div class="mae-panel ${phase >= 3 ? "is-on" : ""}">
-          <h5>③ 编码器（25%）</h5>
-          <div class="mae-enc-box">
-            <div class="mae-enc-in">${patchTile(0)}</div>
-            <div class="mae-enc-stack"><div>ViT 编码器</div><div>只看可见词元</div></div>
-          </div>
-        </div>
+    <div class="mae-study">
+      <div class="mae-image-comparison">
+        <figure><figcaption>原始图块</figcaption><div class="mae-grid" data-mae-original>${[0, 1, 2, 3].map(i => patchTile(i, 1)).join("")}</div></figure>
+        <figure><figcaption>${phase === 1 ? "切分结果" : phase < 4 ? "遮罩后的输入" : "像素重建示意"}</figcaption><div class="mae-grid" data-mae-current>${[0, 1, 2, 3].map(i => patchTile(i)).join("")}</div></figure>
       </div>
-      <div class="mae-paper-row">
-        <div class="mae-panel mae-panel--wide ${phase >= 4 ? "is-on" : ""}">
-          <h5>④ 解码器 + 掩码词元重构全图</h5>
-          <div class="mae-dec-flow">
-            <div class="mae-dec-tokens">
-              ${[0, 1, 2, 3].map((i) => `<span class="${i === 0 ? "from-enc" : "mask-token"}">${i === 0 ? "z₁" : `[M${i}]`}</span>`).join("")}
-            </div>
-            <span class="mae-arrow">→</span>
-            <div class="mae-grid">${[0, 1, 2, 3].map((i) => patchTile(i)).join("")}</div>
-          </div>
-          <p class="mae-caption">损失 = 被遮图块的像素 MSE（预训练无标签）</p>
-        </div>
-      </div>
+      <ol class="mae-study-flow">
+        <li class="${phase === 2 ? "is-current" : ""}"><strong>保留 P1</strong><span>移除其余 75% 图块</span></li>
+        <li class="${phase === 3 ? "is-current" : ""}"><strong>编码可见图块</strong><span>P1 → 向量 z₁</span></li>
+        <li class="${phase === 4 ? "is-current" : ""}"><strong>预测遮挡区域</strong><span>z₁ + 掩码词元 → 像素</span></li>
+      </ol>
+      <p class="output-caption">颜色方格用于说明数据流，不是模型实测结果。原图保留作对照，训练损失只计算被遮挡的 P2–P4。</p>
     </div>`;
 }
 

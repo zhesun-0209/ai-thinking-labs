@@ -1,5 +1,43 @@
 "use strict";
 
+/* Selected Lucide icons, ISC License, copyright (c) 2026 Lucide Icons and Contributors.
+ * Permission to use, copy, modify, and/or distribute this software for any purpose
+ * with or without fee is hereby granted, provided that the above copyright notice
+ * and this permission notice appear in all copies. THE SOFTWARE IS PROVIDED "AS IS"
+ * AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR
+ * BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
+ * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
+ * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * Arrow icons derived from Feather, MIT License, copyright (c) 2013-present Cole Bemis.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in the
+ * Software without restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+ * Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions: The above copyright notice and this
+ * permission notice shall be included in all copies or substantial portions of the
+ * Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+const studyIcons = {
+  prev: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  next: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  play: '<path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/>',
+  pause: '<rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/>',
+  reset: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+  zoom: '<path d="M15 3h6v6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/><path d="M9 21H3v-6"/>',
+};
+function studyIcon(name) {
+  return `<svg class="study-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${studyIcons[name]}</svg>`;
+}
+
 // Keep controls mounted while the diagram and current explanation change.
 window.studyPlayer = {
   mount(host, config) {
@@ -14,11 +52,11 @@ window.studyPlayer = {
       <div class="study-toolbar">
         <strong class="study-title"></strong>
         <div class="study-actions">
-          <button type="button" data-action="prev" aria-label="上一步" title="上一步">←</button>
-          <button type="button" data-action="play" class="study-play">播放</button>
-          <button type="button" data-action="next" aria-label="下一步" title="下一步">→</button>
-          <button type="button" data-action="reset" aria-label="重新开始" title="重新开始">↺</button>
-          <button type="button" data-action="zoom" aria-label="放大图示" title="放大图示">放大</button>
+          <button type="button" data-action="prev" aria-label="上一步" title="上一步">${studyIcon("prev")}</button>
+          <button type="button" data-action="play" class="study-play" aria-label="播放" title="播放">${studyIcon("play")}</button>
+          <button type="button" data-action="next" aria-label="下一步" title="下一步">${studyIcon("next")}</button>
+          <button type="button" data-action="reset" aria-label="重新开始" title="重新开始">${studyIcon("reset")}</button>
+          <button type="button" data-action="zoom" aria-label="放大图示" title="放大图示">${studyIcon("zoom")}</button>
         </div>
       </div>
       <div class="study-body">
@@ -51,29 +89,28 @@ window.studyPlayer = {
     let dialog = null;
     const measure = () => {
       if (!config.measure || disposed || !root.isConnected) return;
-      const slots = ["title", "summary", "fields", "reason"];
-      slots.forEach(key => root.style.removeProperty(`--study-${key}-height`));
+      root.style.removeProperty("--study-detail-height");
       root.style.removeProperty("--study-diagram-height");
-      const heights = {};
       let diagramHeight = 0;
+      let detailHeight = 0;
       // Reserve the largest state at this width before the reader starts playback.
       labels.forEach((_, i) => {
         config.renderVisual(visual, i);
         config.renderDetail(detail, i);
         const content = visual.querySelector(".study-viz-content");
         diagramHeight = Math.max(diagramHeight, content?.getBoundingClientRect().height || 0);
-        detail.querySelectorAll("[data-study-slot]").forEach(node => {
-          const key = node.dataset.studySlot;
-          heights[key] = Math.max(heights[key] || 0, node.getBoundingClientRect().height);
-        });
+        const explanation = detail.querySelector(".study-lesson-detail, .study-clip-detail");
+        detailHeight = Math.max(detailHeight, explanation?.getBoundingClientRect().height || 0);
       });
       root.style.setProperty("--study-diagram-height", `${Math.ceil(diagramHeight)}px`);
-      Object.entries(heights).forEach(([key, value]) => root.style.setProperty(`--study-${key}-height`, `${Math.ceil(value)}px`));
+      root.style.setProperty("--study-detail-height", `${Math.ceil(detailHeight)}px`);
     };
     const stop = () => {
       clearInterval(timer);
       timer = null;
-      play.textContent = "播放";
+      play.innerHTML = studyIcon("play");
+      play.setAttribute("aria-label", "播放");
+      play.title = "播放";
       play.setAttribute("aria-pressed", "false");
     };
     const paint = () => {
@@ -128,7 +165,9 @@ window.studyPlayer = {
           if (timer) { stop(); break; }
           if (index === labels.length - 1) index = 0;
           paint();
-          play.textContent = "暂停";
+          play.innerHTML = studyIcon("pause");
+          play.setAttribute("aria-label", "暂停");
+          play.title = "暂停";
           play.setAttribute("aria-pressed", "true");
           timer = setInterval(() => {
             if (!root.isConnected || document.hidden) { stop(); return; }
@@ -172,3 +211,36 @@ window.studyPlayer = {
     return { go, root };
   },
 };
+
+window.studyPlayer.refinePage = () => {
+  if (!document.body.classList.contains("study-pilot")) return;
+  const chapter = location.pathname.match(/ch(\d+)\.html$/)?.[1];
+  if (chapter) {
+    document.querySelectorAll(".chapter-section > .section-header").forEach((header, index) => {
+      const heading = header.querySelector("h2");
+      if (!heading || heading.querySelector(".study-section-number")) return;
+      const number = document.createElement("span");
+      number.className = "study-section-number";
+      number.textContent = `${chapter}.${index + 1}`;
+      heading.prepend(number);
+      const eyebrow = header.querySelector(".eyebrow");
+      if (eyebrow) eyebrow.hidden = true;
+    });
+  }
+  // Keep optional practice next to its lesson without interrupting the explanation.
+  document.querySelectorAll(".vibe-cell-pair").forEach(pair => {
+    if (pair.querySelector(":scope > .study-resources")) return;
+    pair.querySelectorAll(".cell-header").forEach(header => {
+      if (["要点", "演示"].includes(header.querySelector(".cell-label")?.textContent.trim())) header.hidden = true;
+    });
+    const actions = pair.querySelector(".prompt-actions");
+    if (!actions?.querySelector("button, a")) return;
+    const resources = document.createElement("details");
+    resources.className = "study-resources";
+    const summary = document.createElement("summary");
+    summary.textContent = "延伸练习";
+    resources.append(summary, actions);
+    pair.append(resources);
+  });
+};
+document.addEventListener("DOMContentLoaded", window.studyPlayer.refinePage);

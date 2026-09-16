@@ -24,7 +24,7 @@ async function checkSteps(player) {
     assert.equal(Number(await range.inputValue()), step);
     const current = (await player.boundingBox()).height;
     if (height == null) height = current;
-    assert.ok(Math.abs(height - current) < 1, `Player changed height: ${height} -> ${current}`);
+    assert.ok(Math.abs(height - current) < 1, `${await player.getAttribute("id")} changed height at step ${step}: ${height} -> ${current}`);
     const overflow = await player.locator(".study-detail").evaluate(el =>
       [...el.querySelectorAll(".study-search-detail > *, .study-clip-detail > *, [data-study-slot]")]
         .filter(node => node.scrollHeight > node.clientHeight + 1)

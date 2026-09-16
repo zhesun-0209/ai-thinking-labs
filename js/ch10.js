@@ -143,7 +143,7 @@ const ch10Config = {
         { maePhase: 1, mask: 0, title: "切图块", summary: "原图切成 4 个图块词元。", reason: "与 ViT 相同的前处理。", architectureStep: { phase: 0 } },
         { maePhase: 2, mask: 3, title: "随机遮 75%", summary: "移除 P2–P4，仅保留 P1 送入编码器。", reason: "MAE 用高比例遮罩逼模型学习语义。", fields: [{ label: "可见", value: "25%" }], architectureStep: { phase: 1 } },
         { maePhase: 3, mask: 3, encode: true, title: "编码器", summary: "ViT 编码器只处理可见图块，计算高效。", reason: "不看被遮图块，节省算力。", fields: [{ label: "输入", value: "P1" }], architectureStep: { phase: 2 } },
-        { maePhase: 4, mask: 0, recon: true, title: "解码器重构", summary: "轻量解码器用掩码词元 + 编码器输出，还原全部像素。", reason: "损失仅在被遮区域计算 MSE。", fields: [{ label: "监督", value: "像素 MSE" }], architectureStep: { phase: 3 } },
+        { maePhase: 4, mask: 0, recon: true, title: "预测被遮挡的像素", summary: "轻量解码器结合可见图块的表示与掩码词元，预测缺失图块。这里用颜色方格说明重建流程。", reason: "将预测与原图比较，只对被遮区域计算均方误差。重建不必与原图完全相同，训练目标是学到有用的视觉表示。", fields: [{ label: "监督信号", value: "原图的像素值" }, { label: "计算损失", value: "被遮挡的 P2–P4" }], architectureStep: { phase: 3 } },
       ],
       render(v, s) { window.courseViz.renderMAEFlow(v, s); },
     },

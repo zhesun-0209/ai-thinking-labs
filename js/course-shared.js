@@ -147,6 +147,7 @@ function initCoursePage(config) {
   renderAllModules(config);
   wireCopyButtons();
   wireJumpLab();
+  window.studyPlayer?.refinePage();
   initLearningProgress();
   initRevealAnimations();
   wireLabKeyboard();
@@ -203,23 +204,32 @@ function setActiveSectionLink(id) {
 }
 
 function wireScrollSpy(sections) {
-  const links = [...document.querySelectorAll(".section-link")];
-  const map = new Map(sections.map((s, i) => [s.id, i]));
+  const sync = () => {
+    const navBottom = document.querySelector(".section-nav")?.getBoundingClientRect().bottom || 150;
+    let active = sections[0]?.id;
+    sections.forEach(section => {
+      const element = document.getElementById(section.id);
+      if (element && element.getBoundingClientRect().top <= navBottom + 24) active = section.id;
+    });
+    if (active) setActiveSectionLink(active);
+  };
+  let scheduled = false;
+  const schedule = () => {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => { scheduled = false; sync(); });
+  };
   const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const idx = map.get(entry.target.id);
-        if (idx === undefined) return;
-        links.forEach((link, i) => link.classList.toggle("is-active", i === idx));
-      });
-    },
+    schedule,
     { rootMargin: "-40% 0px -45% 0px", threshold: 0 },
   );
   sections.forEach((s) => {
     const el = document.getElementById(s.id);
     if (el) observer.observe(el);
   });
+  window.addEventListener("scroll", schedule, { passive: true });
+  window.addEventListener("resize", schedule, { passive: true });
+  schedule();
 }
 
 function renderMentorChapter(config) {
@@ -467,6 +477,7 @@ function mountStepDemo(container, demo) {
         if (!content) {
           target.innerHTML = '<div class="study-viz-scroll" tabindex="0" role="region" aria-label="算法图示"><div class="study-viz-content"></div></div>';
           content = target.querySelector(".study-viz-content");
+          content.dataset.diagram = demo.key;
         }
         (demo.render || defaultStepRender)(content, demo.trace[index], index, demo);
       },
@@ -493,6 +504,7 @@ function mountStepDemo(container, demo) {
     window.studyPlayer.mount(container, {
       id: container.closest(".lab-panel") ? "study-clip-lab" : "study-clip-lesson",
       kind: "clip",
+      measure: true,
       title: demo.title,
       labels: demo.stepLabels,
       renderVisual(target, index) { demo.render(target, demo.trace[index], index, demo); },
